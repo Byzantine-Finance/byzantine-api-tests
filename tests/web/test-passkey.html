@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Byzantine SDK - WebAuthn Test Suite</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+        background: #fff;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+      }
+
+      .section {
+        margin-bottom: 20px;
+      }
+
+      .section-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #000;
+      }
+
+      .input-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #000;
+        font-size: 14px;
+        font-family: monospace;
+      }
+
+      textarea {
+        min-height: 100px;
+      }
+
+      button {
+        background: #000;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      button:disabled {
+        background: #999;
+        cursor: not-allowed;
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: monospace;
+        border: 1px solid #000;
+      }
+
+      .result.success {
+        background: #f0f0f0;
+      }
+
+      .result.error {
+        background: #f0f0f0;
+      }
+
+      .result.info {
+        background: #f0f0f0;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #000;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-size: 14px;
+        color: #000;
+      }
+
+      .tab.active {
+        border-bottom-color: #000;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Passkey transaction testing</h1>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="create">Create Passkey</button>
+        <button class="tab" data-tab="sign">Sign with Passkey</button>
+      </div>
+
+      <!-- Create Passkey Tab -->
+      <div id="create-tab" class="tab-content active">
+        <div class="section">
+          <div class="input-group">
+            <label for="userId">User ID</label>
+            <input type="text" id="userId" placeholder="user-123" />
+          </div>
+
+          <div class="input-group">
+            <label for="userEmail">User Email</label>
+            <input type="email" id="userEmail" placeholder="user@example.com" />
+          </div>
+
+          <div class="input-group">
+            <label for="userName">User Name</label>
+            <input type="text" id="userName" placeholder="John Doe" />
+          </div>
+
+          <div class="input-group">
+            <label for="rpIdCreate">Relying Party ID (your domain)</label>
+            <input
+              type="text"
+              id="rpIdCreate"
+              placeholder="localhost"
+              value="localhost"
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="rpNameCreate">Relying Party Name</label>
+            <input
+              type="text"
+              id="rpNameCreate"
+              placeholder="My App"
+              value="Byzantine Test"
+            />
+          </div>
+        </div>
+
+        <button id="createBtn">Create Passkey</button>
+
+        <div id="createResult"></div>
+      </div>
+
+      <!-- Sign with Passkey Tab -->
+      <div id="sign-tab" class="tab-content">
+        <div class="section">
+          <div class="input-group">
+            <label for="credentialId"> Credential ID (optional) </label>
+            <input
+              type="text"
+              id="credentialId"
+              placeholder="Leave empty to use discoverable credentials"
+              value=""
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="rpId">Relying Party ID</label>
+            <input
+              type="text"
+              id="rpId"
+              placeholder="localhost"
+              value="localhost"
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="rpName">Relying Party Name</label>
+            <input
+              type="text"
+              id="rpName"
+              placeholder="My App"
+              value="Byzantine Test"
+            />
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Transaction Body to Sign</div>
+
+          <div class="input-group">
+            <label for="payload">Payload (JSON)</label>
+            <textarea id="payload">
+{
+  "organizationId": "90b132ca-dd18-4ea9-959c-c2382f298cb5",
+  "type": "ACTIVITY_TYPE_SIGN_TRANSACTION_V2",
+  "timestampMs": "1764339416811",
+  "parameters": {
+    "signWith": "0xb784A89339c206410Ddc875AB7C67D1Ba600D39e",
+    "type": "TRANSACTION_TYPE_ETHEREUM",
+    "unsignedTransaction": "0x02f86c82210580830d189c83169e4482dd0d94833589fcd6edb6e08f4c7c32d4f71b54bda0291380b844095ea7b30000000000000000000000000863cf361ea7f92fd53223a2fa1e58f799544e82ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0"
+  }
+}</textarea
+            >
+          </div>
+        </div>
+
+        <button id="testBtn">Sign transaction</button>
+
+        <div id="result"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Import only the WebauthnStamper directly to avoid Node.js dependencies
+      import { WebauthnStamper } from "./node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js";
+
+      // Load user data from JSON
+      fetch("./fixtures/test-data/users/valid-user.json")
+        .then((r) => r.json())
+        .then((d) => {
+          const email = d.userInfo.email || "";
+          document.getElementById("userEmail").value = email;
+          document.getElementById("userName").value =
+            d.userInfo.firstName || "";
+          document.getElementById("userId").value = email.split("@")[0] || "";
+        })
+        .catch(() => {});
+
+      // Tab switching functionality
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const tabName = tab.dataset.tab;
+
+          // Update active tab
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+
+          // Update active content
+          document.querySelectorAll(".tab-content").forEach((content) => {
+            content.classList.remove("active");
+          });
+          document.getElementById(`${tabName}-tab`).classList.add("active");
+        });
+      });
+
+      // Create Passkey functionality
+      async function createPasskey() {
+        const resultDiv = document.getElementById("createResult");
+        const createBtn = document.getElementById("createBtn");
+
+        try {
+          createBtn.disabled = true;
+          createBtn.textContent = "⏳ Creating...";
+          resultDiv.innerHTML = "";
+
+          // Get values from inputs
+          const userId = document.getElementById("userId").value.trim();
+          const userEmail = document.getElementById("userEmail").value.trim();
+          const userName = document.getElementById("userName").value.trim();
+          const rpId = document.getElementById("rpIdCreate").value.trim();
+          const rpName = document.getElementById("rpNameCreate").value.trim();
+
+          // Validate inputs
+          if (!userId || !userEmail || !userName || !rpId || !rpName) {
+            throw new Error("All fields are required");
+          }
+
+          resultDiv.innerHTML =
+            '<div class="result info">Creating passkey...</div>';
+
+          // Create stamper with required configuration
+          const stamper = new WebauthnStamper({
+            rpId: rpId,
+            rpName: rpName,
+            timeout: 60000,
+            userVerification: "preferred",
+            residentKey: "preferred",
+            requireResidentKey: false,
+          });
+
+          // Generate a random challenge
+          const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+          // Create passkey configuration
+          const creationConfig = {
+            userId: userId,
+            userEmail: userEmail,
+            userName: userName,
+            challenge: challenge,
+          };
+
+          // Create the passkey
+          const { attestationData, challengeFromClientData } =
+            await stamper.createPasskey(creationConfig);
+
+          // Display success result
+          const result = {
+            success: true,
+            credentialId: attestationData.credentialId,
+            attestationData: attestationData,
+            challengeFromClientData: challengeFromClientData,
+            timestamp: new Date().toISOString(),
+          };
+
+          resultDiv.innerHTML = `<div class="result success">✅ Passkey Created Successfully!
+
+      <strong>Credential ID:</strong>
+      ${result.credentialId}
+
+      <strong>User Information:</strong>
+      - User ID: ${userId}
+      - Email: ${userEmail}
+      - Name: ${userName}
+
+      <strong>Relying Party:</strong>
+      - RP ID: ${rpId}
+      - RP Name: ${rpName}
+
+      <strong>Timestamp:</strong>
+      ${result.timestamp}
+
+      <strong>⚠️ IMPORTANT:</strong>
+      Save this Credential ID! You'll need it to sign transactions.`;
+
+          // Auto-fill the credential ID in the sign tab
+          document.getElementById("credentialId").value =
+            attestationData.credentialId;
+
+          // Save to valid-user.json
+          try {
+            const userDataResponse = await fetch(
+              "./fixtures/test-data/users/valid-user.json"
+            );
+            const userData = await userDataResponse.json();
+
+            // Initialize authenticators array if needed
+            if (!userData.authenticators) {
+              userData.authenticators = [];
+            }
+
+            // Always replace the first authenticator
+            userData.authenticators[0] = {
+              authenticatorName: "Passkey",
+              challenge: challengeFromClientData,
+              attestation: {
+                credentialId: attestationData.credentialId,
+                clientDataJson: attestationData.clientDataJson,
+                attestationObject: attestationData.attestationObject,
+                transports: attestationData.transports || [
+                  "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                ],
+              },
+            };
+
+            // Save to server
+            const saveResponse = await fetch("/save-user-data", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(userData),
+            });
+
+            const responseText = await saveResponse.text();
+            console.log("Server response status:", saveResponse.status);
+            console.log("Server response:", responseText);
+
+            if (saveResponse.ok) {
+              try {
+                const result = JSON.parse(responseText);
+                console.log("✅ Passkey data saved to valid-user.json", result);
+              } catch (e) {
+                console.log("✅ Passkey data saved (non-JSON response)");
+              }
+            } else {
+              try {
+                const errorData = JSON.parse(responseText);
+                console.error("⚠️ Failed to save passkey data:", errorData);
+              } catch (e) {
+                console.error(
+                  "⚠️ Failed to save passkey data. Status:",
+                  saveResponse.status,
+                  "Response:",
+                  responseText
+                );
+              }
+            }
+          } catch (saveError) {
+            console.error("⚠️ Error saving passkey data:", saveError);
+          }
+
+          // Log to console for easy copying
+          console.log("Passkey Creation Result:", result);
+        } catch (error) {
+          console.error("Error:", error);
+
+          let errorMessage = error.message;
+          let helpText = "";
+
+          // Provide helpful error messages
+          if (error.name === "NotAllowedError") {
+          } else if (error.name === "SecurityError") {
+            helpText =
+              "\n\n💡 Security Error - Make sure:\n- Page is served over HTTPS (or localhost)\n- rpId matches your domain";
+          } else if (error.name === "NotSupportedError") {
+            helpText = "\n\n💡 WebAuthn is not supported in this browser";
+          } else if (error.name === "InvalidStateError") {
+            helpText = "\n\n💡 A passkey with this user ID may already exist";
+          }
+
+          resultDiv.innerHTML = `<div class="result error">❌ Error: ${errorMessage}${helpText}
+              </div>`;
+        } finally {
+          createBtn.disabled = false;
+          createBtn.textContent = "Create Passkey";
+        }
+      }
+
+      // Sign with Passkey functionality
+      async function getWebauthnStamper() {
+        const resultDiv = document.getElementById("result");
+        const testBtn = document.getElementById("testBtn");
+
+        try {
+          testBtn.disabled = true;
+          testBtn.textContent = "Processing...";
+          resultDiv.innerHTML = "";
+
+          // Get values from inputs
+          const credentialId = document
+            .getElementById("credentialId")
+            .value.trim();
+          const rpId = document.getElementById("rpId").value.trim();
+          const rpName = document.getElementById("rpName").value.trim();
+          const payloadText = document.getElementById("payload").value.trim();
+
+          // Validate inputs
+          if (!rpId || !rpName) {
+            throw new Error("Relying Party ID and Name are required");
+          }
+
+          // Parse and validate JSON
+          let payloadObj;
+          try {
+            payloadObj = JSON.parse(payloadText);
+          } catch (e) {
+            throw new Error("Invalid JSON in payload: " + e.message);
+          }
+
+          // Determine mode based on credential ID
+          const mode = credentialId ? "specific" : "discoverable";
+          const modeText = credentialId
+            ? `Using specific credential: ${credentialId.substring(0, 20)}...`
+            : "Using discoverable credentials (browser will show all available passkeys)";
+
+          resultDiv.innerHTML = `<div class="result info">🔄 Initializing WebAuthn Stamper...\n\nMode: ${modeText}</div>`;
+
+          // Create stamper configuration
+          const stamper = new WebauthnStamper({
+            rpId: rpId,
+            rpName: rpName,
+            timeout: 60000,
+            userVerification: "preferred",
+            residentKey: "preferred",
+            requireResidentKey: false,
+          });
+
+          // Get the stamp - with or without credential ID
+          const payload = JSON.stringify(payloadObj);
+          let stamp;
+          if (credentialId) {
+            // Non-discoverable: specify the credential ID
+            stamp = await stamper.getStamp(payload, [credentialId]);
+          } else {
+            // Discoverable: let browser show all available passkeys
+            stamp = await stamper.getStamp(payload);
+          }
+
+          // Display success result
+          const result = {
+            success: true,
+            mode: mode,
+            stampHeaderName: stamp.stampHeaderName,
+            stampHeaderValue: stamp.stampHeaderValue,
+            payload: payloadObj,
+            timestamp: new Date().toISOString(),
+          };
+
+          const credentialInfo = credentialId
+            ? `<strong>Credential ID Used:</strong>\n${credentialId}\n\n<strong>Mode:</strong> Non-discoverable (specific credential)`
+            : `<strong>Mode:</strong> Discoverable credentials (browser selected from available passkeys)`;
+
+          resultDiv.innerHTML = `<div class="result success">✅ WebAuthn Stamp Generated Successfully!
+
+      <strong>Stamp Header Name:</strong>
+      ${stamp.stampHeaderName}
+
+      <strong>Stamp Header Value:</strong>
+      ${stamp.stampHeaderValue}
+
+      ${credentialInfo}
+
+      <strong>Payload Signed:</strong>
+      ${JSON.stringify(payloadObj, null, 2)}
+
+      <strong>Timestamp:</strong>
+      ${result.timestamp}
+     </div>`;
+
+          // Log to console for easy copying
+          console.log("WebAuthn Stamp Result:", result);
+        } catch (error) {
+          console.error("Error:", error);
+
+          let errorMessage = error.message;
+          let helpText = "";
+
+          // Provide helpful error messages
+          if (error.name === "NotAllowedError") {
+            helpText =
+              "\n\n💡 This usually means:\n- User cancelled the authentication\n- Timeout occurred\n- Credential not found (try leaving Credential ID empty for discoverable mode)";
+          } else if (error.name === "SecurityError") {
+            helpText =
+              "\n\n💡 Security Error - Make sure:\n- Page is served over HTTPS (or localhost)\n- rpId matches your domain\n- Credential was registered for this domain";
+          } else if (error.name === "NotSupportedError") {
+            helpText = "\n\n💡 WebAuthn is not supported in this browser";
+          }
+
+          resultDiv.innerHTML = `<div class="result error">❌ Error: ${errorMessage}${helpText}</div>`;
+        } finally {
+          testBtn.disabled = false;
+          testBtn.textContent = "Test WebAuthn Stamp";
+        }
+      }
+
+      // Add click event listeners
+      document
+        .getElementById("createBtn")
+        .addEventListener("click", createPasskey);
+      document
+        .getElementById("testBtn")
+        .addEventListener("click", getWebauthnStamper);
+    </script>
+  </body>
+</html>
