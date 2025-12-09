@@ -1,0 +1,36 @@
+{
+  "name": "integrator-api-testing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:health": "vitest run tests/api/health.test.js",
+    "test:create": "vitest run tests/api/account-creation.test.js",
+    "test:management": "vitest run tests/api/account-management.test.js",
+    "test:vaults": "vitest run tests/api/vault-data.test.js",
+    "test:accounts": "vitest run tests/api/account-data.test.js",
+    "test:deposit-otp": "vitest run tests/api/deposit-otp.test.js",
+    "test:deposit-passkey": "vitest run tests/api/deposit-passkey.js",
+    "test:withdrawal-otp": "vitest run tests/api/withdrawal-otp.test.js",
+    "test:withdrawal-passkey": "vitest run tests/api/withdrawal-passkey.js",
+    "test:transaction-otp": "vitest run tests/api/transaction-otp.test.js",
+    "test:transaction-passkey": "vitest run tests/api/transaction-passkey.js",
+    "test:transaction-data": "vitest run tests/api/transaction-data.test.js",
+    "serve": "node scripts/serve.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@byzantine/integrator-sdk": "file:../../Projects/integrator-sdk/byzantine-integrator-sdk-1.0.0.tgz",
+    "dotenv": "^17.2.3",
+    "elliptic": "^6.6.1"
+  },
+  "devDependencies": {
+    "axios": "^1.13.2",
+    "vitest": "^3.2.4"
+  }
+}
