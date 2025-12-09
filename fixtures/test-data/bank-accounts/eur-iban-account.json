@@ -1,0 +1,11 @@
+{
+  "accountId": null,
+  "currency": "eur",
+  "label": "Test IBAN Account",
+  "ibanBankAccountDetails": {
+    "accountNumber": "DE89370400440532013000",
+    "bic": "COBADEFFXXX",
+    "country": "DEU"
+  }
+}
+

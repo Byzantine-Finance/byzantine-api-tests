@@ -1,0 +1,46 @@
+{
+  "approve": {
+    "bodyToSign": {
+      "timestampMs": "1765212990435",
+      "organizationId": "262195be-2da2-4745-adf8-b30f88053d9d",
+      "parameters": {
+        "signWith": "0xB3430395764eE62a9aeC5c9EFfCb4333D3C80Aa0",
+        "unsignedTransaction": "0x02f86c822105808301442c83297a4c82dd0d94833589fcd6edb6e08f4c7c32d4f71b54bda0291380b844095ea7b30000000000000000000000000863cf361ea7f92fd53223a2fa1e58f799544e82ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0"
+      }
+    },
+    "transactionId": "8c2fb2eb-b791-4a8a-9921-862f6d507e61",
+    "webAuthnStamp": "string"
+  },
+  "deposit": {
+    "bodyToSign": {
+      "type": "ACTIVITY_TYPE_SIGN_TRANSACTION_V2",
+      "timestampMs": "string",
+      "organizationId": "string",
+      "parameters": {
+        "signWith": "string",
+        "unsignedTransaction": "string",
+        "type": "TRANSACTION_TYPE_ETHEREUM"
+      }
+    },
+    "transactionId": "string",
+    "webAuthnStamp": "string"
+  },
+  "withdraw": {
+    "bodyToSign": {
+      "type": "ACTIVITY_TYPE_SIGN_TRANSACTION_V2",
+      "timestampMs": "string",
+      "organizationId": "string",
+      "parameters": {
+        "signWith": "string",
+        "unsignedTransaction": "string",
+        "type": "TRANSACTION_TYPE_ETHEREUM"
+      }
+    },
+    "transactionId": "string",
+    "webAuthnStamp": "string"
+  },
+  "depositAmount": "0.00012",
+  "sourceCurrency": "usdc",
+  "withdrawAmount": "0.0001",
+  "destinationCurrency": "usdc"
+}

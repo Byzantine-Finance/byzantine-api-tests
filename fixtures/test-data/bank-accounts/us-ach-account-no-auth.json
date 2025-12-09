@@ -1,0 +1,11 @@
+{
+  "accountId": null,
+  "currency": "usd",
+  "label": "Test Account",
+  "achBankAccountDetails": {
+    "accountNumber": "1234567890",
+    "routingNumber": "021000021",
+    "checkingOrSavings": "checking"
+  }
+}
+
