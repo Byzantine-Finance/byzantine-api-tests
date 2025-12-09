@@ -48,6 +48,8 @@ describeDepositOtp("Initiate OTP Approve and Deposit transactions API", () => {
           vaultAddr: testVaultAddr,
         };
 
+        assertSchema(requestBody, "approveRequest");
+
         const response = await apiClient.post(
           endpoints.otp.initApprove(chainId),
           requestBody
@@ -77,6 +79,8 @@ describeDepositOtp("Initiate OTP Approve and Deposit transactions API", () => {
           amount: depositAmount,
           sourceCurrency: sourceCurrency,
         };
+
+        assertSchema(requestBody, "depositRequest");
 
         const response = await apiClient.post(
           endpoints.otp.initDeposit(chainId),

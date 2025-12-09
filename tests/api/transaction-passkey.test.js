@@ -50,6 +50,8 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           webAuthnStamp: approveStamp,
         };
 
+        assertSchema(requestBody, "sendPasskeyTransactionRequest");
+
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),
           requestBody,
@@ -72,6 +74,8 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           webAuthnStamp: depositStamp,
         };
 
+        assertSchema(requestBody, "sendPasskeyTransactionRequest");
+
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),
           requestBody,
@@ -93,6 +97,8 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           transactionId: testWithdrawTransactionId,
           webAuthnStamp: withdrawStamp,
         };
+
+        assertSchema(requestBody, "sendPasskeyTransactionRequest");
 
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),

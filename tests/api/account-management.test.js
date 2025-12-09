@@ -17,6 +17,7 @@ import {
   assertSuccessWithSchema,
   assertError,
   assertValidUuid,
+  assertSchema,
 } from "../../utils/assertions.js";
 
 // Import test data from fixtures
@@ -37,6 +38,8 @@ describeManagement("Account Management API", () => {
     it(
       "should add US ACH bank account",
       async () => {
+        assertSchema(usAchAccount, "addBankAccountRequest");
+
         const requestBody = {
           ...usAchAccount,
           accountId: testAccountId,
@@ -57,6 +60,8 @@ describeManagement("Account Management API", () => {
     it(
       "should add EUR IBAN bank account",
       async () => {
+        assertSchema(eurIbanAccount, "addBankAccountRequest");
+
         const requestBody = {
           ...eurIbanAccount,
           accountId: testAccountId,

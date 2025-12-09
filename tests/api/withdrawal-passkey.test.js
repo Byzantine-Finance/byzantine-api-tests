@@ -19,6 +19,7 @@ import {
   assertSuccessWithSchema,
   assertError,
   assertHasFields,
+  assertSchema,
 } from "../../utils/assertions.js";
 import txRequest from "../../fixtures/test-data/transactions/tx-passkey.json" assert { type: "json" };
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
@@ -45,7 +46,9 @@ describeWithdrawalPasskey(
             vaultAddr: testVaultAddr,
             amount: txRequest.withdrawAmount,
             destinationCurrency: txRequest.destinationCurrency,
-          };
+          }
+
+          assertSchema(requestBody, "withdrawRequest");
 
           const response = await apiClient.post(
             endpoints.passkey.getWithdrawTransaction(chainId),

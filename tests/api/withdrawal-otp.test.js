@@ -19,6 +19,7 @@ import {
   assertSuccessWithSchema,
   assertError,
   assertHasFields,
+  assertSchema,
 } from "../../utils/assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
 import txRequest from "../../fixtures/test-data/transactions/tx-otp.json" assert { type: "json" };
@@ -45,6 +46,8 @@ describeWithdrawalOtp("Initiate OTP withdrawal Transactions API", () => {
           amount: txRequest.withdrawAmount,
           destinationCurrency: txRequest.destinationCurrency,
         };
+
+        assertSchema(requestBody, "withdrawRequest");
 
         const response = await apiClient.post(
           endpoints.otp.initWithdraw(chainId),

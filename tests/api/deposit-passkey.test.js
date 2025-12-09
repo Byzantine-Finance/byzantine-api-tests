@@ -21,6 +21,7 @@ import {
   assertSuccessWithSchema,
   assertHasFields,
   assertError,
+  assertSchema,
 } from "../../utils/assertions.js";
 import {
   saveBodyToSign,
@@ -50,7 +51,9 @@ describeDepositPasskey("Initiate Passkey Approve and Deposit transactions API", 
         const requestBody = {
           accountId: testAccountId,
           vaultAddr: testVaultAddr,
-        };
+        }
+
+        assertSchema(requestBody, "approveRequest");
 
         const response = await apiClient.post(
           endpoints.passkey.getApproveTransaction(chainId),
@@ -72,7 +75,9 @@ describeDepositPasskey("Initiate Passkey Approve and Deposit transactions API", 
         const requestBody = {
           accountId: testAccountId,
           vaultAddr: testVaultAddr,
-        };
+        }
+
+        assertSchema(requestBody, "approveRequest");
 
         const response = await apiClient.post(
           endpoints.passkey.getApproveTransaction(99999), // Invalid chain ID
@@ -94,7 +99,9 @@ describeDepositPasskey("Initiate Passkey Approve and Deposit transactions API", 
           vaultAddr: testVaultAddr,
           amount: depositAmount,
           sourceCurrency: sourceCurrency,
-        };
+        }
+
+        assertSchema(requestBody, "depositRequest");
 
         const response = await apiClient.post(
           endpoints.passkey.getDepositTransaction(chainId),

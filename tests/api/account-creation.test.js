@@ -16,6 +16,7 @@ import {
   assertSuccessWithSchema,
   assertError,
   assertValidUuid,
+  assertSchema,
 } from "../../utils/assertions.js";
 import {
   saveUserIds,
@@ -37,6 +38,8 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create user with valid data",
       async () => {
+        assertSchema(validUser, "createUserRequest");
+
         const response = await apiClient.post(
           endpoints.create.user,
           validUser,
@@ -72,6 +75,8 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create entity with valid data",
       async () => {
+        assertSchema(validEntity, "createEntityRequest");
+        
         const response = await apiClient.post(
           endpoints.create.entity,
           validEntity,
