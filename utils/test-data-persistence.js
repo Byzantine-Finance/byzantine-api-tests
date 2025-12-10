@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 // Path to the test data file
 const TEST_DATA_FILE = join(
   __dirname,
-  "../fixtures/test-data/generated/generated-ids.json"
+  "../fixtures/test-data/__generated__/generated-ids.json"
 );
 
 /**
@@ -27,11 +27,6 @@ const DEFAULT_TEST_DATA = {
     testAccountId: null,
     testEntityId: null,
     testEntityAccountId: null,
-  },
-  transactions: {
-    testDepositTransactionId: null,
-    testWithdrawTransactionId: null,
-    walletAddress: null,
   },
   // Metadata
   lastUpdated: null,
@@ -71,10 +66,6 @@ function updateTestData(updates, source = "unknown") {
       ...currentData.accounts,
       ...(updates.accounts || {}),
     },
-    transactions: {
-      ...currentData.transactions,
-      ...(updates.transactions || {}),
-    },
     lastUpdatedBy: source,
   };
 
@@ -103,10 +94,6 @@ export function loadTestData() {
       accounts: {
         ...DEFAULT_TEST_DATA.accounts,
         ...(data.accounts || {}),
-      },
-      transactions: {
-        ...DEFAULT_TEST_DATA.transactions,
-        ...(data.transactions || {}),
       },
     };
   } catch (error) {
@@ -166,7 +153,7 @@ export function saveEntityIds(entityId, accountId) {
 export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   const TX_REQUEST_FILE = join(
     __dirname,
-    "../fixtures/test-data/transactions/tx-passkey.json"
+    "../fixtures/test-data/__generated__/tx-passkey.json"
   );
 
   // Validate transaction type
@@ -230,7 +217,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
 export function saveOtpTransactionId(transactionType, transactionId) {
   const TX_OTP_FILE = join(
     __dirname,
-    "../fixtures/test-data/transactions/tx-otp.json"
+    "../fixtures/test-data/__generated__/tx-top.json"
   );
 
   // Validate transaction type
