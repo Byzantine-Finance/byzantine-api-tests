@@ -36,7 +36,7 @@ describeAccounts("Account Data API", () => {
         const response = await apiClient.get(
           endpoints.accounts.getUserDetails(testUserId)
         );
-        assertSuccessWithSchema(response, "userDetails");
+        assertSuccessWithSchema(response, "GetUserResponse");
       },
       getTimeout("api")
     );
@@ -61,7 +61,7 @@ describeAccounts("Account Data API", () => {
         const response = await apiClient.get(
           endpoints.accounts.getEntityDetails(testEntityId)
         );
-        assertSuccessWithSchema(response, "entityDetails");
+        assertSuccessWithSchema(response, "GetEntityResponse");
       },
       getTimeout("api")
     );
@@ -86,7 +86,7 @@ describeAccounts("Account Data API", () => {
         const response = await apiClient.get(
           endpoints.accounts.getBankAccounts(testAccountId)
         );
-        assertSuccessWithArraySchema(response, "bankAccount");
+        assertSuccessWithArraySchema(response, "OffRampAddress");
       },
       getTimeout("api")
     );
@@ -97,7 +97,7 @@ describeAccounts("Account Data API", () => {
         const response = await apiClient.get(
           endpoints.accounts.getBankAccounts(testAccountId, "usd")
         );
-        assertSuccessWithArraySchema(response, "bankAccount");
+        assertSuccessWithArraySchema(response, "OffRampAddress");
       },
       getTimeout("api")
     );

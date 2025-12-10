@@ -38,7 +38,7 @@ describeManagement("Account Management API", () => {
     it(
       "should add US ACH bank account",
       async () => {
-        assertSchema(usAchAccount, "addBankAccountRequest");
+        assertSchema(usAchAccount, "AddBankAccountRequest");
 
         const requestBody = {
           ...usAchAccount,
@@ -51,7 +51,7 @@ describeManagement("Account Management API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "bankAccount");
+        assertSuccessWithSchema(response, "OffRampAddress");
         assertValidUuid(response.data.bank_account_id);
       },
       getTimeout("api")
@@ -60,7 +60,7 @@ describeManagement("Account Management API", () => {
     it(
       "should add EUR IBAN bank account",
       async () => {
-        assertSchema(eurIbanAccount, "addBankAccountRequest");
+        assertSchema(eurIbanAccount, "AddBankAccountRequest");
 
         const requestBody = {
           ...eurIbanAccount,
@@ -73,7 +73,7 @@ describeManagement("Account Management API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "bankAccount");
+        assertSuccessWithSchema(response, "OffRampAddress");
       },
       getTimeout("api")
     );

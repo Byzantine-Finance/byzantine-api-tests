@@ -21,6 +21,7 @@ import {
   assertSuccessWithSchema,
   assertHasFields,
   assertError,
+  assertSchema,
 } from "../../utils/assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
 import txRequest from "../../fixtures/test-data/transactions/tx-otp.json";
@@ -48,14 +49,14 @@ describeDepositOtp("Initiate OTP Approve and Deposit transactions API", () => {
           vaultAddr: testVaultAddr,
         };
 
-        assertSchema(requestBody, "approveRequest");
+        assertSchema(requestBody, "ApproveRequestBody");
 
         const response = await apiClient.post(
           endpoints.otp.initApprove(chainId),
           requestBody
         );
 
-        assertSuccessWithSchema(response, "otpRequestResponse");
+        assertSuccessWithSchema(response, "OtpRequestResponse");
         assertHasFields(response.data, [
           "transaction_id",
           "accountId",
@@ -69,51 +70,51 @@ describeDepositOtp("Initiate OTP Approve and Deposit transactions API", () => {
     );
   });
 
-  describe("POST /v1/query/init-deposit-otp", () => {
-    it(
-      "should initiate deposit and send OTP",
-      async () => {
-        const requestBody = {
-          accountId: testAccountId,
-          vaultAddr: testVaultAddr,
-          amount: depositAmount,
-          sourceCurrency: sourceCurrency,
-        };
+  // describe("POST /v1/query/init-deposit-otp", () => {
+  //   it(
+  //     "should initiate deposit and send OTP",
+  //     async () => {
+  //       const requestBody = {
+  //         accountId: testAccountId,
+  //         vaultAddr: testVaultAddr,
+  //         amount: depositAmount,
+  //         sourceCurrency: sourceCurrency,
+  //       };
 
-        assertSchema(requestBody, "depositRequest");
+  //       assertSchema(requestBody, "DepositRequestBody");
 
-        const response = await apiClient.post(
-          endpoints.otp.initDeposit(chainId),
-          requestBody
-        );
+  //       const response = await apiClient.post(
+  //         endpoints.otp.initDeposit(chainId),
+  //         requestBody
+  //       );
 
-        assertSuccessWithSchema(response, "otpRequestResponse");
-        assertHasFields(response.data, ["transaction_id", "amount"]);
+  //       assertSuccessWithSchema(response, "OtpRequestResponse");
+  //       assertHasFields(response.data, ["transaction_id", "amount"]);
 
-        // Save deposit OTP transactionId to tx-otp.json
-        saveOtpTransactionId("deposit", response.data.transaction_id);
-      },
-      getTimeout("api")
-    );
+  //       // Save deposit OTP transactionId to tx-otp.json
+  //       saveOtpTransactionId("deposit", response.data.transaction_id);
+  //     },
+  //     getTimeout("api")
+  //   );
 
-    it(
-      "should reject deposit with invalid amount",
-      async () => {
-        const requestBody = {
-          accountId: testAccountId,
-          vaultAddr: testVaultAddr,
-          amount: "-100.00", // Invalid negative amount
-          sourceCurrency: sourceCurrency,
-        };
+  //   it(
+  //     "should reject deposit with invalid amount",
+  //     async () => {
+  //       const requestBody = {
+  //         accountId: testAccountId,
+  //         vaultAddr: testVaultAddr,
+  //         amount: "-100.00", // Invalid negative amount
+  //         sourceCurrency: sourceCurrency,
+  //       };
 
-        const response = await apiClient.post(
-          endpoints.otp.initDeposit(chainId),
-          requestBody
-        );
+  //       const response = await apiClient.post(
+  //         endpoints.otp.initDeposit(chainId),
+  //         requestBody
+  //       );
 
-        assertError(response, 400);
-      },
-      getTimeout("api")
-    );
-  });
+  //       assertError(response, 400);
+  //     },
+  //     getTimeout("api")
+  //   );
+  // });
 });

@@ -38,7 +38,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create user with valid data",
       async () => {
-        assertSchema(validUser, "createUserRequest");
+        assertSchema(validUser, "CreateUserRequest");
 
         const response = await apiClient.post(
           endpoints.create.user,
@@ -46,7 +46,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "createUserResponse", 201);
+        assertSuccessWithSchema(response, "CreateUserResponse", 201);
         assertValidUuid(response.data.userId);
         assertValidUuid(response.data.accountId);
 
@@ -75,7 +75,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create entity with valid data",
       async () => {
-        assertSchema(validEntity, "createEntityRequest");
+        assertSchema(validEntity, "CreateEntityRequest");
         
         const response = await apiClient.post(
           endpoints.create.entity,
@@ -83,7 +83,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "createEntityResponse", 201);
+        assertSuccessWithSchema(response, "CreateEntityResponse", 201);
         assertValidUuid(response.data.entityId);
         assertValidUuid(response.data.accountId);
 
@@ -116,7 +116,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           redirectUri: "https://example.com/callback",
         });
 
-        assertSuccessWithSchema(response, "tosLink");
+        assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
       },
       getTimeout("api")
     );
@@ -126,7 +126,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
       async () => {
         const response = await apiClient.post(endpoints.create.getTosLink, {});
 
-        assertSuccessWithSchema(response, "tosLink");
+        assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
       },
       getTimeout("api")
     );

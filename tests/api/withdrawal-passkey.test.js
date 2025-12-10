@@ -48,14 +48,14 @@ describeWithdrawalPasskey(
             destinationCurrency: txRequest.destinationCurrency,
           }
 
-          assertSchema(requestBody, "withdrawRequest");
+          assertSchema(requestBody, "WithdrawRequestBody");
 
           const response = await apiClient.post(
             endpoints.passkey.getWithdrawTransaction(chainId),
             requestBody
           );
 
-          assertSuccessWithSchema(response, "passkeyTxRequestResponse");
+          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
           // Save withdraw bodyToSign and transactionId to tx-passkey.json

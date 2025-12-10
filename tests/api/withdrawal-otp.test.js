@@ -47,14 +47,14 @@ describeWithdrawalOtp("Initiate OTP withdrawal Transactions API", () => {
           destinationCurrency: txRequest.destinationCurrency,
         };
 
-        assertSchema(requestBody, "withdrawRequest");
+        assertSchema(requestBody, "WithdrawRequestBody");
 
         const response = await apiClient.post(
           endpoints.otp.initWithdraw(chainId),
           requestBody
         );
 
-        assertSuccessWithSchema(response, "otpRequestResponse");
+        assertSuccessWithSchema(response, "OtpRequestResponse");
         assertHasFields(response.data, ["transaction_id"]);
 
         // Save withdraw OTP transactionId to tx-otp.json

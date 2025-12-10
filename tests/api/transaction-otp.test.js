@@ -51,7 +51,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
           otpCode: otpCode.trim(),
         };
 
-        assertSchema(requestBody, "sendOtpTransactionRequest");
+        assertSchema(requestBody, "SendOtpTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.otp.sendTransaction(chainId),
@@ -59,7 +59,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "sendTransactionResponse");
+        assertSuccessWithSchema(response, "SendTransactionResponseBody");
       },
       getTimeout("api")
     );
@@ -79,7 +79,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
           otpCode: otpCode.trim(),
         };
 
-        assertSchema(requestBody, "sendOtpTransactionRequest");
+        assertSchema(requestBody, "SendOtpTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.otp.sendTransaction(chainId),
@@ -87,7 +87,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "sendTransactionResponse");
+        assertSuccessWithSchema(response, "SendTransactionResponseBody");
       },
       getTimeout("api")
     );

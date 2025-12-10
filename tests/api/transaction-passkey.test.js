@@ -50,7 +50,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           webAuthnStamp: approveStamp,
         };
 
-        assertSchema(requestBody, "sendPasskeyTransactionRequest");
+        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),
@@ -58,7 +58,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "sendTransactionResponse");
+        assertSuccessWithSchema(response, "SendTransactionResponseBody");
       },
       getTimeout("api")
     );
@@ -74,7 +74,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           webAuthnStamp: depositStamp,
         };
 
-        assertSchema(requestBody, "sendPasskeyTransactionRequest");
+        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),
@@ -82,7 +82,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "sendTransactionResponse");
+        assertSuccessWithSchema(response, "SendTransactionResponseBody");
       },
       getTimeout("api")
     );
@@ -98,7 +98,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           webAuthnStamp: withdrawStamp,
         };
 
-        assertSchema(requestBody, "sendPasskeyTransactionRequest");
+        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),
@@ -106,7 +106,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "sendTransactionResponse");
+        assertSuccessWithSchema(response, "SendTransactionResponseBody");
       },
       getTimeout("api")
     );

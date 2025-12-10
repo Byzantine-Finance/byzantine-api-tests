@@ -27,7 +27,7 @@ describe("Health API - Direct HTTP", () => {
     "should return valid health status with schema validation",
     async () => {
       const response = await apiClient.get(endpoints.health);
-      assertSuccessWithSchema(response, "health");
+      assertSuccessWithSchema(response, "HealthResponse");
     },
     getTimeout("api")
   );

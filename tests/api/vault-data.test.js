@@ -37,7 +37,7 @@ describeVaults("Vaults API", () => {
       "should return vaults matching schema",
       async () => {
         const response = await apiClient.get(endpoints.vaults.top);
-        assertSuccessWithArraySchema(response, "topVault");
+        assertSuccessWithArraySchema(response, "TopVault");
       },
       getTimeout("api")
     );
@@ -70,7 +70,7 @@ describeVaults("Vaults API", () => {
         const apyResponse = await apiClient.get(
           endpoints.vaults.getApy(vaultId)
         );
-        assertSuccessWithSchema(apyResponse, "vaultApy");
+        assertSuccessWithSchema(apyResponse, "ApyResponse");
       },
       getTimeout("api")
     );
@@ -88,7 +88,7 @@ describeVaults("Vaults API", () => {
         const apyResponse = await apiClient.get(
           endpoints.vaults.getApy(vaultId, "daily")
         );
-        assertSuccessWithSchema(apyResponse, "vaultApy");
+        assertSuccessWithSchema(apyResponse, "ApyResponse");
       },
       getTimeout("api")
     );

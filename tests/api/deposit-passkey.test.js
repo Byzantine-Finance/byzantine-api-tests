@@ -53,14 +53,14 @@ describeDepositPasskey("Initiate Passkey Approve and Deposit transactions API", 
           vaultAddr: testVaultAddr,
         }
 
-        assertSchema(requestBody, "approveRequest");
+        assertSchema(requestBody, "ApproveRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.getApproveTransaction(chainId),
           requestBody
         );
 
-        assertSuccessWithSchema(response, "passkeyTxRequestResponse");
+        assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
         assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
         // Save approve bodyToSign and transactionId to tx-passkey.json
@@ -77,7 +77,7 @@ describeDepositPasskey("Initiate Passkey Approve and Deposit transactions API", 
           vaultAddr: testVaultAddr,
         }
 
-        assertSchema(requestBody, "approveRequest");
+        assertSchema(requestBody, "ApproveRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.getApproveTransaction(99999), // Invalid chain ID
@@ -101,14 +101,14 @@ describeDepositPasskey("Initiate Passkey Approve and Deposit transactions API", 
           sourceCurrency: sourceCurrency,
         }
 
-        assertSchema(requestBody, "depositRequest");
+        assertSchema(requestBody, "DepositRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.getDepositTransaction(chainId),
           requestBody
         );
 
-        assertSuccessWithSchema(response, "passkeyTxRequestResponse");
+        assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
         assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
         // Save deposit bodyToSign and transactionId to tx-passkey.json

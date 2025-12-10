@@ -9,7 +9,7 @@
 import { describe, it } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
-import { getTimeout, TEST_DATA } from "../../config/test.config.js";
+import { getTimeout, TEST_DATA, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
   assertSuccessWithArraySchema,
@@ -17,7 +17,12 @@ import {
 } from "../../utils/assertions.js";
 import { txRequest } from "../../fixtures/test-data/transactions/tx-otp.json";
 
-describeTransactionOtp("Send OTP Transactions API", () => {
+// Skip if account tests are disabled (these tests need test data)
+const describeTransactionData = FEATURE_FLAGS.enableAccountTests
+  ? describe
+  : describe.skip;
+
+describeTransactionData("Transaction Data API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testApproveTransactionId = txRequest.approve.transactionId;
 
@@ -29,7 +34,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
           endpoints.transactions.getById(testApproveTransactionId)
         );
 
-        assertSuccessWithSchema(response, "transaction");
+        assertSuccessWithSchema(response, "TurnkeyTransaction");
       },
       getTimeout("api")
     );
@@ -56,7 +61,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
           endpoints.transactions.getByAccountId(testAccountId)
         );
 
-        assertSuccessWithArraySchema(response, "transaction");
+        assertSuccessWithArraySchema(response, "TurnkeyTransaction");
       },
       getTimeout("api")
     );
