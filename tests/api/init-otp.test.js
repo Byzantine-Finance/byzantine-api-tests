@@ -1,0 +1,152 @@
+/**
+ * OTP deposit Transactions API Tests, what are tested:
+ * - query/init-approve-otp
+ * - query/init-deposit-otp
+ *
+ * Note: OTP tests require receiving real OTP codes via email
+ * Enable with: ENABLE_OTP_TESTS=true ENABLE_AUTH_TESTS=true
+ */
+
+import { describe, it } from "vitest";
+import { apiClient } from "../../utils/api-client.js";
+import { endpoints } from "../../config/endpoints.js";
+import {
+  getTimeout,
+  FEATURE_FLAGS,
+  TEST_DATA,
+} from "../../config/test.config.js";
+import {
+  assertSuccessWithSchema,
+  assertHasFields,
+  assertError,
+  assertSchema,
+} from "../../utils/assertions.js";
+import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
+import txRequest from "../../fixtures/test-data/__generated__/tx-otp.json";
+
+// Skip if OTP tests are disabled
+const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
+const describeInitApproveOtp = FEATURE_FLAGS.enableOtpInitApproveTests
+  ? describe
+  : describe.skip;
+const describeInitDepositOtp = FEATURE_FLAGS.enableOtpInitDepositTests
+  ? describe
+  : describe.skip;
+const describeInitWithdrawOtp = FEATURE_FLAGS.enableOtpInitWithdrawTests
+  ? describe
+  : describe.skip;
+
+describeInitOtp("Initiate OTP transactions API", () => {
+  const testAccountId = TEST_DATA.accounts.testAccountId;
+  const testVaultAddr = TEST_DATA.vaults.selected.address;
+  const chainId = TEST_DATA.vaults.selected.chainId;
+  const depositAmount = txRequest.depositAmount;
+  const sourceCurrency = txRequest.sourceCurrency;
+
+  describeInitApproveOtp("POST /v1/query/init-approve-otp", () => {
+    it(
+      "should initiate approve and send OTP",
+      async () => {
+        const requestBody = {
+          accountId: testAccountId,
+          vaultAddr: testVaultAddr,
+        };
+
+        assertSchema(requestBody, "ApproveRequestBody");
+
+        const response = await apiClient.post(
+          endpoints.otp.initApprove(chainId),
+          requestBody
+        );
+
+        assertSuccessWithSchema(response, "OtpRequestResponse");
+        assertHasFields(response.data, [
+          "transaction_id",
+          "accountId",
+          "vaultAddr",
+        ]);
+
+        // Save approve OTP transactionId to tx-otp.json
+        saveOtpTransactionId("approve", response.data.transaction_id);
+      },
+      getTimeout("api")
+    );
+  });
+
+  describeInitDepositOtp("POST /v1/query/init-deposit-otp", () => {
+    it(
+      "should initiate deposit and send OTP",
+      async () => {
+        const requestBody = {
+          accountId: testAccountId,
+          vaultAddr: testVaultAddr,
+          amount: depositAmount,
+          sourceCurrency: sourceCurrency,
+        };
+
+        assertSchema(requestBody, "DepositRequestBody");
+
+        const response = await apiClient.post(
+          endpoints.otp.initDeposit(chainId),
+          requestBody
+        );
+
+        assertSuccessWithSchema(response, "OtpRequestResponse");
+        assertHasFields(response.data, ["transaction_id", "amount"]);
+
+        // Save deposit OTP transactionId to tx-otp.json
+        saveOtpTransactionId("deposit", response.data.transaction_id);
+      },
+      getTimeout("api")
+    );
+
+    it(
+      "should reject deposit with invalid amount",
+      async () => {
+        const requestBody = {
+          accountId: testAccountId,
+          vaultAddr: testVaultAddr,
+          amount: "-100.00", // Invalid negative amount
+          sourceCurrency: sourceCurrency,
+        };
+
+        const response = await apiClient.post(
+          endpoints.otp.initDeposit(chainId),
+          requestBody
+        );
+
+        assertError(response, 400);
+      },
+      getTimeout("api")
+    );
+  });
+
+  // Withdrawal using OTP
+  describeInitWithdrawOtp("POST /v1/query/init-withdraw-otp", () => {
+    it(
+      "should initiate withdraw and send OTP",
+      async () => {
+        const requestBody = {
+          accountId: testAccountId,
+          vaultAddr: testVaultAddr,
+          amount: txRequest.withdrawAmount,
+          destinationCurrency: txRequest.destinationCurrency,
+        };
+
+        assertSchema(requestBody, "WithdrawRequestBody");
+
+        const response = await apiClient.post(
+          endpoints.otp.initWithdraw(chainId),
+          requestBody
+        );
+
+        assertSuccessWithSchema(response, "OtpRequestResponse");
+        assertHasFields(response.data, ["transaction_id"]);
+
+        // Save withdraw OTP transactionId to tx-otp.json
+        saveOtpTransactionId("withdraw", response.data.transaction_id);
+      },
+      getTimeout("api")
+    );
+  });
+});

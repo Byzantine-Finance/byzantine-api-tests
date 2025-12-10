@@ -1,12 +1,9 @@
 /**
- * Transactions API Tests, what are tested:
+ * OTP transactions API Tests, what are tested:
  * - submit/send-transaction-otp
- * - submit/send-transaction-passkey
- * - query/get-transaction
- * - query/get-transactions
  */
 
-import { describe, it } from "vitest";
+import { describe, it, beforeAll } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import {
@@ -16,70 +13,72 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertSuccessWithArraySchema,
   assertError,
   assertSchema,
 } from "../../utils/assertions.js";
-import { txRequest } from "../../fixtures/test-data/transactions/tx-passkey.json";
+import { txRequest } from "../../fixtures/test-data/__generated__/tx-passkey.json";
 
 // Skip if OTP and Passkey tests are disabled
-const describeTransactionOtp =
-  FEATURE_FLAGS.enableOtpTests &&
-  FEATURE_FLAGS.enableAuthenticatedTests
-    ? describe
-    : describe.skip;
+const describeTransactionOtp = FEATURE_FLAGS.enableOtpTests
+  ? describe
+  : describe.skip;
 
 describeTransactionOtp("Send OTP Transactions API", () => {
-  const testAccountId = TEST_DATA.accounts.testAccountId;
-  const testApproveTransactionId = txRequest.approve.transactionId;
-  const testDepositTransactionId = txRequest.deposit.transactionId;
   const chainId = TEST_DATA.vaults.selected.chainId;
 
+  // Define all possible tests with their feature flags
+  const allTransactionTests = [
+    {
+      type: "Approve",
+      transactionId: txRequest.approve.transactionId,
+      otpEnvVar: "OTP_APPROVE",
+      flag: "enableOtpApproveTxTests",
+    },
+    {
+      type: "Deposit",
+      transactionId: txRequest.deposit.transactionId,
+      otpEnvVar: "OTP_DEPOSIT",
+      flag: "enableOtpDepositTxTests",
+    },
+    {
+      type: "Withdraw",
+      transactionId: txRequest.withdraw.transactionId,
+      otpEnvVar: "OTP_WITHDRAW",
+      flag: "enableOtpWithdrawTxTests",
+    },
+  ];
+
+  // Filter tests based on feature flags in test.config.js
+  const transactionTests = allTransactionTests.filter(
+    (test) => FEATURE_FLAGS[test.flag]
+  );
+
+  // Validate schemas before all tests (only for enabled tests)
+  beforeAll(() => {
+    transactionTests.forEach((test) => {
+      const requestBody = {
+        transactionId: test.transactionId,
+        otpCode: "000000",
+      };
+      assertSchema(requestBody, "SendOtpTransactionRequestBody");
+    });
+  });
+
   describe("POST /v1/submit/send-transaction-otp", () => {
-    it(
-      "should submit Approve transaction with OTP code",
-      async () => {
+    it.each(transactionTests)(
+      "should submit $type transaction with OTP code",
+      async ({ transactionId, otpEnvVar }) => {
         // Get OTP code from environment variable
-        const otpCode = process.env.OTP_APPROVE;
+        const otpCode = process.env[otpEnvVar];
 
         if (!otpCode || !otpCode.trim()) {
-          throw new Error("\n❌ OTP code required!\n");
+          throw new Error(`\n❌ OTP code required for ${otpEnvVar}!\n`);
         }
 
         const requestBody = {
-          transactionId: testApproveTransactionId,
+          transactionId: transactionId,
           otpCode: otpCode.trim(),
         };
-
-        assertSchema(requestBody, "SendOtpTransactionRequestBody");
-
-        const response = await apiClient.post(
-          endpoints.otp.sendTransaction(chainId),
-          requestBody,
-          { authenticated: true }
-        );
-
-        assertSuccessWithSchema(response, "SendTransactionResponseBody");
-      },
-      getTimeout("api")
-    );
-
-    it(
-      "should submit Deposit transaction with OTP code",
-      async () => {
-        // Get OTP code from environment variable
-        const otpCode = process.env.OTP_DEPOSIT;
-
-        if (!otpCode || !otpCode.trim()) {
-          throw new Error("\n❌ OTP code required!\n");
-        }
-
-        const requestBody = {
-          transactionId: testDepositTransactionId,
-          otpCode: otpCode.trim(),
-        };
-
-        assertSchema(requestBody, "SendOtpTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.otp.sendTransaction(chainId),
@@ -96,7 +95,7 @@ describeTransactionOtp("Send OTP Transactions API", () => {
       "should reject invalid OTP code",
       async () => {
         const requestBody = {
-          transactionId: testApproveTransactionId,
+          transactionId: txRequest.approve.transactionId,
           otpCode: "000000", // Invalid OTP
         };
 

@@ -1,12 +1,9 @@
 /**
- * Transactions API Tests, what are tested:
- * - submit/send-transaction-otp
+ * Passkey transactions API Tests, what are tested:
  * - submit/send-transaction-passkey
- * - query/get-transaction
- * - query/get-transactions
  */
 
-import { describe, it } from "vitest";
+import { describe, it, beforeAll } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import {
@@ -16,89 +13,69 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertSuccessWithArraySchema,
-  assertError,
   assertSchema,
 } from "../../utils/assertions.js";
-import { txRequest } from "../../fixtures/test-data/transactions/tx-passkey.json";
+import { txRequest } from "../../fixtures/test-data/__generated__/tx-passkey.json";
 
 // Skip if OTP and Passkey tests are disabled
-const describeTransactionPasskey =
-  FEATURE_FLAGS.enablePasskeyTests && FEATURE_FLAGS.enableAuthenticatedTests
-    ? describe
-    : describe.skip;
+const describeTransactionPasskey = FEATURE_FLAGS.enablePasskeyTests
+  ? describe
+  : describe.skip;
 
 describeTransactionPasskey("Send Passkey Transactions API", () => {
-  const testApproveBody = txRequest.approve.bodyToSign;
-  const testDepositBody = txRequest.deposit.bodyToSign;
-  const testWithdrawBody = txRequest.withdraw.bodyToSign;
-  const testApproveTransactionId = txRequest.approve.transactionId;
-  const testDepositTransactionId = txRequest.deposit.transactionId;
-  const testWithdrawTransactionId = txRequest.withdraw.transactionId;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const approveStamp = txRequest.approve.webAuthnStamp;
-  const depositStamp = txRequest.deposit.webAuthnStamp;
-  const withdrawStamp = txRequest.withdraw.webAuthnStamp;
 
-  describe("POST /v1/submit/send-transaction-passkey", () => {
-    it(
-      "should submit Approve transaction with Patsskey",
-      async () => {
-        const requestBody = {
-          signedBody: testApproveBody,
-          transactionId: testApproveTransactionId,
-          webAuthnStamp: approveStamp,
-        };
+  // Organize test data by transaction type
+  const allTransactionTests = [
+    {
+      type: "Approve",
+      bodyToSign: txRequest.approve.bodyToSign,
+      transactionId: txRequest.approve.transactionId,
+      webAuthnStamp: txRequest.approve.webAuthnStamp,
+      flag: "enablePasskeyApproveTxTests",
+    },
+    {
+      type: "Deposit",
+      bodyToSign: txRequest.deposit.bodyToSign,
+      transactionId: txRequest.deposit.transactionId,
+      webAuthnStamp: txRequest.deposit.webAuthnStamp,
+      flag: "enablePasskeyDepositTxTests",
+    },
+    {
+      type: "Withdrawal",
+      bodyToSign: txRequest.withdraw.bodyToSign,
+      transactionId: txRequest.withdraw.transactionId,
+      webAuthnStamp: txRequest.withdraw.webAuthnStamp,
+      flag: "enablePasskeyWithdrawTxTests",
+    },
+  ];
 
-        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
+  // Filter tests based on feature flags in test.config.js
+  const transactionTests = allTransactionTests.filter(
+    (test) => FEATURE_FLAGS[test.flag]
+  );
 
-        const response = await apiClient.post(
-          endpoints.passkey.sendTransaction(chainId),
-          requestBody,
-          { authenticated: true }
-        );
-
-        assertSuccessWithSchema(response, "SendTransactionResponseBody");
-      },
-      getTimeout("api")
-    );
+  // Validate schemas before all tests
+  beforeAll(() => {
+    transactionTests.forEach((test) => {
+      const requestBody = {
+        signedBody: test.bodyToSign,
+        transactionId: test.transactionId,
+        webAuthnStamp: test.webAuthnStamp,
+      };
+      assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
+    });
   });
 
   describe("POST /v1/submit/send-transaction-passkey", () => {
-    it(
-      "should submit Deposit transaction with Passkey",
-      async () => {
+    it.each(transactionTests)(
+      "should submit $type transaction with Passkey",
+      async ({ bodyToSign, transactionId, webAuthnStamp }) => {
         const requestBody = {
-          signedBody: testDepositBody,
-          transactionId: testDepositTransactionId,
-          webAuthnStamp: depositStamp,
+          signedBody: bodyToSign,
+          transactionId: transactionId,
+          webAuthnStamp: webAuthnStamp,
         };
-
-        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
-
-        const response = await apiClient.post(
-          endpoints.passkey.sendTransaction(chainId),
-          requestBody,
-          { authenticated: true }
-        );
-
-        assertSuccessWithSchema(response, "SendTransactionResponseBody");
-      },
-      getTimeout("api")
-    );
-  });
-
-  describe("POST /v1/submit/send-transaction-passkey", () => {
-    it(
-      "should submit Withdrawal transaction with Passkey",
-      async () => {
-        const requestBody = {
-          signedBody: testWithdrawBody,
-          transactionId: testWithdrawTransactionId,
-          webAuthnStamp: withdrawStamp,
-        };
-
-        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
 
         const response = await apiClient.post(
           endpoints.passkey.sendTransaction(chainId),

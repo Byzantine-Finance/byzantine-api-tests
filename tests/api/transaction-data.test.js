@@ -1,7 +1,5 @@
 /**
- * Transactions API Tests, what are tested:
- * - submit/send-transaction-otp
- * - submit/send-transaction-passkey
+ * Transaction Data API Tests, what are tested:
  * - query/get-transaction
  * - query/get-transactions
  */
@@ -9,13 +7,17 @@
 import { describe, it } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
-import { getTimeout, TEST_DATA, FEATURE_FLAGS } from "../../config/test.config.js";
+import {
+  getTimeout,
+  TEST_DATA,
+  FEATURE_FLAGS,
+} from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
   assertSuccessWithArraySchema,
   assertError,
 } from "../../utils/assertions.js";
-import { txRequest } from "../../fixtures/test-data/transactions/tx-otp.json";
+import { txRequest } from "../../fixtures/test-data/__generated__/tx-top.json";
 
 // Skip if account tests are disabled (these tests need test data)
 const describeTransactionData = FEATURE_FLAGS.enableAccountTests

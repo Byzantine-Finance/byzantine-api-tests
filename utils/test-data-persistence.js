@@ -217,7 +217,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
 export function saveOtpTransactionId(transactionType, transactionId) {
   const TX_OTP_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/tx-top.json"
+    "../fixtures/test-data/__generated__/tx-otp.json"
   );
 
   // Validate transaction type

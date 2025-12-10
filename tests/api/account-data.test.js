@@ -5,7 +5,7 @@
  * - query/get-bank-accounts
  */
 
-import { describe, it, beforeAll } from "vitest";
+import { describe, it } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import {
@@ -28,6 +28,7 @@ describeAccounts("Account Data API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testUserId = TEST_DATA.accounts.testUserId;
   const testEntityId = TEST_DATA.accounts.testEntityId;
+  const fakeId = "00000000-0000-0000-0000-000000000000";
 
   describe("GET /v1/query/get-user-details", () => {
     it(
@@ -44,9 +45,8 @@ describeAccounts("Account Data API", () => {
     it(
       "should return 404 for non-existent user",
       async () => {
-        const fakeUserId = "00000000-0000-0000-0000-000000000000";
         const response = await apiClient.get(
-          endpoints.accounts.getUserDetails(fakeUserId)
+          endpoints.accounts.getUserDetails(fakeId)
         );
         assertError(response, 404);
       },
@@ -69,9 +69,8 @@ describeAccounts("Account Data API", () => {
     it(
       "should return 404 for non-existent entity",
       async () => {
-        const fakeEntityId = "00000000-0000-0000-0000-000000000000";
         const response = await apiClient.get(
-          endpoints.accounts.getEntityDetails(fakeEntityId)
+          endpoints.accounts.getEntityDetails(fakeId)
         );
         assertError(response, 404);
       },

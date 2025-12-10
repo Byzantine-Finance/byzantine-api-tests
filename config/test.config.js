@@ -85,9 +85,7 @@ export const TEST_DATA = {
 
   transactions: {
     // Test transaction IDs
-    testTransactionId:
-      generatedTestData.transactions.testTransactionId ||
-      process.env.TEST_TRANSACTION_ID,
+    testTransactionId: process.env.TEST_TRANSACTION_ID || null,
   },
 };
 
@@ -99,22 +97,30 @@ export const FEATURE_FLAGS = {
   enableVaultTests: true,
   enableHealthTests: true,
 
-  // Tests that require authentication
-  enableAuthenticatedTests: process.env.ENABLE_AUTH_TESTS === "true",
-
   // Tests that modify data (POST/PUT/DELETE) - only in dev/staging
   enableWriteTests:
     !isProduction() && process.env.ENABLE_WRITE_TESTS === "true",
 
   // Tests that require specific test data to exist
   enableAccountTests: Boolean(TEST_DATA.accounts.testUserId),
-  enableTransactionTests: Boolean(TEST_DATA.transactions.testTransactionId),
 
-  // WebAuthn/Passkey tests (require browser environment)
+  // WebAuthn/Passkey tests
   enablePasskeyTests: process.env.ENABLE_PASSKEY_TESTS === "true",
+  enablePasskeyInitApproveTests: process.env.ENABLE_PASSKEY_INIT_APPROVE_TESTS === "true",
+  enablePasskeyInitDepositTests: process.env.ENABLE_PASSKEY_INIT_DEPOSIT_TESTS === "true",
+  enablePasskeyInitWithdrawTests: process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
+  enablePasskeyApproveTxTests: process.env.ENABLE_PASSKEY_APPROVE_TX_TESTS === "true",
+  enablePasskeyDepositTxTests: process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true",
+  enablePasskeyWithdrawTxTests: process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
 
   // OTP tests (require real OTP codes)
   enableOtpTests: process.env.ENABLE_OTP_TESTS === "true",
+  enableOtpInitApproveTests: process.env.ENABLE_OTP_INIT_APPROVE_TESTS === "true",
+  enableOtpInitDepositTests: process.env.ENABLE_OTP_INIT_DEPOSIT_TESTS === "true",
+  enableOtpInitWithdrawTests: process.env.ENABLE_OTP_INIT_WITHDRAW_TESTS === "true",
+  enableOtpApproveTxTests: process.env.ENABLE_OTP_APPROVE_TX_TESTS === "true",
+  enableOtpDepositTxTests: process.env.ENABLE_OTP_DEPOSIT_TX_TESTS === "true",
+  enableOtpWithdrawTxTests: process.env.ENABLE_OTP_WITHDRAW_TX_TESTS === "true",
 };
 
 /**
@@ -198,8 +204,9 @@ export function printTestConfig() {
 ║ Feature Flags:                         ║
 ║ - Health Tests: ${String(FEATURE_FLAGS.enableHealthTests).padEnd(22)} ║
 ║ - Vault Tests: ${String(FEATURE_FLAGS.enableVaultTests).padEnd(23)} ║
-║ - Auth Tests: ${String(FEATURE_FLAGS.enableAuthenticatedTests).padEnd(24)} ║
 ║ - Write Tests: ${String(FEATURE_FLAGS.enableWriteTests).padEnd(23)} ║
+║ - Passkey Tests: ${String(FEATURE_FLAGS.enablePasskeyTests).padEnd(21)} ║
+║ - OTP Tests: ${String(FEATURE_FLAGS.enableOtpTests).padEnd(25)} ║
 ╚════════════════════════════════════════╝
   `);
 }

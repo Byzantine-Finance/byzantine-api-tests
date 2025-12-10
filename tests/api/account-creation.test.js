@@ -28,18 +28,20 @@ import validUser from "../../fixtures/test-data/users/valid-user.json" assert { 
 import validEntity from "../../fixtures/test-data/entities/valid-entity.json" assert { type: "json" };
 
 // Skip if auth/write tests are disabled
-const describeAccountCreation =
-  FEATURE_FLAGS.enableAuthenticatedTests && FEATURE_FLAGS.enableWriteTests
-    ? describe
-    : describe.skip;
+const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
+  ? describe
+  : describe.skip;
 
 describeAccountCreation("Byzantine Account Creation API", () => {
+  beforeAll(async () => {
+    assertSchema(validUser, "CreateUserRequest");
+    assertSchema(validEntity, "CreateEntityRequest");
+  });
+
   describe("POST /v1/submit/create-user", () => {
     it(
       "should create user with valid data",
       async () => {
-        assertSchema(validUser, "CreateUserRequest");
-
         const response = await apiClient.post(
           endpoints.create.user,
           validUser,
@@ -75,8 +77,6 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create entity with valid data",
       async () => {
-        assertSchema(validEntity, "CreateEntityRequest");
-        
         const response = await apiClient.post(
           endpoints.create.entity,
           validEntity,
