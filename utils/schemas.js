@@ -1,385 +1,124 @@
 /**
- * API Response Schemas
- * Expected data structures from Byzantine API
+ * API Schema Validation Utilities
  *
- * These schemas are used for contract validation, not mocking.
- * They define what we EXPECT from the API responses.
+ * This module provides runtime validation functions using JSON Schema definitions generated-schemas.json.
+ *
+ * Unlike scripts/validate-schemas.js which validates the schemas themselves at build time,
+ * this module is used at runtime to validate actual API request/response data against
+ * the generated schemas using Ajv.
+ *
+ * Should use PascalCase for schema names same as the OpenAPI component names.
  */
 
+import { ajv, prepareSchema } from "./ajv.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load generated schemas from OpenAPI
+let generatedSchemas = {};
+
+try {
+  const schemasPath = path.join(
+    __dirname,
+    "..",
+    "fixtures",
+    "__generated__",
+    "generated-schemas.json"
+  );
+
+  if (fs.existsSync(schemasPath)) {
+    generatedSchemas = JSON.parse(fs.readFileSync(schemasPath, "utf8"));
+
+    // Add all schemas to Ajv's schema registry so $ref can be resolved
+    // Ajv needs schemas registered with their $ref paths
+    for (const [schemaName, schema] of Object.entries(generatedSchemas)) {
+      if (schema && typeof schema === "object") {
+        // Register schema with the path that $ref uses
+        ajv.addSchema(
+          prepareSchema(schema),
+          `#/components/schemas/${schemaName}`
+        );
+      }
+    }
+  } else {
+    console.warn(
+      '⚠️  Generated schemas file not found. Run "npm run generate-schemas" to generate schemas from OpenAPI'
+    );
+  }
+} catch (error) {
+  console.warn("⚠️  Could not load generated schemas:", error.message);
+  console.warn(
+    '   Run "npm run generate-schemas" to generate schemas from OpenAPI'
+  );
+}
+
 /**
- * Schema definitions
- * Format: { fieldName: { type: 'string'|'number'|'boolean'|'object'|'array', required: boolean, nullable: boolean } }
+ * Get JSON Schema for a given schema name
+ * Schema names should match OpenAPI component names (PascalCase)
+ * @param {string} schemaName - OpenAPI schema name (PascalCase)
+ * @returns {object|null} JSON Schema or null if not found
  */
+function getJsonSchema(schemaName) {
+  if (generatedSchemas[schemaName]) {
+    return generatedSchemas[schemaName];
+  }
 
-export const schemas = {
-  /**
-   * RESPONSE SCHEMAS
-   */
-
-  // ============================================
-  // Health Check
-  // ============================================
-  health: {
-    status: { type: "string", required: true },
-  },
-
-  // ============================================
-  // Vault Schemas
-  // ============================================
-  topVault: {
-    vault_address: { type: "string", required: true },
-    chain_id: { type: "number", required: true },
-    is_active: { type: "boolean", required: true },
-  },
-
-  vaultApy: {
-    vault_id: { type: "string", required: true },
-    daily_apy: { type: "number", required: false, nullable: true },
-    weekly_apy: { type: "number", required: false, nullable: true },
-    monthly_apy: { type: "number", required: false, nullable: true },
-    yearly_apy: { type: "number", required: false, nullable: true },
-    daily_period_days: { type: "number", required: false, nullable: true },
-    weekly_period_days: { type: "number", required: false, nullable: true },
-    monthly_period_days: { type: "number", required: false, nullable: true },
-    yearly_period_days: { type: "number", required: false, nullable: true },
-    latest_share_price: { type: "string", required: true },
-    calculated_at: { type: "string", required: true },
-  },
-
-  vaultHistoryDataPoint: {
-    timestamp: { type: "string", required: true },
-    share_price: { type: "number", required: true },
-    total_assets: { type: "number", required: true },
-    hourly_apy: { type: "number", required: true },
-  },
-
-  vaultHistory: {
-    vault_id: { type: "string", required: true },
-    data: { type: "array", required: true },
-    total_count: { type: "number", required: true },
-  },
-
-  // ============================================
-  // Transaction Schemas
-  // ============================================
-  transaction: {
-    transactionId: { type: "string", required: true },
-    accountId: { type: "string", required: true },
-    chainId: { type: "number", required: true },
-    vaultAddr: { type: "string", required: true },
-    type: { type: "string", required: true },
-    status: { type: "string", required: true },
-    createdAt: { type: "string", required: true },
-    updatedAt: { type: "string", required: true },
-    sourceCurrency: { type: "string", required: true },
-    destinationCurrency: { type: "string", required: true },
-    fiatAccountId: { type: "string", required: false, nullable: true },
-    transactionHash: { type: "string", required: false, nullable: true },
-    optId: { type: "string", required: false, nullable: true },
-    broadcastedAt: { type: "string", required: false, nullable: true },
-    fiatTransactionId: { type: "string", required: false, nullable: true },
-    destinationAmount: { type: "string", required: false, nullable: true },
-    sourceAmount: { type: "string", required: false, nullable: true },
-  },
-
-  // ============================================
-  // Account Schemas
-  // ============================================
-  userInfo: {
-    firstName: { type: "string", required: true },
-    lastName: { type: "string", required: true },
-    email: { type: "string", required: true },
-    nationality: { type: "string", required: true },
-    residentialAddress: { type: "object", required: true },
-  },
-
-  entityInfo: {
-    companyName: { type: "string", required: true },
-    email: { type: "string", required: true },
-    website: { type: "string", required: true },
-    companyNumber: { type: "string", required: true },
-    registeredAddress: { type: "object", required: true },
-    physicalAddress: { type: "object", required: true },
-  },
-
-  userDetails: {
-    userId: { type: "string", required: true },
-    verificationStatus: { type: "string", required: true },
-    accountIds: { type: "array", required: false, nullable: true },
-    userInfo: { type: "object", required: true },
-    createdAt: { type: "string", required: true },
-  },
-
-  entityDetails: {
-    entityId: { type: "string", required: true },
-    verificationStatus: { type: "string", required: true },
-    accountId: { type: "string", required: true },
-    entityInfo: { type: "object", required: true },
-    associatedPersons: { type: "array", required: true },
-    createdAt: { type: "string", required: true },
-  },
-
-  // ============================================
-  // Account Creation Response Schemas
-  // ============================================
-  createUserResponse: {
-    userId: { type: "string", required: true },
-    accountId: { type: "string", required: true },
-    verificationStatus: { type: "string", required: true },
-    userInfo: { type: "object", required: true },
-    bridgeSignedAgreementId: { type: "string", required: true },
-    byzantineTermsSignedAt: { type: "number", required: true },
-    isPasskeyActivated: { type: "boolean", required: true },
-    isOtpActivated: { type: "boolean", required: true },
-    additionalUserInfo: { type: "object", required: false, nullable: true },
-    verificationDocuments: { type: "array", required: false, nullable: true },
-  },
-
-  createEntityResponse: {
-    entityId: { type: "string", required: true },
-    accountId: { type: "string", required: true },
-    verificationStatus: { type: "string", required: true },
-    entityInfo: { type: "object", required: true },
-    associatedPersons: { type: "array", required: true },
-    bridgeSignedAgreementId: { type: "string", required: true },
-    byzantineTermsSignedAt: { type: "number", required: true },
-    entityDocuments: { type: "array", required: false, nullable: true },
-  },
-
-  // ============================================
-  // Bank Account Schema
-  // ============================================
-  offRampAddress: {
-    bank_account_id: { type: "string", required: true },
-    accountId: { type: "string", required: true },
-    name: { type: "string", required: true },
-    liquidationAddress: { type: "string", required: true },
-    createdAt: { type: "string", required: true },
-    currency: { type: "string", required: true },
-  },
-
-  getBankAccountsResponse: {
-    offRampAddresses: { type: "array", required: true },
-  },
-
-  // ============================================
-  // Transaction Response Schemas
-  // ============================================
-  otpRequestResponse: {
-    accountId: { type: "string", required: true },
-    transactionType: { type: "string", required: true },
-    vaultAddr: { type: "string", required: true },
-    transaction_id: { type: "string", required: true },
-    amount: { type: "string", required: false, nullable: true },
-  },
-
-  parameters: {
-    signWith: {
-      type: "string",
-      required: true,
-    },
-    unsignedTransaction: {
-      type: "string",
-      required: true,
-    },
-    type: {
-      type: "string",
-      required: true,
-    },
-  },
-
-  bodyToSign: {
-    type: {
-      type: "string",
-      required: true,
-    },
-    timestampMs: {
-      type: "string",
-      required: true,
-    },
-    organizationId: {
-      type: "string",
-      required: true,
-    },
-    parameters: {
-      type: "object",
-      required: true,
-    },
-  },
-
-  passkeyTxRequestResponse: {
-    bodyToSign: {
-      type: "object",
-      required: true,
-    },
-    transactionId: { type: "string", required: true },
-  },
-
-  sendTransactionResponse: {
-    transactionId: { type: "string", required: true },
-    status: { type: "string", required: true },
-    broadcastedAt: { type: "string", required: false, nullable: true },
-    transactionReceipt: { type: "object", required: false, nullable: true },
-    fiatDepositInstructions: {
-      type: "object",
-      required: false,
-      nullable: true,
-    },
-  },
-
-  // ============================================
-  // Error Schema
-  // ============================================
-  error: {
-    error: { type: "string", required: true },
-    status: { type: "number", required: true },
-  },
-
-  // ============================================
-  // ToS Link Schema
-  // ============================================
-  tosLink: {
-    hostedUrl: { type: "string", required: true },
-  },
-
-  /**
-   * REQUEST BODY SCHEMAS
-   */
-
-  // ============================================
-  // Account Creation Requests
-  // ============================================
-  createUserRequest: {
-    userInfo: { type: "object", required: true },
-    bridgeSignedAgreementId: { type: "string", required: true },
-    byzantineTermsSignedAt: { type: "number", required: true },
-    additionalUserInfo: { type: "object", required: false, nullable: true },
-    verificationDocuments: { type: "array", required: false, nullable: true },
-    authenticators: { type: "array", required: false, nullable: true },
-  },
-
-  createEntityRequest: {
-    entityInfo: { type: "object", required: true },
-    associatedPersons: { type: "array", required: true },
-    bridgeSignedAgreementId: { type: "string", required: true },
-    byzantineTermsSignedAt: { type: "number", required: true },
-    entityDocuments: { type: "array", required: false, nullable: true },
-  },
-
-  getTosLinkRequest: {
-    redirectUri: { type: "string", required: false, nullable: true },
-  },
-
-  // ============================================
-  // Transaction Requests
-  // ============================================
-  approveRequest: {
-    accountId: { type: "string", required: true },
-    vaultAddr: { type: "string", required: true },
-  },
-
-  depositRequest: {
-    accountId: { type: "string", required: true },
-    vaultAddr: { type: "string", required: true },
-    amount: { type: "string", required: true },
-    sourceCurrency: { type: "string", required: true },
-  },
-
-  withdrawRequest: {
-    accountId: { type: "string", required: true },
-    vaultAddr: { type: "string", required: true },
-    amount: { type: "string", required: true },
-    destinationCurrency: { type: "string", required: true },
-    bankAccountId: { type: "string", required: false, nullable: true },
-  },
-
-  sendOtpTransactionRequest: {
-    transactionId: { type: "string", required: true },
-    otpCode: { type: "string", required: true },
-  },
-
-  signedBody: {
-    type: { type: "string", required: true },
-    timestampMs: { type: "string", required: true },
-    organizationId: { type: "string", required: true },
-    parameters: { type: "object", required: true },
-  },
-
-  sendPasskeyTransactionRequest: {
-    signedBody: { type: "object", required: true },
-    transactionId: { type: "string", required: true },
-    webAuthnStamp: { type: "string", required: true },
-  },
-
-  // ============================================
-  // Bank Account Request
-  // ============================================
-  addBankAccountRequest: {
-    accountId: { type: "string", required: true },
-    currency: { type: "string", required: true },
-    label: { type: "string", required: true },
-    achBankAccountDetails: { type: "object", required: false, nullable: true },
-    ibanBankAccountDetails: { type: "object", required: false, nullable: true },
-  },
-};
+  return null;
+}
 
 /**
- * Validate that an object matches a schema
+ * Validate that an object matches a schema using JSON Schema + Ajv
  * @param {object} obj - The object to validate
  * @param {string} schemaName - Name of the schema to validate against
  * @returns {object} - { valid: boolean, errors: string[] }
  */
 export function validateSchema(obj, schemaName) {
-  const schema = schemas[schemaName];
+  const jsonSchema = getJsonSchema(schemaName);
 
-  if (!schema) {
+  if (!jsonSchema) {
     return {
       valid: false,
-      errors: [`Unknown schema: ${schemaName}`],
+      errors: [
+        `Schema not found: ${schemaName}. Run "npm run generate-schemas" to generate schemas from OpenAPI.`,
+      ],
     };
   }
 
-  const errors = [];
+  // Compile and validate
+  let validate;
+  try {
+    validate = ajv.compile(prepareSchema(jsonSchema));
+  } catch (error) {
+    return {
+      valid: false,
+      errors: [`Failed to compile schema "${schemaName}": ${error.message}`],
+    };
+  }
 
-  // Check each field in the schema
-  for (const [fieldName, fieldDef] of Object.entries(schema)) {
-    const value = obj[fieldName];
-    const exists = fieldName in obj;
+  const valid = validate(obj);
 
-    // Check if required field is missing
-    if (fieldDef.required && !exists) {
-      errors.push(`Missing required field: ${fieldName}`);
-      continue;
-    }
+  if (!valid) {
+    // Format Ajv errors into readable messages
+    const errors = validate.errors?.map((err) => {
+      const path = err.instancePath || "root";
+      const message = err.message;
+      const params = err.params ? ` (${JSON.stringify(err.params)})` : "";
+      return `${path} ${message}${params}`;
+    }) || ["Unknown validation error"];
 
-    // Skip validation if field doesn't exist and isn't required
-    if (!exists) {
-      continue;
-    }
-
-    // Check if value is null when it shouldn't be
-    if (value === null && !fieldDef.nullable) {
-      errors.push(`Field ${fieldName} cannot be null`);
-      continue;
-    }
-
-    // Skip type check if value is null and nullable
-    if (value === null && fieldDef.nullable) {
-      continue;
-    }
-
-    // Validate type
-    const actualType = Array.isArray(value) ? "array" : typeof value;
-    if (actualType !== fieldDef.type) {
-      errors.push(
-        `Field ${fieldName} has wrong type: expected ${fieldDef.type}, got ${actualType}`
-      );
-    }
+    return {
+      valid: false,
+      errors,
+    };
   }
 
   return {
-    valid: errors.length === 0,
-    errors,
+    valid: true,
+    errors: [],
   };
 }
 
@@ -419,12 +158,20 @@ export function validateArraySchema(arr, schemaName) {
  * Get a list of all available schema names
  */
 export function listSchemas() {
-  return Object.keys(schemas);
+  return Object.keys(generatedSchemas);
 }
 
 /**
- * Get schema definition for a given schema name
+ * Get schema definition for a given schema name (PascalCase)
+ * Returns the JSON Schema object
  */
 export function getSchema(schemaName) {
-  return schemas[schemaName] || null;
+  return getJsonSchema(schemaName);
+}
+
+/**
+ * Check if a schema exists (PascalCase)
+ */
+export function hasSchema(schemaName) {
+  return getJsonSchema(schemaName) !== null;
 }

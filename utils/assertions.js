@@ -6,6 +6,29 @@
 import { expect } from "vitest";
 import { validateSchema, validateArraySchema } from "./schemas.js";
 
+// Regex patterns (compiled once for performance)
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+/**
+ * Format validation errors into readable message
+ * @private
+ */
+function formatValidationErrors(errors, prefix = "") {
+  return errors.map((e) => `${prefix}${e}`).join("\n");
+}
+
+/**
+ * Validate that data is a non-null object
+ * @private
+ */
+function validateObject(data) {
+  expect(data).toBeDefined();
+  expect(typeof data).toBe("object");
+  expect(data).not.toBeNull();
+}
+
 /**
  * Assert that a response is successful
  * Validates status code, ok flag, and data existence
@@ -14,7 +37,7 @@ import { validateSchema, validateArraySchema } from "./schemas.js";
  * @param {number} expectedStatus - Expected HTTP status code (default: 200)
  */
 export function assertSuccess(response, expectedStatus = 200) {
-//   expect(response.status).toBe(expectedStatus);
+  //   expect(response.status).toBe(expectedStatus);
   expect(response.ok).toBe(true);
   expect(response.data).toBeDefined();
   expect(response.error).toBeUndefined();
@@ -30,14 +53,18 @@ export function assertSuccess(response, expectedStatus = 200) {
  *
  */
 export function assertError(response, expectedStatus, validateSchema = true) {
-//   expect(response.status).toBe(expectedStatus);
+  //   expect(response.status).toBe(expectedStatus);
   expect(response.ok).toBe(false);
   expect(response.error).toBeDefined();
   expect(response.data).toBeUndefined();
 
   // Only validate error schema if error is an object and validation is enabled
   // Some APIs return plain string error messages
-  if (validateSchema && typeof response.error === "object" && response.error !== null) {
+  if (
+    validateSchema &&
+    typeof response.error === "object" &&
+    response.error !== null
+  ) {
     assertSchema(response.error, "error");
   }
 }
@@ -54,10 +81,12 @@ export function assertSchema(data, schemaName) {
   const validation = validateSchema(data, schemaName);
 
   if (!validation.valid) {
-    const errorMessage =
-      `Schema validation failed for "${schemaName}":\n` +
-      validation.errors.map((e) => `  - ${e}`).join("\n");
-    throw new Error(errorMessage);
+    throw new Error(
+      `Schema validation failed for "${schemaName}":\n${formatValidationErrors(
+        validation.errors,
+        "  - "
+      )}`
+    );
   }
 }
 
@@ -80,8 +109,10 @@ export function assertArraySchema(data, schemaName) {
       validation.errors
         .map(
           (e) =>
-            `  - Item ${e.index}:\n` +
-            e.errors.map((err) => `     - ${err}`).join("\n")
+            `  - Item ${e.index}:\n${formatValidationErrors(
+              e.errors,
+              "     - "
+            )}`
         )
         .join("\n");
     throw new Error(errorMessage);
@@ -150,8 +181,7 @@ export function assertResponseHeader(response, headerName, expectedValue) {
  *
  */
 export function assertHasFields(data, requiredFields) {
-  expect(data).toBeDefined();
-  expect(typeof data).toBe("object");
+  validateObject(data);
 
   requiredFields.forEach((field) => {
     expect(data[field]).toBeDefined();
@@ -167,8 +197,7 @@ export function assertHasFields(data, requiredFields) {
  *
  */
 export function assertDoesNotHaveFields(data, forbiddenFields) {
-  expect(data).toBeDefined();
-  expect(typeof data).toBe("object");
+  validateObject(data);
 
   forbiddenFields.forEach((field) => {
     expect(data[field]).toBeUndefined();
@@ -183,9 +212,7 @@ export function assertDoesNotHaveFields(data, forbiddenFields) {
  */
 export function assertValidUuid(value) {
   expect(typeof value).toBe("string");
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  expect(value).toMatch(uuidRegex);
+  expect(value).toMatch(UUID_REGEX);
 }
 
 /**
@@ -196,8 +223,7 @@ export function assertValidUuid(value) {
  */
 export function assertValidEthAddress(value) {
   expect(typeof value).toBe("string");
-  const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/;
-  expect(value).toMatch(ethAddressRegex);
+  expect(value).toMatch(ETH_ADDRESS_REGEX);
 }
 
 /**
@@ -209,7 +235,7 @@ export function assertValidEthAddress(value) {
 export function assertValidDateTime(value) {
   expect(typeof value).toBe("string");
   const date = new Date(value);
-  expect(date.toString()).not.toBe("Invalid Date");
+  expect(Number.isNaN(date.valueOf())).toBe(false);
 }
 
 /**
@@ -236,4 +262,3 @@ export function assertValidPagination(response) {
   expect(typeof response.total_count).toBe("number");
   expect(response.total_count).toBeGreaterThanOrEqual(0);
 }
-

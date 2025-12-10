@@ -1,0 +1,2438 @@
+{
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-10T11:33:28.126Z\nSpec SHA-256: fd1432d6fcdfd95701a24f92eb0d9d0ca76ee02fca7391b10c1286eb3a54b7ec",
+  "AchAccountPayload": {
+    "type": "object",
+    "required": [
+      "accountNumber",
+      "routingNumber",
+      "checkingOrSavings"
+    ],
+    "properties": {
+      "accountNumber": {
+        "type": "string"
+      },
+      "routingNumber": {
+        "type": "string"
+      },
+      "checkingOrSavings": {
+        "$ref": "#/components/schemas/CheckingOrSavings"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AddBankAccountRequest": {
+    "type": "object",
+    "required": [
+      "accountId",
+      "currency",
+      "label"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "currency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "label": {
+        "type": "string"
+      },
+      "achBankAccountDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AchAccountPayload"
+          }
+        ]
+      },
+      "ibanBankAccountDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IbanAccountPayload"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AddBankAccountResponse": {
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/OffRampAddress"
+      },
+      {
+        "type": "object"
+      }
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AdditionalUserInfo": {
+    "type": "object",
+    "description": "Additional user information for KYC. This information is required for users considered high risk or over 60 years of age.",
+    "properties": {
+      "employmentStatus": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EmploymentStatus"
+          }
+        ]
+      },
+      "expectedMonthlyPaymentsUsd": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ExpectedMonthlyPayments"
+          }
+        ]
+      },
+      "sourceOfFunds": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/UserSourceOfFunds"
+          }
+        ]
+      },
+      "mostRecentOccupation": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Most recent occupation of the user. Required for high risk users.\nMust be a valid six-digit occupation code. See the full list of [occupation codes](https://docs.byzantine.fi/api-reference/lists/occupation-codes).",
+        "maxLength": 6,
+        "minLength": 6
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Address": {
+    "type": "object",
+    "description": "Address information. Must be a valid address in the relevant country.",
+    "required": [
+      "streetLine1",
+      "city",
+      "postalCode",
+      "country"
+    ],
+    "properties": {
+      "streetLine1": {
+        "type": "string"
+      },
+      "streetLine2": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional additional details to the street name and number."
+      },
+      "city": {
+        "type": "string"
+      },
+      "state": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required for US addresses. Should be a valid ISO 3166-2 subdivision code."
+      },
+      "postalCode": {
+        "type": "string",
+        "description": "Postal code."
+      },
+      "country": {
+        "$ref": "#/components/schemas/CountryCode"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ApproveRequestBody": {
+    "type": "object",
+    "required": [
+      "accountId",
+      "vaultAddr"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "vaultAddr": {
+        "type": "string",
+        "description": "The address of the vault to approve."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ApyQueryParams": {
+    "type": "object",
+    "properties": {
+      "period": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ApyResponse": {
+    "type": "object",
+    "required": [
+      "vault_id",
+      "latest_share_price",
+      "calculated_at"
+    ],
+    "properties": {
+      "vault_id": {
+        "type": "string"
+      },
+      "daily_apy": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "weekly_apy": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "monthly_apy": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "yearly_apy": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "daily_period_days": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "weekly_period_days": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "monthly_period_days": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "yearly_period_days": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "latest_share_price": {
+        "$ref": "#/components/schemas/BigDecimal"
+      },
+      "calculated_at": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AssociatedPerson": {
+    "type": "object",
+    "description": "Associated person (beneficiary or representative). Must be at least one.",
+    "required": [
+      "isRootUser",
+      "userInfo",
+      "beneficiaryDetails"
+    ],
+    "properties": {
+      "isRootUser": {
+        "type": "boolean",
+        "description": "Set to `true` if this person should be an active controller of the account. At least one org_admin is required."
+      },
+      "userInfo": {
+        "$ref": "#/components/schemas/UserInfo"
+      },
+      "beneficiaryDetails": {
+        "$ref": "#/components/schemas/BeneficiaryDetails"
+      },
+      "verificationDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/UserVerificationDocument"
+        }
+      },
+      "authenticators": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AuthenticatorParam"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AssociatedPersonResponse": {
+    "type": "object",
+    "description": "Response body for an associated person",
+    "required": [
+      "beneficiaryType",
+      "firstName",
+      "lastName",
+      "email",
+      "isRootUser"
+    ],
+    "properties": {
+      "userId": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        ]
+      },
+      "beneficiaryType": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BeneficiaryType"
+        }
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "isRootUser": {
+        "type": "boolean"
+      },
+      "isPasskeyActivated": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "isOtpActivated": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Attestation": {
+    "type": "object",
+    "required": [
+      "credentialId",
+      "clientDataJson",
+      "attestationObject",
+      "transports"
+    ],
+    "properties": {
+      "credentialId": {
+        "type": "string",
+        "description": "The cbor encoded then base64 url encoded id of the credential."
+      },
+      "clientDataJson": {
+        "type": "string",
+        "description": "A base64 url encoded payload containing metadata about the signing context and the challenge."
+      },
+      "attestationObject": {
+        "type": "string",
+        "description": "A base64 url encoded payload containing authenticator data and any attestation the webauthn provider chooses."
+      },
+      "transports": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Transports"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AuthenticatorParam": {
+    "type": "object",
+    "description": "Passkey authenticator object.",
+    "required": [
+      "authenticatorName",
+      "challenge",
+      "attestation"
+    ],
+    "properties": {
+      "authenticatorName": {
+        "type": "string",
+        "description": "Human-readable name for an Authenticator."
+      },
+      "challenge": {
+        "type": "string",
+        "description": "Challenge presented for authentication purposes."
+      },
+      "attestation": {
+        "$ref": "#/components/schemas/Attestation"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BeneficiaryDetails": {
+    "type": "object",
+    "description": "Additional details about beneficiaries.",
+    "required": [
+      "beneficiaryType"
+    ],
+    "properties": {
+      "beneficiaryType": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BeneficiaryType"
+        }
+      },
+      "title": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required for representatives. The title held at the business."
+      },
+      "ownershipPercentage": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "format": "double",
+        "description": "Required for UBOs. The % of direct or indirect business ownership.",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BeneficiaryType": {
+    "type": "string",
+    "description": "Beneficiary type.\n\nUBOs are any individuals who, directly or inderectly, own more than 25% of the business.\n\nRepresentatives are individuals who have direct control over daily operations.",
+    "enum": [
+      "ubo",
+      "representative"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BigDecimal": {
+    "type": "string",
+    "description": "A decimal number represented as a string",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BusinessActivityInfo": {
+    "type": "object",
+    "description": "Information about business activities. This is required for high-risk businesses. Filling it wholly can accelerate the KYB process.",
+    "required": [
+      "preferredPrimaryCurrency",
+      "sourceOfFunds"
+    ],
+    "properties": {
+      "preferredPrimaryCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "sourceOfFunds": {
+        "$ref": "#/components/schemas/EntitySourceOfFunds"
+      },
+      "estimatedAnnualRevenueUsd": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EstimatedAnnualRevenue"
+          }
+        ]
+      },
+      "expectedMonthlyPaymentsUsd": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Expected monthly inflows in USD.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "operatesInProhibitedCountries": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Must be set to `true` if the business has any activity in or relation to Cuba, Iran, Myanmar, North Korea, or Syria."
+      },
+      "highRiskActivities": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/HighRiskActivity"
+          }
+        ]
+      },
+      "highRiskActivitiesExplanation": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required if high_risk_activities is anything other than none_of_the_above or empty. A short description to explain the business' involvement with the declared high-risk activities."
+      },
+      "conductsMoneyServices": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Must be set to `true` if the business offers money services, investment products, and/or other financial services."
+      },
+      "conductsMoneyServicesDescription": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required if conducts_money_services is true. A short description to explain the business' money services. Should include a detailed description of the business's compliance and anti-money laundering controls and practices."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BusinessType": {
+    "type": "string",
+    "description": "Business legal form. Select that most appropriate one fitting your jurisdiction.",
+    "enum": [
+      "cooperative",
+      "corporation",
+      "llc",
+      "other",
+      "partnership",
+      "sole_prop",
+      "trust"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CheckingOrSavings": {
+    "type": "string",
+    "enum": [
+      "checking",
+      "savings"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CountryCode": {
+    "type": "string",
+    "description": "The ISO 3166-1 (three-character) country code of the relevant country. See the full list of [countries](https://docs.byzantine.fi/api-reference/lists/countries).",
+    "enum": [
+      "ABW",
+      "AFG",
+      "AGO",
+      "ALB",
+      "AND",
+      "ARG",
+      "ARM",
+      "AUS",
+      "AUT",
+      "AZE",
+      "BEL",
+      "BGD",
+      "BGR",
+      "BHR",
+      "BHS",
+      "BIH",
+      "BLZ",
+      "BMU",
+      "BOL",
+      "BRA",
+      "BRB",
+      "BWA",
+      "CAN",
+      "CHL",
+      "CHN",
+      "CIV",
+      "CMR",
+      "COL",
+      "COM",
+      "CRI",
+      "CUW",
+      "CXR",
+      "CYM",
+      "CYP",
+      "CZE",
+      "DEU",
+      "DMA",
+      "DNK",
+      "DOM",
+      "DZA",
+      "ECU",
+      "EGY",
+      "ESP",
+      "EST",
+      "ETH",
+      "FIN",
+      "FJI",
+      "FRA",
+      "GBR",
+      "GEO",
+      "GHA",
+      "GIB",
+      "GRC",
+      "GTM",
+      "HKG",
+      "HND",
+      "HRV",
+      "HTI",
+      "HUN",
+      "IDN",
+      "IMN",
+      "IND",
+      "IRL",
+      "IRQ",
+      "ISL",
+      "ISR",
+      "ITA",
+      "JAM",
+      "JOR",
+      "JPN",
+      "KAZ",
+      "KEN",
+      "KGZ",
+      "KHM",
+      "KNA",
+      "KOR",
+      "KWT",
+      "LAO",
+      "LBN",
+      "LBR",
+      "LCA",
+      "LKA",
+      "LTU",
+      "LUX",
+      "LVA",
+      "MAR",
+      "MCO",
+      "MDA",
+      "MDG",
+      "MEX",
+      "MHL",
+      "MKD",
+      "MLT",
+      "MNE",
+      "MOZ",
+      "MRT",
+      "MUS",
+      "MWI",
+      "MYS",
+      "NAM",
+      "NGA",
+      "NIC",
+      "NLD",
+      "NOR",
+      "NPL",
+      "NZL",
+      "OMN",
+      "PAN",
+      "PER",
+      "PHL",
+      "PAK",
+      "POL",
+      "PRT",
+      "QAT",
+      "ROU",
+      "RUS",
+      "SAU",
+      "SEN",
+      "SGP",
+      "SVK",
+      "SVN",
+      "ZAF",
+      "SWE",
+      "CHE",
+      "THA",
+      "TUN",
+      "TUR",
+      "UGA",
+      "UKR",
+      "ARE",
+      "USA",
+      "URY",
+      "UZB",
+      "VEN",
+      "VNM",
+      "YEM",
+      "ZMB",
+      "ZWE"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateEntityRequest": {
+    "type": "object",
+    "description": "Request body for creating a Byzantine entity",
+    "required": [
+      "entityInfo",
+      "associatedPersons",
+      "bridgeSignedAgreementId",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "entityInfo": {
+        "$ref": "#/components/schemas/EntityInfo"
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/EntityVerificationDocument"
+        }
+      },
+      "associatedPersons": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPerson"
+        }
+      },
+      "bridgeSignedAgreementId": {
+        "type": "string",
+        "description": "The ID of the signed Bridge ToS agreement. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      },
+      "byzantineTermsSignedAt": {
+        "type": "integer",
+        "format": "int64",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc).",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateEntityResponse": {
+    "type": "object",
+    "description": "Response body for creating a Byzantine entity",
+    "required": [
+      "entityId",
+      "accountId",
+      "verificationStatus",
+      "entityInfo",
+      "associatedPersons",
+      "bridgeSignedAgreementId",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "entityInfo": {
+        "$ref": "#/components/schemas/EntityInfo"
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
+      },
+      "associatedPersons": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPersonResponse"
+        }
+      },
+      "bridgeSignedAgreementId": {
+        "type": "string",
+        "description": "The ID of the signed Bridge ToS agreement. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      },
+      "byzantineTermsSignedAt": {
+        "type": "integer",
+        "format": "int64",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc).",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateUserRequest": {
+    "type": "object",
+    "description": "User to be created. The vast majority of fields are required in order to complete the identity verification process.",
+    "required": [
+      "userInfo",
+      "bridgeSignedAgreementId",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "userInfo": {
+        "$ref": "#/components/schemas/UserInfo"
+      },
+      "additionalUserInfo": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdditionalUserInfo"
+          }
+        ]
+      },
+      "verificationDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/UserVerificationDocument"
+        }
+      },
+      "bridgeSignedAgreementId": {
+        "type": "string",
+        "description": "The ID of the signed Bridge ToS agreement. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      },
+      "byzantineTermsSignedAt": {
+        "type": "integer",
+        "format": "int64",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc).",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "authenticators": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AuthenticatorParam"
+        },
+        "description": "A list of Authenticators."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateUserResponse": {
+    "type": "object",
+    "description": "Response body for creating a Byzantine user",
+    "required": [
+      "userId",
+      "accountId",
+      "verificationStatus",
+      "userInfo",
+      "bridgeSignedAgreementId",
+      "byzantineTermsSignedAt",
+      "isPasskeyActivated",
+      "isOtpActivated"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "userInfo": {
+        "$ref": "#/components/schemas/UserInfo"
+      },
+      "additionalUserInfo": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdditionalUserInfo"
+          }
+        ]
+      },
+      "verificationDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
+      },
+      "bridgeSignedAgreementId": {
+        "type": "string",
+        "description": "The ID of the signed Bridge ToS agreement. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      },
+      "byzantineTermsSignedAt": {
+        "type": "integer",
+        "format": "int64",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc).",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "isPasskeyActivated": {
+        "type": "boolean",
+        "description": "An indicator showing whether passkey authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      },
+      "isOtpActivated": {
+        "type": "boolean",
+        "description": "An indicator showing whether OTP authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Currency": {
+    "type": "string",
+    "enum": [
+      "usd",
+      "eur",
+      "usdc",
+      "eurc"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Decimal": {
+    "type": "string",
+    "description": "A high-precision decimal number represented as a string",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "DepositRequestBody": {
+    "type": "object",
+    "description": "The legal name of the business",
+    "required": [
+      "accountId",
+      "vaultAddr",
+      "amount",
+      "sourceCurrency"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "vaultAddr": {
+        "type": "string",
+        "description": "The address of the vault to deposit into."
+      },
+      "amount": {
+        "$ref": "#/components/schemas/Decimal"
+      },
+      "sourceCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "DocumentType": {
+    "oneOf": [
+      {
+        "$ref": "#/components/schemas/UserDocumentType"
+      },
+      {
+        "$ref": "#/components/schemas/EntityDocumentType"
+      }
+    ],
+    "description": "Type of verification document.",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EmploymentStatus": {
+    "type": "string",
+    "description": "Employment status of a user. Required for high risk users.",
+    "enum": [
+      "employed",
+      "homemaker",
+      "retired",
+      "self_employed",
+      "student",
+      "unemployed"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityDetailsQuery": {
+    "type": "object",
+    "description": "Query parameters for getting entity details",
+    "required": [
+      "entityId"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityDocumentType": {
+    "type": "string",
+    "description": "Entity document type. For a full list of accepted document types, see [accepted documents](https://docs.byzantine.fi/api-reference/documents).",
+    "enum": [
+      "aml_comfort_letter",
+      "business_formation",
+      "directors_registry",
+      "e_signature_certificate",
+      "evidence_of_good_standing",
+      "flow_of_funds",
+      "marketing_materials",
+      "ownership_chart",
+      "ownership_information",
+      "proof_of_account_purpose",
+      "proof_of_address",
+      "proof_of_entity_name_change",
+      "proof_of_nature_of_business",
+      "proof_of_signatory_authority",
+      "proof_of_source_of_funds",
+      "proof_of_source_of_wealth",
+      "proof_of_tax_identification",
+      "shareholder_register",
+      "other"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityInfo": {
+    "type": "object",
+    "description": "Entity information for KYB",
+    "required": [
+      "businessLegalName",
+      "businessTradeName",
+      "businessDescription",
+      "businessType",
+      "email",
+      "website",
+      "businessIndustry",
+      "companyNumber",
+      "hasMaterialIntermediaryEntityOwner",
+      "registeredAddress",
+      "physicalAddress",
+      "businessActivityInfo"
+    ],
+    "properties": {
+      "businessLegalName": {
+        "type": "string",
+        "description": "The legal name of the business."
+      },
+      "businessTradeName": {
+        "type": "string",
+        "description": "The trade name of the business. Can be the same as the entity name, but must be submitted."
+      },
+      "businessDescription": {
+        "type": "string",
+        "description": "Short description of business activities.",
+        "maxLength": 1024,
+        "minLength": 1
+      },
+      "businessType": {
+        "$ref": "#/components/schemas/BusinessType"
+      },
+      "email": {
+        "type": "string",
+        "description": "Business contact email."
+      },
+      "website": {
+        "type": "string",
+        "description": "Business website."
+      },
+      "businessIndustry": {
+        "type": "integer",
+        "format": "int64",
+        "description": "A valid 6-digit NAICS industry code. See the full list of [industry codes](https://docs.byzantine.fi/api-reference/lists/industry-codes).",
+        "minimum": 0,
+        "maximum": 9223372036854776000
+      },
+      "companyNumber": {
+        "type": "string",
+        "description": "The registered business number. Depending on the country of registration, we accept these [entity number types](https://docs.byzantine.fi/api-reference/lists/company-number-types)."
+      },
+      "hasMaterialIntermediaryEntityOwner": {
+        "type": "boolean",
+        "description": "true if there is another legal entity that owns 25% or more of the business"
+      },
+      "registeredAddress": {
+        "$ref": "#/components/schemas/Address"
+      },
+      "physicalAddress": {
+        "$ref": "#/components/schemas/Address"
+      },
+      "businessActivityInfo": {
+        "$ref": "#/components/schemas/BusinessActivityInfo"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntitySourceOfFunds": {
+    "type": "string",
+    "description": "Source of funds for entities.",
+    "enum": [
+      "business_loans",
+      "grants",
+      "inter_company_funds",
+      "investment_proceeds",
+      "legal_settlement",
+      "owners_capital",
+      "pension_retirement",
+      "sale_of_assets",
+      "sales_of_goods_and_services",
+      "tax_refund",
+      "third_party_funds",
+      "treasury_reserves"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityVerificationDocument": {
+    "type": "object",
+    "description": "Entity verification document object. For a full list of required documents, see [accepted documents](https://docs.byzantine.fi/api-reference/documents).",
+    "required": [
+      "documentType",
+      "issuingCountry",
+      "document"
+    ],
+    "properties": {
+      "documentType": {
+        "$ref": "#/components/schemas/EntityDocumentType"
+      },
+      "description": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "A description of the document. Must be submitted if document if os type `other`."
+      },
+      "issuingCountry": {
+        "$ref": "#/components/schemas/CountryCode"
+      },
+      "document": {
+        "type": "string",
+        "format": "data:[MIME];base64,[base64-encoded-data]",
+        "description": "The document to be uploaded.\n\nSupported MIME types: image/jpeg, image/png, image/heic, image/tiff, application/pdf"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ErrorResponse": {
+    "type": "object",
+    "required": [
+      "error",
+      "status"
+    ],
+    "properties": {
+      "error": {
+        "type": "string",
+        "description": "Error message"
+      },
+      "status": {
+        "type": "integer",
+        "format": "int32",
+        "description": "HTTP status code",
+        "minimum": 0,
+        "maximum": 2147483647
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EstimatedAnnualRevenue": {
+    "type": "string",
+    "description": "Estimated annual business revenue in USD, defined as a range.",
+    "enum": [
+      "0_99999",
+      "100000_999999",
+      "1000000_9999999",
+      "10000000_49999999",
+      "50000000_249999999",
+      "250000000_plus"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ExpectedMonthlyPayments": {
+    "type": "string",
+    "description": "Expected monthly payments in USD. Required for high risk users.",
+    "enum": [
+      "0_4999",
+      "5000_9999",
+      "10000_49999",
+      "50000_plus"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetEntityInfo": {
+    "type": "object",
+    "description": "Response body for entity information",
+    "required": [
+      "companyName",
+      "email",
+      "website",
+      "companyNumber",
+      "registeredAddress",
+      "physicalAddress"
+    ],
+    "properties": {
+      "companyName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "website": {
+        "type": "string"
+      },
+      "companyNumber": {
+        "type": "string"
+      },
+      "registeredAddress": {
+        "$ref": "#/components/schemas/Address"
+      },
+      "physicalAddress": {
+        "$ref": "#/components/schemas/Address"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetEntityResponse": {
+    "type": "object",
+    "description": "Response body for entity details",
+    "required": [
+      "entityId",
+      "verificationStatus",
+      "accountId",
+      "entityInfo",
+      "associatedPersons",
+      "createdAt"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "entityInfo": {
+        "$ref": "#/components/schemas/GetEntityInfo"
+      },
+      "associatedPersons": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPersonResponse"
+        }
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetOffRampAddressesQuery": {
+    "type": "object",
+    "required": [
+      "account_id"
+    ],
+    "properties": {
+      "account_id": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "currency": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Currency"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetOffRampAddressesResponse": {
+    "type": "object",
+    "required": [
+      "offRampAddresses"
+    ],
+    "properties": {
+      "offRampAddresses": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OffRampAddress"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetTosAcceptanceLinkRequest": {
+    "type": "object",
+    "properties": {
+      "redirectUri": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional redirect URI to append to the hosted URL returned by Bridge"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetTosAcceptanceLinkResponse": {
+    "type": "object",
+    "required": [
+      "hostedUrl"
+    ],
+    "properties": {
+      "hostedUrl": {
+        "type": "string"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetTransactionQuery": {
+    "type": "object",
+    "required": [
+      "transaction_id"
+    ],
+    "properties": {
+      "transaction_id": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetTransactionResponse": {
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/TurnkeyTransaction"
+      },
+      {
+        "type": "object"
+      }
+    ],
+    "description": "Response for getting a single transaction by ID",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetTransactionsQuery": {
+    "type": "object",
+    "required": [
+      "account_id"
+    ],
+    "properties": {
+      "account_id": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetUserInfo": {
+    "type": "object",
+    "description": "Response body for user information",
+    "required": [
+      "firstName",
+      "lastName",
+      "email",
+      "nationality",
+      "residentialAddress"
+    ],
+    "properties": {
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "nationality": {
+        "$ref": "#/components/schemas/CountryCode"
+      },
+      "residentialAddress": {
+        "$ref": "#/components/schemas/Address"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetUserResponse": {
+    "type": "object",
+    "description": "Response body for user details",
+    "required": [
+      "userId",
+      "verificationStatus",
+      "userInfo",
+      "createdAt"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "accountIds": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/Uuid"
+        }
+      },
+      "userInfo": {
+        "$ref": "#/components/schemas/GetUserInfo"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "HealthResponse": {
+    "type": "object",
+    "required": [
+      "status"
+    ],
+    "properties": {
+      "status": {
+        "type": "string",
+        "description": "Health status"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "HighRiskActivity": {
+    "type": "string",
+    "description": "High risk business activities. Must be declared if the business is engaged in any.",
+    "enum": [
+      "adult_entertainment",
+      "gambling",
+      "hold_client_funds",
+      "investment_services",
+      "lending_banking",
+      "marijuana_or_related_services",
+      "money_services",
+      "nicotine_tobacco_or_related_services",
+      "operate_foreign_exchange_virtual_currencies_brokerage_otc",
+      "pharmaceuticals",
+      "precious_metals_precious_stones_jewelry",
+      "safe_deposit_box_rentals",
+      "third_party_payment_processing",
+      "weapons_firearms_and_explosives",
+      "none_of_the_above"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "HistoryDataPoint": {
+    "type": "object",
+    "required": [
+      "timestamp",
+      "share_price",
+      "total_assets",
+      "hourly_apy"
+    ],
+    "properties": {
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "share_price": {
+        "type": "number",
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "total_assets": {
+        "type": "number",
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "hourly_apy": {
+        "type": "number",
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "HistoryQueryParams": {
+    "type": "object",
+    "properties": {
+      "start_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "end_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "limit": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "offset": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "order": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "HistoryResponse": {
+    "type": "object",
+    "required": [
+      "vault_id",
+      "data",
+      "total_count"
+    ],
+    "properties": {
+      "vault_id": {
+        "type": "string"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/HistoryDataPoint"
+        }
+      },
+      "total_count": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "IbanAccountPayload": {
+    "type": "object",
+    "required": [
+      "accountNumber",
+      "bic",
+      "country"
+    ],
+    "properties": {
+      "accountNumber": {
+        "type": "string"
+      },
+      "bic": {
+        "type": "string"
+      },
+      "country": {
+        "type": "string"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "NaiveDateTime": {
+    "type": "string",
+    "format": "date-time",
+    "description": "A naive datetime string without timezone",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "OffRampAddress": {
+    "type": "object",
+    "required": [
+      "bank_account_id",
+      "accountId",
+      "name",
+      "liquidationAddress",
+      "createdAt",
+      "currency"
+    ],
+    "properties": {
+      "bank_account_id": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "name": {
+        "type": "string"
+      },
+      "liquidationAddress": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "currency": {
+        "$ref": "#/components/schemas/Currency"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "OtpRequestResponse": {
+    "type": "object",
+    "required": [
+      "accountId",
+      "transactionType",
+      "vaultAddr",
+      "transaction_id"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "transactionType": {
+        "$ref": "#/components/schemas/TransactionType"
+      },
+      "vaultAddr": {
+        "type": "string",
+        "description": "The address of the vault."
+      },
+      "amount": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Amount to deposit."
+      },
+      "transaction_id": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "PasskeyTxRequestResponse": {
+    "type": "object",
+    "required": [
+      "bodyToSign",
+      "transactionId"
+    ],
+    "properties": {
+      "bodyToSign": {
+        "$ref": "#/components/schemas/SignTransactionRequest"
+      },
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "PaymentRailVirtualAccount": {
+    "type": "string",
+    "enum": [
+      "AchPush",
+      "Pix",
+      "Sepa",
+      "Spei",
+      "Wire"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SendOtpTransactionRequestBody": {
+    "type": "object",
+    "required": [
+      "transactionId",
+      "otpCode"
+    ],
+    "properties": {
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "otpCode": {
+        "type": "string",
+        "description": "The OTp code that the user received via email."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SendPasskeyTransactionRequestBody": {
+    "type": "object",
+    "required": [
+      "signedBody",
+      "transactionId",
+      "webAuthnStamp"
+    ],
+    "properties": {
+      "signedBody": {
+        "$ref": "#/components/schemas/SignTransactionRequest"
+      },
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "webAuthnStamp": {
+        "type": "string",
+        "description": "Cryptographically signed (stamped) request to be passed in as a header. For more info, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SendTransactionResponseBody": {
+    "type": "object",
+    "required": [
+      "transactionId",
+      "status"
+    ],
+    "properties": {
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "status": {
+        "$ref": "#/components/schemas/TransactionStatus"
+      },
+      "broadcastedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": "Exact timestamp when the transaction was broadcasted on-chain. Only available for `completed` transactions."
+      },
+      "transactionReceipt": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TransactionReceipt"
+          }
+        ]
+      },
+      "fiatDepositInstructions": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SourceDepositInstructions"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SignTransactionParams": {
+    "type": "object",
+    "description": "The parameters object containing the specific intent data for this transaction.",
+    "required": [
+      "signWith",
+      "unsignedTransaction",
+      "type"
+    ],
+    "properties": {
+      "signWith": {
+        "type": "string",
+        "description": "A Wallet account address, Private Key address, or Private Key identifier."
+      },
+      "unsignedTransaction": {
+        "type": "string",
+        "description": "Raw unsigned transaction to be signed."
+      },
+      "type": {
+        "type": "string",
+        "description": "Defaults to `TRANSACTION_TYPE_ETHEREUM`"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SignTransactionRequest": {
+    "type": "object",
+    "description": "The object that needs to be signed by the end user to make a transaction.",
+    "required": [
+      "type",
+      "timestampMs",
+      "organizationId",
+      "parameters"
+    ],
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "Defaults to `ACTIVITY_TYPE_SIGN_TRANSACTION_V2`"
+      },
+      "timestampMs": {
+        "type": "string",
+        "description": "UNIX timestamp of the creation of the transaction."
+      },
+      "organizationId": {
+        "type": "string",
+        "description": "The account ID making the transaction."
+      },
+      "parameters": {
+        "$ref": "#/components/schemas/SignTransactionParams"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SourceDepositInstructions": {
+    "type": "object",
+    "required": [
+      "currency",
+      "bank_name",
+      "bank_address",
+      "payment_rails",
+      "bank_beneficiary_name",
+      "bank_beneficiary_address"
+    ],
+    "properties": {
+      "currency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "bank_name": {
+        "type": "string",
+        "description": "The name of the beneficiary bank."
+      },
+      "bank_address": {
+        "type": "string",
+        "description": "The address of the beneficiary bank."
+      },
+      "payment_rails": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PaymentRailVirtualAccount"
+        }
+      },
+      "bank_beneficiary_name": {
+        "type": "string",
+        "description": "The name of the beneficiary. Either first and last name, or a business name."
+      },
+      "bank_beneficiary_address": {
+        "type": "string",
+        "description": "The address of the beneficiary."
+      },
+      "bank_account_number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "In case of a USD deposit, the bank account number to deposit to."
+      },
+      "bank_routing_number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "In case of a USD deposit, the ban routing number to deposit to."
+      },
+      "iban_number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "In case of a EUR deposit, the IBAN to deposit to."
+      },
+      "iban_bic": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "In case of a EUR deposit, the BIC to deposit to."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "TopVault": {
+    "type": "object",
+    "required": [
+      "vault_address",
+      "chain_id",
+      "is_active"
+    ],
+    "properties": {
+      "vault_address": {
+        "type": "string"
+      },
+      "chain_id": {
+        "type": "integer",
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "is_active": {
+        "type": "boolean"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "TransactionReceipt": {
+    "type": "object",
+    "description": "Ethereum transaction receipt",
+    "properties": {
+      "transactionHash": {
+        "type": "string"
+      },
+      "transactionIndex": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "blockHash": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "blockNumber": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "gasUsed": {
+        "type": "string"
+      },
+      "effectiveGasPrice": {
+        "type": "string"
+      },
+      "blobGasUsed": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "blobGasPrice": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "from": {
+        "type": "string"
+      },
+      "to": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "contractAddress": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "TransactionStatus": {
+    "type": "string",
+    "description": "The current status of the transaction.",
+    "enum": [
+      "created",
+      "waiting_for_funds",
+      "funds_in_transfer",
+      "processing",
+      "completed"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "TransactionType": {
+    "type": "string",
+    "description": "Type of transaction that is being submitted.",
+    "enum": [
+      "approve",
+      "deposit",
+      "withdraw"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Transports": {
+    "type": "string",
+    "enum": [
+      "AUTHENTICATOR_TRANSPORT_BLE",
+      "AUTHENTICATOR_TRANSPORT_INTERNAL",
+      "AUTHENTICATOR_TRANSPORT_NFC",
+      "AUTHENTICATOR_TRANSPORT_USB",
+      "AUTHENTICATOR_TRANSPORT_HYBRID"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "TurnkeyTransaction": {
+    "type": "object",
+    "required": [
+      "transactionId",
+      "accountId",
+      "chainId",
+      "vaultAddr",
+      "type",
+      "status",
+      "createdAt",
+      "updatedAt",
+      "sourceCurrency",
+      "destinationCurrency"
+    ],
+    "properties": {
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "chainId": {
+        "type": "integer",
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "vaultAddr": {
+        "type": "string"
+      },
+      "type": {
+        "$ref": "#/components/schemas/TransactionType"
+      },
+      "status": {
+        "$ref": "#/components/schemas/TransactionStatus"
+      },
+      "fiatAccountId": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        ]
+      },
+      "transactionHash": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "optId": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "broadcastedAt": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "sourceCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "destinationCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "fiatTransactionId": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "destinationAmount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Decimal"
+          }
+        ]
+      },
+      "sourceAmount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Decimal"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UserDetailsQuery": {
+    "type": "object",
+    "description": "Query parameters for getting user details",
+    "required": [
+      "userId"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UserDocumentType": {
+    "type": "string",
+    "description": "Type of the document. See the full list of [accepted documents](https://docs.byzantine.fi/api-reference/documents).",
+    "enum": [
+      "passport",
+      "national_id_front",
+      "national_id_back",
+      "proof_of_address",
+      "other"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UserInfo": {
+    "type": "object",
+    "description": "Personal information about the user required for identity verification.",
+    "required": [
+      "firstName",
+      "lastName",
+      "email",
+      "birthDate",
+      "nationality",
+      "residentialAddress"
+    ],
+    "properties": {
+      "firstName": {
+        "type": "string",
+        "description": "First name of the user."
+      },
+      "middleName": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Middle name of the user."
+      },
+      "lastName": {
+        "type": "string",
+        "description": "Last name of the user."
+      },
+      "email": {
+        "type": "string",
+        "description": "Contact email of the user."
+      },
+      "phone": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Phone number of the user."
+      },
+      "birthDate": {
+        "type": "string",
+        "description": "User's date of birth."
+      },
+      "nationality": {
+        "$ref": "#/components/schemas/CountryCode"
+      },
+      "residentialAddress": {
+        "$ref": "#/components/schemas/Address"
+      },
+      "socialSecurityNumber": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required exclusively for USA-based users. Must be the full social security number."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UserSourceOfFunds": {
+    "type": "string",
+    "description": "Source of funds for users. Required for high risk users.",
+    "enum": [
+      "company_funds",
+      "ecommerce_reseller",
+      "gambling_proceeds",
+      "gifts",
+      "government_benefits",
+      "inheritance",
+      "investments_loans",
+      "pension_retirement",
+      "salary",
+      "sale_of_assets_real_estate",
+      "savings",
+      "someone_elses_funds"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UserVerificationDocument": {
+    "type": "object",
+    "description": "Document(s) to verify the identity of the user.",
+    "required": [
+      "documentType",
+      "issuingCountry",
+      "document"
+    ],
+    "properties": {
+      "documentType": {
+        "$ref": "#/components/schemas/UserDocumentType"
+      },
+      "documentNumber": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required for identity documents (passport, national ID). Must be the full document number."
+      },
+      "description": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required if document type is 'other'."
+      },
+      "issuingCountry": {
+        "$ref": "#/components/schemas/CountryCode"
+      },
+      "document": {
+        "type": "string",
+        "format": "data:[MIME];base64,[base64-encoded-data]",
+        "description": "The document to be uploaded.\n\nSupported MIME types: image/jpeg, image/png, image/heic, image/tiff, application/pdf"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Uuid": {
+    "type": "string",
+    "format": "uuid",
+    "description": "A UUID string",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "VaultV2Transaction": {
+    "type": "object",
+    "required": [
+      "timestamp",
+      "amountAssetsTransferred",
+      "amountSharesTransferred",
+      "currentBalanceShares",
+      "hash",
+      "type"
+    ],
+    "properties": {
+      "timestamp": {
+        "type": "integer",
+        "format": "int64",
+        "description": "Transaction timestamp in milliseconds",
+        "minimum": 0,
+        "maximum": 9223372036854776000
+      },
+      "amountAssetsTransferred": {
+        "type": "number",
+        "format": "double",
+        "description": "Amount of assets transferred",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "amountSharesTransferred": {
+        "type": "number",
+        "format": "double",
+        "description": "Amount of shares transferred",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "currentBalanceShares": {
+        "type": "number",
+        "format": "double",
+        "description": "Current balance in shares after this transaction",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "hash": {
+        "type": "string",
+        "description": "Transaction hash"
+      },
+      "type": {
+        "type": "string",
+        "description": "Transaction type"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "VaultV2VaultPosition": {
+    "type": "object",
+    "required": [
+      "addressVault",
+      "chain_id",
+      "shares",
+      "ratio",
+      "lastUpdateTxHash",
+      "lastUpdateTimestamp",
+      "transactions"
+    ],
+    "properties": {
+      "addressVault": {
+        "type": "string",
+        "description": "Vault address"
+      },
+      "chain_id": {
+        "type": "integer",
+        "format": "int32",
+        "description": "Chain ID",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "shares": {
+        "type": "number",
+        "format": "double",
+        "description": "User's shares in this vault",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "ratio": {
+        "type": "number",
+        "format": "double",
+        "description": "Share to asset ratio (last share price)",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "lastUpdateTxHash": {
+        "type": "string",
+        "description": "Hash of the last update transaction"
+      },
+      "lastUpdateTimestamp": {
+        "type": "integer",
+        "format": "int64",
+        "description": "Timestamp of the last update in milliseconds",
+        "minimum": 0,
+        "maximum": 9223372036854776000
+      },
+      "transactions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/VaultV2Transaction"
+        },
+        "description": "List of transactions for this vault"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "VerificationDocumentResponse": {
+    "type": "object",
+    "description": "Response body for verification documents.",
+    "required": [
+      "documentType",
+      "issuingCountry",
+      "documentId"
+    ],
+    "properties": {
+      "documentType": {
+        "$ref": "#/components/schemas/DocumentType"
+      },
+      "documentNumber": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The full document number sent with the document."
+      },
+      "description": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "issuingCountry": {
+        "type": "string",
+        "description": "The ISO 3166-1 (three-character) country code of the relevant country. See the full list of [countries](https://docs.byzantine.fi/api-reference/lists/countries)."
+      },
+      "documentId": {
+        "type": "string",
+        "description": "Unique identifier assigned to the document."
+      },
+      "warnings": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "errors": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "VerificationStatus": {
+    "type": "string",
+    "description": "The identity verification status of the user.",
+    "enum": [
+      "init",
+      "under_review",
+      "waiting_for_information",
+      "active",
+      "rejected",
+      "inactive"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "WithdrawRequestBody": {
+    "type": "object",
+    "required": [
+      "accountId",
+      "vaultAddr",
+      "amount",
+      "destinationCurrency"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "vaultAddr": {
+        "type": "string",
+        "description": "The address of the vault to withdraw from."
+      },
+      "amount": {
+        "$ref": "#/components/schemas/Decimal"
+      },
+      "destinationCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "bankAccountId": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "get_top_vaults_200": {
+    "type": "array",
+    "items": {
+      "$ref": "#/components/schemas/TopVault"
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "get_transactions_200": {
+    "type": "array",
+    "items": {
+      "$ref": "#/components/schemas/GetTransactionResponse"
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  }
+}
