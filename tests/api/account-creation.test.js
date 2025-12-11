@@ -8,10 +8,14 @@
  * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
  */
 
-import { describe, it } from "vitest";
+import { describe, it, beforeAll } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
+import {
+  generateUniqueEmail,
+  genFakeBridgeAgreementId,
+} from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
   assertError,
@@ -32,6 +36,9 @@ const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
   ? describe
   : describe.skip;
 
+// Generate a fake bridgeSignedAgreementId for use in tests
+const bridgeSignedAgreementId = genFakeBridgeAgreementId();
+
 describeAccountCreation("Byzantine Account Creation API", () => {
   beforeAll(async () => {
     assertSchema(validUser, "CreateUserRequest");
@@ -42,9 +49,20 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create user with valid data",
       async () => {
+        // Create a unique email and bridgeSignedAgreementId for this test
+        const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
+        const userWithUniqueEmail = {
+          ...validUser,
+          userInfo: {
+            ...validUser.userInfo,
+            email: uniqueEmail,
+          },
+          bridgeSignedAgreementId,
+        };
+
         const response = await apiClient.post(
           endpoints.create.user,
-          validUser,
+          userWithUniqueEmail,
           { authenticated: true }
         );
 
@@ -77,9 +95,20 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create entity with valid data",
       async () => {
+        // Create a unique email and bridgeSignedAgreementId for this test
+        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
+        const entityWithUniqueEmail = {
+          ...validEntity,
+          entityInfo: {
+            ...validEntity.entityInfo,
+            email: uniqueEmail,
+          },
+          bridgeSignedAgreementId,
+        };
+
         const response = await apiClient.post(
           endpoints.create.entity,
-          validEntity,
+          entityWithUniqueEmail,
           { authenticated: true }
         );
 
