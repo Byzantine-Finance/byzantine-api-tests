@@ -102,13 +102,29 @@ export function validateSchema(obj, schemaName) {
   const valid = validate(obj);
 
   if (!valid) {
+    // Filter out `oneOf` errors where multiple schemas match in DocumentType ("proof_of_address")
+    const filteredErrors = validate.errors?.filter((err) => {
+      if (err.keyword === "oneOf" && err.params?.passingSchemas?.length > 1) {
+        return false; // Ignore this error
+      }
+      return true;
+    }) || [];
+
     // Format Ajv errors into readable messages
-    const errors = validate.errors?.map((err) => {
+    const errors = filteredErrors.map((err) => {
       const path = err.instancePath || "root";
       const message = err.message;
       const params = err.params ? ` (${JSON.stringify(err.params)})` : "";
       return `${path} ${message}${params}`;
-    }) || ["Unknown validation error"];
+    });
+
+    // If all errors were filtered out, consider validation successful
+    if (errors.length === 0) {
+      return {
+        valid: true,
+        errors: [],
+      };
+    }
 
     return {
       valid: false,
