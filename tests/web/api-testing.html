@@ -130,11 +130,12 @@
   </head>
   <body>
     <div class="container">
-      <h1>Passkey transaction testing</h1>
+      <h1>API Testing Widget</h1>
 
       <div class="tabs">
         <button class="tab active" data-tab="create">Create Passkey</button>
         <button class="tab" data-tab="sign">Sign with Passkey</button>
+        <button class="tab" data-tab="bridge">Bridge ToS</button>
       </div>
 
       <!-- Create Passkey Tab -->
@@ -239,11 +240,63 @@
 
         <div id="result"></div>
       </div>
+
+      <!-- Bridge ToS Tab -->
+      <div id="bridge-tab" class="tab-content">
+        <div class="section">
+          <button id="getUserTosBtn">Get ToS Link for User</button>
+          <div id="userTosResult"></div>
+        </div>
+
+        <div class="section">
+          <button id="getEntityTosBtn">Get ToS Link for Entity</button>
+          <div id="entityTosResult"></div>
+        </div>
+      </div>
     </div>
 
     <script type="module">
       // Import only the WebauthnStamper directly to avoid Node.js dependencies
       import { WebauthnStamper } from "./node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js";
+
+      // Check for ToS acceptance success message in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("tosAccepted") === "true") {
+        const type = urlParams.get("type") || "user";
+        const agreementId = urlParams.get("agreementId");
+        const resultDiv = document.getElementById(
+          type === "entity" ? "entityTosResult" : "userTosResult"
+        );
+
+        // Switch to Bridge ToS tab
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+        document.querySelector('[data-tab="bridge"]').classList.add("active");
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.remove("active");
+        });
+        document.getElementById("bridge-tab").classList.add("active");
+
+        if (agreementId) {
+          resultDiv.innerHTML = `
+            <div class="result success">
+              ✅ ToS Accepted Successfully!
+              <br><br>
+              <strong>Agreement ID:</strong> ${agreementId}
+              <br><br>
+              Saved to valid-${type}.json
+            </div>
+          `;
+        }
+
+        // Clean up URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }
 
       // Load user data from JSON
       fetch("./fixtures/test-data/users/valid-user.json")
@@ -564,6 +617,65 @@
         }
       }
 
+      // Bridge ToS functionality
+      async function getTosLink(type) {
+        const resultDiv = document.getElementById(
+          type === "user" ? "userTosResult" : "entityTosResult"
+        );
+        const btn = document.getElementById(
+          type === "user" ? "getUserTosBtn" : "getEntityTosBtn"
+        );
+
+        try {
+          btn.disabled = true;
+          btn.textContent = "⏳ Getting link...";
+          resultDiv.innerHTML = "";
+
+          const redirectUri = `${window.location.origin}/bridge-callback?type=${type}`;
+
+          // Call the API endpoint through a proxy
+          const response = await fetch("/get-tos-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ redirectUri }),
+          });
+
+          if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error || "Failed to get ToS link");
+          }
+
+          const data = await response.json();
+          // API response may be wrapped in data field or direct
+          const hostedUrl = data.hostedUrl || data.data?.hostedUrl;
+
+          if (!hostedUrl) {
+            throw new Error(
+              "No hostedUrl in API response: " + JSON.stringify(data)
+            );
+          }
+
+          resultDiv.innerHTML = `
+            <div class="result success">
+              <strong>Click the link below to accept ToS:</strong>
+              <br>
+              <a href="${hostedUrl}" target="_blank" style="color: #0066cc; word-break: break-all;">${hostedUrl}</a>
+              <br><br>
+              After accepting, the agreement ID will be automatically saved to valid-${type}.json
+            </div>
+          `;
+        } catch (error) {
+          console.error("Error:", error);
+          resultDiv.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+        } finally {
+          btn.disabled = false;
+          btn.textContent =
+            type === "user"
+              ? "Get ToS Link for User"
+              : "Get ToS Link for Entity";
+        }
+      }
+
       // Add click event listeners
       document
         .getElementById("createBtn")
@@ -571,6 +683,12 @@
       document
         .getElementById("testBtn")
         .addEventListener("click", getWebauthnStamper);
+      document
+        .getElementById("getUserTosBtn")
+        .addEventListener("click", () => getTosLink("user"));
+      document
+        .getElementById("getEntityTosBtn")
+        .addEventListener("click", () => getTosLink("entity"));
     </script>
   </body>
 </html>

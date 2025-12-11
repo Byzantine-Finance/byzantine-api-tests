@@ -65,7 +65,7 @@ export function assertError(response, expectedStatus, validateSchema = true) {
     typeof response.error === "object" &&
     response.error !== null
   ) {
-    assertSchema(response.error, "error");
+    assertSchema(response.error, "ErrorResponse");
   }
 }
 
