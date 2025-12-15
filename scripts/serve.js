@@ -95,6 +95,60 @@ function startServer(port) {
       return;
     }
 
+    // Handle POST request to save WebAuthn stamp header value
+    if (req.method === "POST" && urlPath === "/save-passkey-stamp") {
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      req.on("end", () => {
+        try {
+          const { transactionType = "approve", webAuthnStamp } =
+            JSON.parse(body);
+
+          if (!webAuthnStamp) {
+            throw new Error("webAuthnStamp is required");
+          }
+
+          const validTypes = ["approve", "deposit", "withdraw"];
+          if (!validTypes.includes(transactionType)) {
+            throw new Error(
+              `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
+                ", "
+              )}`
+            );
+          }
+
+          const filePath = join(
+            __dirname,
+            "fixtures/test-data/__generated__/generated-tx-passkey.json"
+          );
+
+          const currentData = JSON.parse(readFileSync(filePath, "utf-8"));
+
+          if (!currentData[transactionType]) {
+            currentData[transactionType] = {};
+          }
+
+          currentData[transactionType].webAuthnStamp = webAuthnStamp;
+
+          writeFileSync(filePath, JSON.stringify(currentData, null, 2));
+          console.log(
+            `✅ Saved WebAuthn stamp for ${transactionType} to:`,
+            filePath
+          );
+
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          console.error("❌ Error saving WebAuthn stamp:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      return;
+    }
+
     // Handle POST request to get ToS link
     if (req.method === "POST" && urlPath === "/get-tos-link") {
       let body = "";

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Byzantine SDK - WebAuthn Test Suite</title>
+    <title>Byzantine API Testing Widget</title>
     <style>
       * {
         margin: 0;
@@ -214,6 +214,14 @@
               value="Byzantine Test"
             />
           </div>
+          <div class="input-group">
+            <label for="txType">Transaction Type</label>
+            <select id="txType">
+              <option value="approve">Approve</option>
+              <option value="deposit">Deposit</option>
+              <option value="withdraw">Withdraw</option>
+            </select>
+          </div>
         </div>
 
         <div class="section">
@@ -221,18 +229,10 @@
 
           <div class="input-group">
             <label for="payload">Payload (JSON)</label>
-            <textarea id="payload">
-{
-  "organizationId": "90b132ca-dd18-4ea9-959c-c2382f298cb5",
-  "type": "ACTIVITY_TYPE_SIGN_TRANSACTION_V2",
-  "timestampMs": "1764339416811",
-  "parameters": {
-    "signWith": "0xb784A89339c206410Ddc875AB7C67D1Ba600D39e",
-    "type": "TRANSACTION_TYPE_ETHEREUM",
-    "unsignedTransaction": "0x02f86c82210580830d189c83169e4482dd0d94833589fcd6edb6e08f4c7c32d4f71b54bda0291380b844095ea7b30000000000000000000000000863cf361ea7f92fd53223a2fa1e58f799544e82ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0"
-  }
-}</textarea
-            >
+            <textarea
+              id="payload"
+              placeholder="Loaded from generated-tx-passkey.json"
+            ></textarea>
           </div>
         </div>
 
@@ -309,6 +309,31 @@
           document.getElementById("userId").value = email.split("@")[0] || "";
         })
         .catch(() => {});
+
+      // Load default transaction payload from generated fixtures
+      function loadPayloadForCurrentType() {
+        const txTypeSelect = document.getElementById("txType");
+        const txType = txTypeSelect ? txTypeSelect.value : "approve";
+
+        fetch("./fixtures/test-data/__generated__/generated-tx-passkey.json")
+          .then((r) => r.json())
+          .then((data) => {
+            const bodyToSign = data?.[txType]?.bodyToSign;
+            if (!bodyToSign) return;
+
+            const payloadTextarea = document.getElementById("payload");
+            if (!payloadTextarea) return;
+
+            payloadTextarea.value = JSON.stringify(bodyToSign, null, 2);
+          })
+          .catch(() => {});
+      }
+
+      const txTypeSelect = document.getElementById("txType");
+      if (txTypeSelect) {
+        txTypeSelect.addEventListener("change", loadPayloadForCurrentType);
+      }
+      loadPayloadForCurrentType();
 
       // Tab switching functionality
       document.querySelectorAll(".tab").forEach((tab) => {
@@ -516,6 +541,7 @@
             .value.trim();
           const rpId = document.getElementById("rpId").value.trim();
           const rpName = document.getElementById("rpName").value.trim();
+          const txType = document.getElementById("txType").value;
           const payloadText = document.getElementById("payload").value.trim();
 
           // Validate inputs
@@ -558,6 +584,20 @@
           } else {
             // Discoverable: let browser show all available passkeys
             stamp = await stamper.getStamp(payload);
+          }
+
+          // Persist the WebAuthn stamp header value for reuse in API tests
+          try {
+            await fetch("/save-passkey-stamp", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                transactionType: txType,
+                webAuthnStamp: stamp.stampHeaderValue,
+              }),
+            });
+          } catch (e) {
+            console.error("Failed to save WebAuthn stamp:", e);
           }
 
           // Display success result
