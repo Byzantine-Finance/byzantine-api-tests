@@ -10,7 +10,6 @@ import { describe, it } from "vitest";
 import { getSdkClient } from "../../utils/sdk-client.js";
 import {
   getTimeout,
-  TEST_DATA,
   FEATURE_FLAGS,
 } from "../../config/test.config.js";
 import {
@@ -18,7 +17,7 @@ import {
   assertArrayWithSchema,
   assertError,
 } from "../../utils/sdk-assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
+import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if account tests are disabled (these tests need test data)
 const describeTransactionData = FEATURE_FLAGS.enableAccountTests
@@ -27,16 +26,29 @@ const describeTransactionData = FEATURE_FLAGS.enableAccountTests
 
 describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
-  const testAccountId = TEST_DATA.accounts.testAccountId;
-  const testApproveTransactionId = txRequest.approve.transactionId;
+  const testAccountId = passkeyData.accountId;
+  let transactionId;
+
+  describe("getTransactions()", () => {
+    it(
+      "should return array of transactions with expected structure",
+      async () => {
+        const sdkResponse = await client.api.getTransactions(testAccountId);
+
+        // Assert SDK behavior: array with expected data shape
+        assertArrayWithSchema(sdkResponse, "TurnkeyTransaction");
+
+        transactionId = sdkResponse.data[0].transactionId;
+      },
+      getTimeout("api")
+    );
+  });
 
   describe("getTransaction()", () => {
     it(
       "should return transaction with expected structure",
       async () => {
-        const sdkResponse = await client.api.getTransaction(
-          testApproveTransactionId
-        );
+        const sdkResponse = await client.api.getTransaction(transactionId);
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
@@ -52,19 +64,6 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
 
         // Assert SDK error handling
         assertError(sdkResponse);
-      },
-      getTimeout("api")
-    );
-  });
-
-  describe("getTransactions()", () => {
-    it(
-      "should return array of transactions with expected structure",
-      async () => {
-        const sdkResponse = await client.api.getTransactions(testAccountId);
-
-        // Assert SDK behavior: array with expected data shape
-        assertArrayWithSchema(sdkResponse, "TurnkeyTransaction");
       },
       getTimeout("api")
     );

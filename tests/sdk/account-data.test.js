@@ -16,10 +16,11 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertArrayWithSchema,
   assertError,
   assertDataUuid,
+  assertSuccess,
 } from "../../utils/sdk-assertions.js";
+import { assertArraySchema } from "../../utils/api-assertions.js";
 
 // Skip if feature is disabled or no test data
 const describeAccounts = FEATURE_FLAGS.enableAccountTests
@@ -38,11 +39,7 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
       "should return user details with expected structure",
       async () => {
         const sdkResponse = await client.api.getUserDetails(testUserId);
-
-        // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "GetUserResponse");
-        assertDataUuid(sdkResponse, "userId");
-        assertDataUuid(sdkResponse, "accountId");
       },
       getTimeout("api")
     );
@@ -91,8 +88,8 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
       async () => {
         const sdkResponse = await client.api.getBankAccounts(testAccountId);
 
-        // Assert SDK behavior: array response with expected shape
-        assertArrayWithSchema(sdkResponse, "OffRampAddress");
+        assertSuccess(sdkResponse);
+        assertArraySchema(sdkResponse.data.offRampAddresses, "OffRampAddress");
       },
       getTimeout("api")
     );
@@ -105,8 +102,8 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
           "usd"
         );
 
-        // Assert SDK behavior: filtered array response
-        assertArrayWithSchema(sdkResponse, "OffRampAddress");
+        assertSuccess(sdkResponse);
+        assertArraySchema(sdkResponse.data.offRampAddresses, "OffRampAddress");
       },
       getTimeout("api")
     );

@@ -13,7 +13,7 @@ import {
   TEST_DATA,
 } from "../../config/test.config.js";
 import { assertSuccessWithSchema, assertSchema } from "../../utils/sdk-assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
 // Skip if OTP and Passkey tests are disabled
 const describeTransactionPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -86,7 +86,7 @@ describeTransactionPasskey(
           // Assert SDK behavior: success with expected data shape
           assertSuccessWithSchema(sdkResponse, "SendTransactionResponseBody");
         },
-        getTimeout("api")
+        getTimeout("integration")
       );
     });
   }

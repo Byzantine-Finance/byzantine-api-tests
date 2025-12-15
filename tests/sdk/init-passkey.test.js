@@ -23,7 +23,7 @@ import {
   assertSchema,
 } from "../../utils/sdk-assertions.js";
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
-import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
+import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if Passkey tests are disabled
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -43,7 +43,7 @@ describeInitPasskey(
   "Initiate Passkey transactions SDK - Using Integrator SDK",
   () => {
     const client = getSdkClient();
-    const testAccountId = TEST_DATA.accounts.testAccountId;
+    const testAccountId = passkeyData.accountId;
     const testVaultAddr = TEST_DATA.vaults.selected.address;
     const chainId = TEST_DATA.vaults.selected.chainId;
     const depositAmount = txRequest.depositAmount;

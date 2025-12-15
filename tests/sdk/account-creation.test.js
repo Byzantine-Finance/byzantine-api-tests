@@ -14,7 +14,6 @@ import { getSdkClient } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   generateUniqueEmail,
-  genFakeBridgeAgreementId,
 } from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
@@ -30,9 +29,6 @@ import {
 // Import test data from fixtures
 import validUser from "../../fixtures/test-data/users/valid-user.json" assert { type: "json" };
 import validEntity from "../../fixtures/test-data/entities/valid-entity.json" assert { type: "json" };
-
-// Generate a fake bridgeSignedAgreementId for use in tests
-const bridgeSignedAgreementId = genFakeBridgeAgreementId();
 
 // Skip if auth/write tests are disabled
 const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
@@ -51,7 +47,6 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     it(
       "should create user with valid data and return typed response",
       async () => {
-        // Create a unique email and bridgeSignedAgreementId for this test
         const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
         const userWithUniqueEmail = {
           ...validUser,
@@ -59,7 +54,6 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
             ...validUser.userInfo,
             email: uniqueEmail,
           },
-          bridgeSignedAgreementId,
         };
 
         const sdkResponse = await client.api.createUser(userWithUniqueEmail);
@@ -78,7 +72,6 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     it(
       "should handle authentication errors correctly",
       async () => {
-        // Create a client without private key to test unauthenticated request
         const unauthenticatedClient = new (
           await import("@byzantine/integrator-sdk")
         ).ByzantineClient({
@@ -102,7 +95,6 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     it(
       "should create entity with valid data and return typed response",
       async () => {
-        // Create a unique email and bridgeSignedAgreementId for this test
         const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
         const entityWithUniqueEmail = {
           ...validEntity,
@@ -110,7 +102,6 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
             ...validEntity.entityInfo,
             email: uniqueEmail,
           },
-          bridgeSignedAgreementId,
         };
 
         const sdkResponse = await client.api.createEntity(
