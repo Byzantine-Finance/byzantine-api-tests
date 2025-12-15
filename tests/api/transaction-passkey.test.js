@@ -15,7 +15,7 @@ import {
   assertSuccessWithSchema,
   assertSchema,
 } from "../../utils/api-assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
 // Skip if OTP and Passkey tests are disabled
 const describeTransactionPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -85,7 +85,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
 
         assertSuccessWithSchema(response, "SendTransactionResponseBody");
       },
-      getTimeout("api")
+      getTimeout("integration")
     );
   });
 });

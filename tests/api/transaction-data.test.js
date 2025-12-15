@@ -9,7 +9,6 @@ import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import {
   getTimeout,
-  TEST_DATA,
   FEATURE_FLAGS,
 } from "../../config/test.config.js";
 import {
@@ -17,7 +16,7 @@ import {
   assertSuccessWithArraySchema,
   assertError,
 } from "../../utils/api-assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
+import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if account tests are disabled (these tests need test data)
 const describeTransactionData = FEATURE_FLAGS.enableAccountTests
@@ -25,15 +24,31 @@ const describeTransactionData = FEATURE_FLAGS.enableAccountTests
   : describe.skip;
 
 describeTransactionData("Transaction Data API", () => {
-  const testAccountId = TEST_DATA.accounts.testAccountId;
-  const testApproveTransactionId = txRequest.approve.transactionId;
+  const testAccountId = passkeyData.accountId;
+  let transactionId;
+
+  describe("GET /v1/query/get-transactions", () => {
+    it(
+      "should get all transactions for an account by account ID",
+      async () => {
+        const response = await apiClient.get(
+          endpoints.transactions.getByAccountId(testAccountId)
+        );
+
+        assertSuccessWithArraySchema(response, "TurnkeyTransaction");
+
+        transactionId = response.data[0].transactionId;
+      },
+      getTimeout("api")
+    );
+  });
 
   describe("GET /v1/query/get-transaction", () => {
     it(
       "should get transaction by transaction ID",
       async () => {
         const response = await apiClient.get(
-          endpoints.transactions.getById(testApproveTransactionId)
+          endpoints.transactions.getById(transactionId)
         );
 
         assertSuccessWithSchema(response, "TurnkeyTransaction");
@@ -50,20 +65,6 @@ describeTransactionData("Transaction Data API", () => {
         );
 
         assertError(response, 404);
-      },
-      getTimeout("api")
-    );
-  });
-
-  describe("GET /v1/query/get-transactions", () => {
-    it(
-      "should get all transactions for an account by account ID",
-      async () => {
-        const response = await apiClient.get(
-          endpoints.transactions.getByAccountId(testAccountId)
-        );
-
-        assertSuccessWithArraySchema(response, "TurnkeyTransaction");
       },
       getTimeout("api")
     );

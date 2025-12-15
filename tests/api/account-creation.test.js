@@ -14,7 +14,6 @@ import { endpoints } from "../../config/endpoints.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   generateUniqueEmail,
-  genFakeBridgeAgreementId,
 } from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
@@ -36,9 +35,6 @@ const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
   ? describe
   : describe.skip;
 
-// Generate a fake bridgeSignedAgreementId for use in tests
-const bridgeSignedAgreementId = genFakeBridgeAgreementId();
-
 describeAccountCreation("Byzantine Account Creation API", () => {
   beforeAll(async () => {
     assertSchema(validUser, "CreateUserRequest");
@@ -57,7 +53,6 @@ describeAccountCreation("Byzantine Account Creation API", () => {
             ...validUser.userInfo,
             email: uniqueEmail,
           },
-          bridgeSignedAgreementId,
         };
 
         const response = await apiClient.post(
@@ -103,7 +98,6 @@ describeAccountCreation("Byzantine Account Creation API", () => {
             ...validEntity.entityInfo,
             email: uniqueEmail,
           },
-          bridgeSignedAgreementId,
         };
 
         const response = await apiClient.post(

@@ -15,8 +15,9 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertSuccessWithArraySchema,
   assertError,
+  assertSuccess,
+  assertArraySchema,
 } from "../../utils/api-assertions.js";
 
 // Skip if feature is disabled or no test data
@@ -85,7 +86,8 @@ describeAccounts("Account Data API", () => {
         const response = await apiClient.get(
           endpoints.accounts.getBankAccounts(testAccountId)
         );
-        assertSuccessWithArraySchema(response, "OffRampAddress");
+        assertSuccess(response);
+        assertArraySchema(response.data.offRampAddresses, "OffRampAddress");
       },
       getTimeout("api")
     );
@@ -96,7 +98,8 @@ describeAccounts("Account Data API", () => {
         const response = await apiClient.get(
           endpoints.accounts.getBankAccounts(testAccountId, "usd")
         );
-        assertSuccessWithArraySchema(response, "OffRampAddress");
+        assertSuccess(response);
+        assertArraySchema(response.data.offRampAddresses, "OffRampAddress");
       },
       getTimeout("api")
     );
