@@ -11,7 +11,7 @@ import {
   assertSuccess,
   assertSuccessWithSchema,
   assertHasFields,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
 
 describe("Health API - Direct HTTP", () => {
   it(

@@ -14,7 +14,6 @@ dotenv.config();
  * These are for Vitest test execution, not API request timeouts
  */
 export const TEST_TIMEOUTS = {
-  // How long a single test can run before timing out
   default: 10000, // 10 seconds
   api: 15000, // 15 seconds for API tests
   integration: 30000, // 30 seconds for integration tests
@@ -38,7 +37,7 @@ export function getTimeout(type = "default") {
  * Test Data - IDs and addresses for testing
  *
  * Priority order:
- * 1. Generated IDs from test runs (fixtures/test-data/generated/generated-ids.json)
+ * 1. Generated IDs from test runs (fixtures/test-data/__generated__/generated-accounts.json)
  * 2. Environment variables
  * 3. Default values (for vaults)
  *
@@ -66,7 +65,6 @@ export const TEST_DATA = {
   },
 
   accounts: {
-    // Test user/account IDs
     // dev mode: generated from test runs
     // production mode: environment variables only
     testUserId: isProduction()

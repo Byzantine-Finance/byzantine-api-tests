@@ -20,9 +20,9 @@ import {
   assertHasFields,
   assertError,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
-import txRequest from "../../fixtures/test-data/__generated__/tx-passkey.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
 
 // Skip if Passkey tests are disabled
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -67,7 +67,7 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
-          // Save approve bodyToSign and transactionId to tx-passkey.json
+          // Save approve bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "approve",
             response.data.bodyToSign,
@@ -122,7 +122,7 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
-          // Save deposit bodyToSign and transactionId to tx-passkey.json
+          // Save deposit bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "deposit",
             response.data.bodyToSign,
@@ -157,7 +157,7 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
-          // Save withdraw bodyToSign and transactionId to tx-passkey.json
+          // Save withdraw bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "withdraw",
             response.data.bodyToSign,

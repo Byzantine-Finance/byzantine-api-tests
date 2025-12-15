@@ -20,9 +20,9 @@ import {
   assertHasFields,
   assertError,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
-import txRequest from "../../fixtures/test-data/__generated__/tx-otp.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
@@ -66,7 +66,7 @@ describeInitOtp("Initiate OTP transactions API", () => {
           "vaultAddr",
         ]);
 
-        // Save approve OTP transactionId to tx-otp.json
+        // Save approve OTP transactionId to generated-tx-otp.json
         saveOtpTransactionId("approve", response.data.transaction_id);
       },
       getTimeout("api")
@@ -94,7 +94,7 @@ describeInitOtp("Initiate OTP transactions API", () => {
         assertSuccessWithSchema(response, "OtpRequestResponse");
         assertHasFields(response.data, ["transaction_id", "amount"]);
 
-        // Save deposit OTP transactionId to tx-otp.json
+        // Save deposit OTP transactionId to generated-tx-otp.json
         saveOtpTransactionId("deposit", response.data.transaction_id);
       },
       getTimeout("api")
@@ -143,7 +143,7 @@ describeInitOtp("Initiate OTP transactions API", () => {
         assertSuccessWithSchema(response, "OtpRequestResponse");
         assertHasFields(response.data, ["transaction_id"]);
 
-        // Save withdraw OTP transactionId to tx-otp.json
+        // Save withdraw OTP transactionId to generated-tx-otp.json
         saveOtpTransactionId("withdraw", response.data.transaction_id);
       },
       getTimeout("api")

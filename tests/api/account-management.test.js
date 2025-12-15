@@ -18,7 +18,7 @@ import {
   assertError,
   assertValidUuid,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
 
 // Import test data from fixtures
 import usAchAccount from "../../fixtures/test-data/bank-accounts/us-ach-account.json" assert { type: "json" };

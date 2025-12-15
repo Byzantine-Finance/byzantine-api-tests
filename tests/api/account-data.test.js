@@ -17,7 +17,7 @@ import {
   assertSuccessWithSchema,
   assertSuccessWithArraySchema,
   assertError,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
 
 // Skip if feature is disabled or no test data
 const describeAccounts = FEATURE_FLAGS.enableAccountTests

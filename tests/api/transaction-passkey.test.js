@@ -14,8 +14,8 @@ import {
 import {
   assertSuccessWithSchema,
   assertSchema,
-} from "../../utils/assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/tx-passkey.json";
+} from "../../utils/api-assertions.js";
+import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
 
 // Skip if OTP and Passkey tests are disabled
 const describeTransactionPasskey = FEATURE_FLAGS.enablePasskeyTests

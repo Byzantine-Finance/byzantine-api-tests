@@ -21,7 +21,7 @@ import {
   assertError,
   assertValidUuid,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
 import {
   saveUserIds,
   saveEntityIds,

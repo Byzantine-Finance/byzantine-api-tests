@@ -28,7 +28,7 @@ export function createApiClient(options = {}) {
   // Request interceptor - for logging and debugging
   client.interceptors.request.use(
     (config) => {
-      if (process.env.DEBUG_API === "true") {
+      if (process.env.DEBUG_MODE === "true") {
         console.log(
           `→ ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`
         );
@@ -39,7 +39,7 @@ export function createApiClient(options = {}) {
       return config;
     },
     (error) => {
-      if (process.env.DEBUG_API === "true") {
+      if (process.env.DEBUG_MODE === "true") {
         console.error("Request Error:", error);
       }
       return Promise.reject(error);
@@ -49,7 +49,7 @@ export function createApiClient(options = {}) {
   // Response interceptor - for logging and debugging
   client.interceptors.response.use(
     (response) => {
-      if (process.env.DEBUG_API === "true") {
+      if (process.env.DEBUG_MODE === "true") {
         console.log(`← ${response.status} ${response.config.url}`);
         if (response.data) {
           console.log("  Response:", JSON.stringify(response.data, null, 2));
@@ -58,7 +58,7 @@ export function createApiClient(options = {}) {
       return response;
     },
     (error) => {
-      if (process.env.DEBUG_API === "true") {
+      if (process.env.DEBUG_MODE === "true") {
         console.error("Response Error:", error);
       }
       return Promise.reject(error);
@@ -77,8 +77,9 @@ export function createApiClient(options = {}) {
  * @returns {object} Authentication headers
  */
 function generateRequestAuthHeaders(method, path, params, body) {
-  const key = 
-  isProduction() ? process.env.PROD_INTEGRATOR_PRIVATE_KEY : process.env.DEV_INTEGRATOR_PRIVATE_KEY || null;
+  const key = isProduction()
+    ? process.env.PROD_INTEGRATOR_PRIVATE_KEY
+    : process.env.DEV_INTEGRATOR_PRIVATE_KEY || null;
 
   if (!key) {
     throw new Error(
@@ -169,7 +170,7 @@ export async function makeRequest(method, path, options = {}) {
         ...authHeaders,
       };
     } catch (error) {
-      if (process.env.DEBUG_API === "true") {
+      if (process.env.DEBUG_MODE === "true") {
         console.error("Failed to generate auth headers:", error.message);
       }
       throw error;
@@ -181,7 +182,7 @@ export async function makeRequest(method, path, options = {}) {
     return formatResponse(response);
   } catch (error) {
     // Network or other errors
-    if (process.env.DEBUG_API === "true") {
+    if (process.env.DEBUG_MODE === "true") {
       console.error("Request failed:", error.message);
     }
     throw error;

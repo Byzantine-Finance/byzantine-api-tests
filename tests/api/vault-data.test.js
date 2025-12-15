@@ -14,7 +14,8 @@ import {
   assertSuccessWithArraySchema,
   assertNonEmptyArray,
   assertValidEthAddress,
-} from "../../utils/assertions.js";
+} from "../../utils/api-assertions.js";
+import { saveActiveVaults } from "../../utils/test-data-persistence.js";
 
 // Skip all vault tests if disabled or network tests are disabled
 const describeVaults = FEATURE_FLAGS.enableVaultTests
@@ -29,6 +30,9 @@ describeVaults("Vaults API", () => {
         const response = await apiClient.get(endpoints.vaults.top);
         assertSuccess(response);
         assertNonEmptyArray(response.data);
+
+        // Save active vaults to generated-vaults.json
+        saveActiveVaults(response.data);
       },
       getTimeout("api")
     );

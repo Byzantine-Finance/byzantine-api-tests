@@ -16,8 +16,8 @@ import {
   assertSuccessWithSchema,
   assertSuccessWithArraySchema,
   assertError,
-} from "../../utils/assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/tx-otp.json";
+} from "../../utils/api-assertions.js";
+import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
 
 // Skip if account tests are disabled (these tests need test data)
 const describeTransactionData = FEATURE_FLAGS.enableAccountTests

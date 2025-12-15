@@ -1,15 +1,12 @@
 /**
  * Reusable Test Assertions
  * Common assertion patterns for API testing
+ *
  */
 
 import { expect } from "vitest";
 import { validateSchema, validateArraySchema } from "./schemas.js";
-
-// Regex patterns (compiled once for performance)
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+import { UUID_REGEX, ETH_ADDRESS_REGEX } from "./constants.js";
 
 /**
  * Format validation errors into readable message

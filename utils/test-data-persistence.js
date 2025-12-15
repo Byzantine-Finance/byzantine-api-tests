@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 // Path to the test data file
 const TEST_DATA_FILE = join(
   __dirname,
-  "../fixtures/test-data/__generated__/generated-ids.json"
+  "../fixtures/test-data/__generated__/generated-accounts.json"
 );
 
 /**
@@ -144,7 +144,7 @@ export function saveEntityIds(entityId, accountId) {
 }
 
 /**
- * Save bodyToSign and transactionId to tx-passkey.json
+ * Save bodyToSign and transactionId to generated-tx-passkey.json
  * Excludes the two "type" fields (bodyToSign.type and parameters.type)
  * @param {string} transactionType - Type of transaction: "approve", "deposit", or "withdraw"
  * @param {object} bodyToSign - The bodyToSign object from the API response
@@ -153,7 +153,7 @@ export function saveEntityIds(entityId, accountId) {
 export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   const TX_REQUEST_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/tx-passkey.json"
+    "../fixtures/test-data/__generated__/generated-tx-passkey.json"
   );
 
   // Validate transaction type
@@ -198,7 +198,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
       "utf-8"
     );
     console.log(
-      `✅ Saved ${transactionType} bodyToSign and transactionId to tx-passkey.json`
+      `✅ Saved ${transactionType} bodyToSign and transactionId to generated-tx-passkey.json`
     );
   } catch (error) {
     console.error(
@@ -210,14 +210,14 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
 }
 
 /**
- * Save OTP transaction ID to tx-otp.json
+ * Save OTP transaction ID to generated-tx-otp.json
  * @param {string} transactionType - Type of transaction: "approve", "deposit", or "withdraw"
  * @param {string} transactionId - The transaction ID from the API response
  */
 export function saveOtpTransactionId(transactionType, transactionId) {
   const TX_OTP_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/tx-otp.json"
+    "../fixtures/test-data/__generated__/generated-tx-otp.json"
   );
 
   // Validate transaction type
@@ -260,10 +260,49 @@ export function saveOtpTransactionId(transactionType, transactionId) {
 
     // Write back to file
     writeFileSync(TX_OTP_FILE, JSON.stringify(updatedData, null, 4), "utf-8");
-    console.log(`✅ Saved ${transactionType} OTP transactionId to tx-otp.json`);
+    console.log(`✅ Saved ${transactionType} OTP transactionId to generated-tx-otp.json`);
   } catch (error) {
     console.error(
       `Failed to save ${transactionType} OTP transactionId to ${TX_OTP_FILE}:`,
+      error.message
+    );
+    throw error;
+  }
+}
+
+/**
+ * Save active vaults to generated-vaults.json
+ * Filters vaults with is_active: true and saves them with vault_address, chain_id, and is_active
+ * @param {Array} vaults - Array of vault objects from the API response
+ */
+export function saveActiveVaults(vaults) {
+  const VAULTS_FILE = join(
+    __dirname,
+    "../fixtures/test-data/__generated__/generated-vaults.json"
+  );
+
+  try {
+    // Filter vaults with is_active: true
+    const activeVaults = vaults
+      .filter((vault) => vault.is_active === true)
+      .map((vault) => ({
+        vault_address: vault.vault_address,
+        chain_id: vault.chain_id,
+        is_active: vault.is_active,
+      }));
+
+    // Write to file
+    writeFileSync(
+      VAULTS_FILE,
+      JSON.stringify(activeVaults, null, 2),
+      "utf-8"
+    );
+    console.log(
+      `✅ Saved ${activeVaults.length} active vault(s) to generated-vaults.json`
+    );
+  } catch (error) {
+    console.error(
+      `Failed to save active vaults to ${VAULTS_FILE}:`,
       error.message
     );
     throw error;

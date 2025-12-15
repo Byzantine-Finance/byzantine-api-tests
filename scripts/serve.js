@@ -80,7 +80,7 @@ function startServer(port) {
           const txData = JSON.parse(body);
           const filePath = join(
             __dirname,
-            "fixtures/test-data/__generated__/tx-passkey.json"
+            "fixtures/test-data/__generated__/generated-tx-passkey.json"
           );
           writeFileSync(filePath, JSON.stringify(txData, null, 2));
           console.log("✅ Saved transaction data to:", filePath);
