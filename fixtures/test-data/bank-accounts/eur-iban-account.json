@@ -3,6 +3,7 @@
   "currency": "eur",
   "label": "Test IBAN Account",
   "ibanBankAccountDetails": {
+    "bankName": "Test Bank",
     "accountNumber": "DE89370400440532013000",
     "bic": "COBADEFFXXX",
     "country": "DEU"

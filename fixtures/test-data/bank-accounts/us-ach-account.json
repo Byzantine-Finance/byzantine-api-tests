@@ -1,11 +1,11 @@
 {
   "accountId": null,
   "currency": "usd",
-  "label": "Test Checking Account",
+  "label": "Lead Bank",
   "achBankAccountDetails": {
+    "bankName": "Lead Bank",
     "accountNumber": "1234567890",
-    "routingNumber": "021000021",
+    "routingNumber": "101019644",
     "checkingOrSavings": "checking"
   }
 }
-

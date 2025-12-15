@@ -1,13 +1,17 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-10T11:33:28.126Z\nSpec SHA-256: fd1432d6fcdfd95701a24f92eb0d9d0ca76ee02fca7391b10c1286eb3a54b7ec",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-15T09:43:46.030Z\nSpec SHA-256: 27a5bbcaed52313b0791889e5655e91c14484d7474c6c0e9d7a27a0f3ed77b42",
   "AchAccountPayload": {
     "type": "object",
     "required": [
+      "bankName",
       "accountNumber",
       "routingNumber",
       "checkingOrSavings"
     ],
     "properties": {
+      "bankName": {
+        "type": "string"
+      },
       "accountNumber": {
         "type": "string"
       },
@@ -308,49 +312,51 @@
     "type": "object",
     "description": "Response body for an associated person",
     "required": [
-      "beneficiaryType",
-      "firstName",
-      "lastName",
-      "email",
-      "isRootUser"
+      "userId",
+      "verificationStatus",
+      "isRootUser",
+      "userInfo",
+      "beneficiaryDetails"
     ],
     "properties": {
       "userId": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Uuid"
-          }
-        ]
+        "$ref": "#/components/schemas/Uuid"
       },
-      "beneficiaryType": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/BeneficiaryType"
-        }
-      },
-      "firstName": {
-        "type": "string"
-      },
-      "lastName": {
-        "type": "string"
-      },
-      "email": {
-        "type": "string"
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
       },
       "isRootUser": {
-        "type": "boolean"
+        "type": "boolean",
+        "description": "Set to `true` if this person should be an active controller of the account. At least one org_admin is required."
+      },
+      "userInfo": {
+        "$ref": "#/components/schemas/UserInfo"
+      },
+      "beneficiaryDetails": {
+        "$ref": "#/components/schemas/BeneficiaryDetails"
+      },
+      "verificationDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
       },
       "isPasskeyActivated": {
         "type": [
           "boolean",
           "null"
-        ]
+        ],
+        "description": "An indicator showing whether passkey authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
       },
       "isOtpActivated": {
         "type": [
           "boolean",
           "null"
-        ]
+        ],
+        "description": "An indicator showing whether OTP authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1172,6 +1178,57 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "GetAssociatedPersonResponse": {
+    "type": "object",
+    "description": "Response body for an associated person",
+    "required": [
+      "beneficiaryType",
+      "firstName",
+      "lastName",
+      "email",
+      "isRootUser"
+    ],
+    "properties": {
+      "userId": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        ]
+      },
+      "beneficiaryType": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BeneficiaryType"
+        }
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "isRootUser": {
+        "type": "boolean"
+      },
+      "isPasskeyActivated": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "isOtpActivated": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "GetEntityInfo": {
     "type": "object",
     "description": "Response body for entity information",
@@ -1232,7 +1289,7 @@
       "associatedPersons": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/AssociatedPersonResponse"
+          "$ref": "#/components/schemas/GetAssociatedPersonResponse"
         }
       },
       "createdAt": {
@@ -1548,6 +1605,12 @@
       "country"
     ],
     "properties": {
+      "bankName": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "accountNumber": {
         "type": "string"
       },

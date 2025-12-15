@@ -2,6 +2,7 @@
   "accountId": null,
   "label": "Invalid Account",
   "achBankAccountDetails": {
+    "bankName": "Invalid Bank",
     "accountNumber": "1234567890",
     "routingNumber": "021000021",
     "checkingOrSavings": "checking"
