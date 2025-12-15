@@ -1,13 +1,13 @@
 {
   "entityInfo": {
-    "businessLegalName": "ByzCorp Incorporated",
-    "businessTradeName": "ByzCorp",
+    "businessLegalName": "Byz Finance",
+    "businessTradeName": "Byz Finance",
     "businessDescription": "ByzCorp does business.",
     "businessType": "sole_prop",
-    "email": "byzcorp+testing-16@byzantine.fi",
-    "website": "byzcorp.com",
+    "email": "lin+for-entity@byzantine.fi",
+    "website": "byzfinance.com",
     "businessIndustry": 541511,
-    "companyNumber": "byzcorp.com",
+    "companyNumber": "byzfinance.com",
     "hasMaterialIntermediaryEntityOwner": true,
     "registeredAddress": {
       "streetLine1": "33 Rue La Fayette",
@@ -60,7 +60,8 @@
       },
       "beneficiaryDetails": {
         "beneficiaryType": [
-          "ubo", "representative"
+          "ubo",
+          "representative"
         ],
         "title": "CEO",
         "ownershipPercentage": 100
@@ -77,7 +78,7 @@
       "authenticators": null
     }
   ],
-  "bridgeSignedAgreementId": "b107c1e1-766a-404c-802c-ee62a3973e91",
+  "bridgeSignedAgreementId": "3f0ed815-28a1-479b-8b17-6cbf0930bfa1",
   "byzantineTermsSignedAt": 1764604807,
   "entityDocuments": [
     {

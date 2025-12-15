@@ -174,11 +174,13 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
 
     // Extract data excluding the two "type" fields
     const bodyToSignData = {
+      type: bodyToSign.type,
       timestampMs: bodyToSign.timestampMs,
       organizationId: bodyToSign.organizationId,
       parameters: {
         signWith: bodyToSign.parameters.signWith,
         unsignedTransaction: bodyToSign.parameters.unsignedTransaction,
+        type: bodyToSign.parameters.type,
       },
     };
 

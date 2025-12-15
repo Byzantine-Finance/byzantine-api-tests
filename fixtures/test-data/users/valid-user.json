@@ -2,7 +2,7 @@
   "userInfo": {
     "firstName": "Lin",
     "lastName": "huuu",
-    "email": "lin+testing-30@byzantine.fi",
+    "email": "lin@byzantine.fi",
     "birthDate": "1990-01-01",
     "nationality": "FRA",
     "residentialAddress": {
@@ -17,7 +17,7 @@
     "phone": "0600000000",
     "socialSecurityNumber": null
   },
-  "bridgeSignedAgreementId": "cd3f15bv-6b32-491b-a5dd-33e0b2ecb5v9",
+  "bridgeSignedAgreementId": "df09d1be-0983-43ed-82e9-dce35b07600d",
   "byzantineTermsSignedAt": 1764604807,
   "additionalUserInfo": {
     "employmentStatus": "employed",
@@ -44,11 +44,11 @@
   "authenticators": [
     {
       "authenticatorName": "Passkey",
-      "challenge": "LTzBjd8O1sOwB63ykTUiHGctVvlk8HquLNiadUst5wA",
+      "challenge": "Z8zioqyeUQ2jp3TUiS7bgoVuHQdv13xxPg9A29h4Hd8",
       "attestation": {
-        "credentialId": "UOBNZ2Xv4SEt3G61QIH7mVI",
-        "clientDataJson": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiTFR6QmpkOE8xc093QjYzeWtUVWlIR2N0VnZsazhIcXVMTmlhZFVzdDV3QSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImNyb3NzT3JpZ2luIjpmYWxzZX0",
-        "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEOBNZ2Xv4SEt3G61QIH7mVKlAQIDJiABIVggqrVVAE58tG68Ycr8NeelpOQLZQbtuS0220ne1VQFdz8iWCAB3gy_vfvIJCb4c_tARzzpL4m3Zwy8YgMScDDLybFCrg",
+        "credentialId": "UAyWT6mtOIjzo4dsgNjQjBU",
+        "clientDataJson": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiWjh6aW9xeWVVUTJqcDNUVWlTN2Jnb1Z1SFFkdjEzeHhQZzlBMjloNEhkOCIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImNyb3NzT3JpZ2luIjpmYWxzZX0",
+        "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEAyWT6mtOIjzo4dsgNjQjBWlAQIDJiABIVggYelgl5JeCVwMcxFhcDAcz9IXLyVZy04EHGoZMzi_1rIiWCDL0OKhAIbR_hUUHxp7BKsLzFV5nbe0UGjygYrBGBTDCA",
         "transports": [
           "AUTHENTICATOR_TRANSPORT_HYBRID",
           "AUTHENTICATOR_TRANSPORT_INTERNAL"

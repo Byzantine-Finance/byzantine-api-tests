@@ -10,11 +10,3 @@ export function generateUniqueEmail(email) {
   const [emailLocal, emailDomain] = email.split("@");
   return `${emailLocal}+apitests-${timestamp}@${emailDomain}`;
 }
-
-/**
- * Generate a UUID for bridgeSignedAgreementId
- * @returns {string} A UUID v4 string (e.g., "550e8400-e29b-41d4-a716-446655440000")
- */
-export function genFakeBridgeAgreementId() {
-  return randomUUID();
-}
