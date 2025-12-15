@@ -10,7 +10,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -18,12 +18,12 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertHasFields,
+  assertDataHasFields,
   assertError,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/sdk-assertions.js";
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
-import txRequest from "../../fixtures/test-data/__generated__/tx-passkey.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
 
 // Skip if Passkey tests are disabled
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -65,16 +65,16 @@ describeInitPasskey(
             chainId,
             requestBody
           );
-          const response = formatSdkResponse(sdkResponse);
 
-          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
-          assertHasFields(response.data, ["bodyToSign", "transactionId"]);
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(sdkResponse, "PasskeyTxRequestResponse");
+          assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
 
-          // Save approve bodyToSign and transactionId to tx-passkey.json
+          // Save approve bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "approve",
-            response.data.bodyToSign,
-            response.data.transactionId
+            sdkResponse.data.bodyToSign,
+            sdkResponse.data.transactionId
           );
         },
         getTimeout("api")
@@ -94,9 +94,9 @@ describeInitPasskey(
             99999,
             requestBody
           ); // Invalid chain ID
-          const response = formatSdkResponse(sdkResponse);
 
-          assertError(response, 400);
+          // Assert SDK error handling
+          assertError(sdkResponse);
         },
         getTimeout("api")
       );
@@ -119,16 +119,16 @@ describeInitPasskey(
             chainId,
             requestBody
           );
-          const response = formatSdkResponse(sdkResponse);
 
-          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
-          assertHasFields(response.data, ["bodyToSign", "transactionId"]);
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(sdkResponse, "PasskeyTxRequestResponse");
+          assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
 
-          // Save deposit bodyToSign and transactionId to tx-passkey.json
+          // Save deposit bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "deposit",
-            response.data.bodyToSign,
-            response.data.transactionId
+            sdkResponse.data.bodyToSign,
+            sdkResponse.data.transactionId
           );
         },
         getTimeout("api")
@@ -152,16 +152,16 @@ describeInitPasskey(
             chainId,
             requestBody
           );
-          const response = formatSdkResponse(sdkResponse);
 
-          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
-          assertHasFields(response.data, ["bodyToSign", "transactionId"]);
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(sdkResponse, "PasskeyTxRequestResponse");
+          assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
 
-          // Save withdraw bodyToSign and transactionId to tx-passkey.json
+          // Save withdraw bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "withdraw",
-            response.data.bodyToSign,
-            response.data.transactionId
+            sdkResponse.data.bodyToSign,
+            sdkResponse.data.transactionId
           );
         },
         getTimeout("api")

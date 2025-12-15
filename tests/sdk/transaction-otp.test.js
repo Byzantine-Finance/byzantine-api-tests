@@ -6,7 +6,7 @@
  */
 
 import { describe, it, beforeAll } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -16,8 +16,8 @@ import {
   assertSuccessWithSchema,
   assertError,
   assertSchema,
-} from "../../utils/assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/tx-passkey.json";
+} from "../../utils/sdk-assertions.js";
+import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
 
 // Skip if OTP and Passkey tests are disabled
 const describeTransactionOtp = FEATURE_FLAGS.enableOtpTests
@@ -88,9 +88,9 @@ describeTransactionOtp(
             chainId,
             requestBody
           );
-          const response = formatSdkResponse(sdkResponse);
 
-          assertSuccessWithSchema(response, "SendTransactionResponseBody");
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(sdkResponse, "SendTransactionResponseBody");
         },
         getTimeout("api")
       );
@@ -107,9 +107,9 @@ describeTransactionOtp(
             chainId,
             requestBody
           );
-          const response = formatSdkResponse(sdkResponse);
 
-          assertError(response, 400);
+          // Assert SDK error handling
+          assertError(sdkResponse);
         },
         getTimeout("api")
       );

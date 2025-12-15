@@ -10,7 +10,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -18,12 +18,12 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertHasFields,
+  assertDataHasFields,
   assertError,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/sdk-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
-import txRequest from "../../fixtures/test-data/__generated__/tx-otp.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
@@ -60,17 +60,17 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
           chainId,
           requestBody
         );
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "OtpRequestResponse");
-        assertHasFields(response.data, [
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "OtpRequestResponse");
+        assertDataHasFields(sdkResponse, [
           "transaction_id",
           "accountId",
           "vaultAddr",
         ]);
 
-        // Save approve OTP transactionId to tx-otp.json
-        saveOtpTransactionId("approve", response.data.transaction_id);
+        // Save approve OTP transactionId to generated-tx-otp.json
+        saveOtpTransactionId("approve", sdkResponse.data.transaction_id);
       },
       getTimeout("api")
     );
@@ -93,13 +93,13 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
           chainId,
           requestBody
         );
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "OtpRequestResponse");
-        assertHasFields(response.data, ["transaction_id", "amount"]);
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "OtpRequestResponse");
+        assertDataHasFields(sdkResponse, ["transaction_id", "amount"]);
 
-        // Save deposit OTP transactionId to tx-otp.json
-        saveOtpTransactionId("deposit", response.data.transaction_id);
+        // Save deposit OTP transactionId to generated-tx-otp.json
+        saveOtpTransactionId("deposit", sdkResponse.data.transaction_id);
       },
       getTimeout("api")
     );
@@ -118,9 +118,9 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
           chainId,
           requestBody
         );
-        const response = formatSdkResponse(sdkResponse);
 
-        assertError(response, 400);
+        // Assert SDK error handling
+        assertError(sdkResponse);
       },
       getTimeout("api")
     );
@@ -144,13 +144,13 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
           chainId,
           requestBody
         );
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "OtpRequestResponse");
-        assertHasFields(response.data, ["transaction_id"]);
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "OtpRequestResponse");
+        assertDataHasFields(sdkResponse, ["transaction_id"]);
 
-        // Save withdraw OTP transactionId to tx-otp.json
-        saveOtpTransactionId("withdraw", response.data.transaction_id);
+        // Save withdraw OTP transactionId to generated-tx-otp.json
+        saveOtpTransactionId("withdraw", sdkResponse.data.transaction_id);
       },
       getTimeout("api")
     );

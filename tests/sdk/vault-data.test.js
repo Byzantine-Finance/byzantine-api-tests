@@ -7,15 +7,15 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   assertSuccess,
   assertSuccessWithSchema,
-  assertSuccessWithArraySchema,
-  assertNonEmptyArray,
+  assertArrayWithSchema,
+  assertDataArray,
   assertValidEthAddress,
-} from "../../utils/assertions.js";
+} from "../../utils/sdk-assertions.js";
 
 // Skip all vault tests if disabled or network tests are disabled
 const describeVaults = FEATURE_FLAGS.enableVaultTests
@@ -30,19 +30,21 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
       "should return list of vaults",
       async () => {
         const sdkResponse = await client.api.getTopVaults();
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccess(response);
-        assertNonEmptyArray(response.data);
+
+        // Assert SDK behavior: array response
+        assertSuccess(sdkResponse);
+        assertDataArray(sdkResponse, 1);
       },
       getTimeout("api")
     );
 
     it(
-      "should return vaults matching schema",
+      "should return vaults with expected structure",
       async () => {
         const sdkResponse = await client.api.getTopVaults();
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccessWithArraySchema(response, "TopVault");
+
+        // Assert SDK behavior: array with expected data shape
+        assertArrayWithSchema(sdkResponse, "TopVault");
       },
       getTimeout("api")
     );
@@ -51,10 +53,12 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
       "should have valid vault addresses",
       async () => {
         const sdkResponse = await client.api.getTopVaults();
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccess(response);
 
-        response.data.forEach((vault) => {
+        // Assert SDK behavior
+        assertSuccess(sdkResponse);
+        assertDataArray(sdkResponse, 1);
+
+        sdkResponse.data.forEach((vault) => {
           assertValidEthAddress(vault.vault_address);
         });
       },
@@ -64,19 +68,20 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
 
   describe("getVaultApy()", () => {
     it(
-      "should return APY for specific vault",
+      "should return APY for specific vault with expected structure",
       async () => {
         // First get a vault ID
         const vaultsResponse = await client.api.getTopVaults();
-        const vaults = formatSdkResponse(vaultsResponse);
-        assertSuccess(vaults);
+        assertSuccess(vaultsResponse);
+        assertDataArray(vaultsResponse, 1);
 
-        const vaultId = vaults.data[0].vault_address;
+        const vaultId = vaultsResponse.data[0].vault_address;
 
         // Then get its APY
         const apyResponse = await client.api.getVaultApy(vaultId);
-        const response = formatSdkResponse(apyResponse);
-        assertSuccessWithSchema(response, "ApyResponse");
+
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(apyResponse, "ApyResponse");
       },
       getTimeout("api")
     );
@@ -86,17 +91,18 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
       async () => {
         // Get a vault ID
         const vaultsResponse = await client.api.getTopVaults();
-        const vaults = formatSdkResponse(vaultsResponse);
-        assertSuccess(vaults);
+        assertSuccess(vaultsResponse);
+        assertDataArray(vaultsResponse, 1);
 
-        const vaultId = vaults.data[0].vault_address;
+        const vaultId = vaultsResponse.data[0].vault_address;
 
         // Get daily APY
         const apyResponse = await client.api.getVaultApy(vaultId, {
           period: "daily",
         });
-        const response = formatSdkResponse(apyResponse);
-        assertSuccessWithSchema(response, "ApyResponse");
+
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(apyResponse, "ApyResponse");
       },
       getTimeout("api")
     );

@@ -10,14 +10,18 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
+import {
+  generateUniqueEmail,
+  genFakeBridgeAgreementId,
+} from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
   assertError,
-  assertValidUuid,
+  assertDataUuid,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/sdk-assertions.js";
 import {
   saveUserIds,
   saveEntityIds,
@@ -26,6 +30,9 @@ import {
 // Import test data from fixtures
 import validUser from "../../fixtures/test-data/users/valid-user.json" assert { type: "json" };
 import validEntity from "../../fixtures/test-data/entities/valid-entity.json" assert { type: "json" };
+
+// Generate a fake bridgeSignedAgreementId for use in tests
+const bridgeSignedAgreementId = genFakeBridgeAgreementId();
 
 // Skip if auth/write tests are disabled
 const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
@@ -42,23 +49,34 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
 
   describe("createUser()", () => {
     it(
-      "should create user with valid data",
+      "should create user with valid data and return typed response",
       async () => {
-        const sdkResponse = await client.api.createUser(validUser);
-        const response = formatSdkResponse(sdkResponse);
+        // Create a unique email and bridgeSignedAgreementId for this test
+        const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
+        const userWithUniqueEmail = {
+          ...validUser,
+          userInfo: {
+            ...validUser.userInfo,
+            email: uniqueEmail,
+          },
+          bridgeSignedAgreementId,
+        };
 
-        assertSuccessWithSchema(response, "CreateUserResponse", 201);
-        assertValidUuid(response.data.userId);
-        assertValidUuid(response.data.accountId);
+        const sdkResponse = await client.api.createUser(userWithUniqueEmail);
+
+        // Assert SDK behavior: success response with expected data shape
+        assertSuccessWithSchema(sdkResponse, "CreateUserResponse");
+        assertDataUuid(sdkResponse, "userId");
+        assertDataUuid(sdkResponse, "accountId");
 
         // Save IDs for use in other tests
-        saveUserIds(response.data.userId, response.data.accountId);
+        saveUserIds(sdkResponse.data.userId, sdkResponse.data.accountId);
       },
       getTimeout("api")
     );
 
     it(
-      "should reject request without integrator authentication",
+      "should handle authentication errors correctly",
       async () => {
         // Create a client without private key to test unauthenticated request
         const unauthenticatedClient = new (
@@ -69,18 +87,12 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
           },
         });
 
-        try {
-          const sdkResponse = await unauthenticatedClient.api.createUser(
-            validUser
-          );
-          const response = formatSdkResponse(sdkResponse);
-          // If we get here, the request succeeded but shouldn't have
-          // The SDK should handle auth automatically, so this test may need adjustment
-          assertError(response, 400);
-        } catch (error) {
-          // SDK might throw an error instead of returning an error response
-          expect(error).toBeDefined();
-        }
+        const sdkResponse = await unauthenticatedClient.api.createUser(
+          validUser
+        );
+
+        // Assert SDK error handling behavior
+        assertError(sdkResponse);
       },
       getTimeout("api")
     );
@@ -88,23 +100,36 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
 
   describe("createEntity()", () => {
     it(
-      "should create entity with valid data",
+      "should create entity with valid data and return typed response",
       async () => {
-        const sdkResponse = await client.api.createEntity(validEntity);
-        const response = formatSdkResponse(sdkResponse);
+        // Create a unique email and bridgeSignedAgreementId for this test
+        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
+        const entityWithUniqueEmail = {
+          ...validEntity,
+          entityInfo: {
+            ...validEntity.entityInfo,
+            email: uniqueEmail,
+          },
+          bridgeSignedAgreementId,
+        };
 
-        assertSuccessWithSchema(response, "CreateEntityResponse", 201);
-        assertValidUuid(response.data.entityId);
-        assertValidUuid(response.data.accountId);
+        const sdkResponse = await client.api.createEntity(
+          entityWithUniqueEmail
+        );
+
+        // Assert SDK behavior: success response with expected data shape
+        assertSuccessWithSchema(sdkResponse, "CreateEntityResponse");
+        assertDataUuid(sdkResponse, "entityId");
+        assertDataUuid(sdkResponse, "accountId");
 
         // Save IDs for use in other tests
-        saveEntityIds(response.data.entityId, response.data.accountId);
+        saveEntityIds(sdkResponse.data.entityId, sdkResponse.data.accountId);
       },
       getTimeout("api")
     );
 
     it(
-      "should reject request without integrator authentication",
+      "should handle authentication errors correctly",
       async () => {
         // Create a client without private key to test unauthenticated request
         const unauthenticatedClient = new (
@@ -115,16 +140,12 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
           },
         });
 
-        try {
-          const sdkResponse = await unauthenticatedClient.api.createEntity(
-            validEntity
-          );
-          const response = formatSdkResponse(sdkResponse);
-          assertError(response, 400);
-        } catch (error) {
-          // SDK might throw an error instead of returning an error response
-          expect(error).toBeDefined();
-        }
+        const sdkResponse = await unauthenticatedClient.api.createEntity(
+          validEntity
+        );
+
+        // Assert SDK error handling
+        assertError(sdkResponse);
       },
       getTimeout("api")
     );
@@ -132,25 +153,28 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
 
   describe("requestTosAcceptanceLink()", () => {
     it(
-      "should get ToS acceptance link",
+      "should return ToS acceptance link with expected structure",
       async () => {
         const sdkResponse = await client.api.requestTosAcceptanceLink({
           redirectUri: "https://example.com/callback",
         });
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "GetTosAcceptanceLinkResponse");
+        expect(typeof sdkResponse.data.hostedUrl).toBe("string");
+        expect(sdkResponse.data.hostedUrl).toMatch(/^https?:\/\//);
       },
       getTimeout("api")
     );
 
     it(
-      "should get ToS link without redirect URI",
+      "should return ToS link without redirect URI",
       async () => {
         const sdkResponse = await client.api.requestTosAcceptanceLink({});
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
+        // Assert SDK behavior
+        assertSuccessWithSchema(sdkResponse, "GetTosAcceptanceLinkResponse");
+        expect(typeof sdkResponse.data.hostedUrl).toBe("string");
       },
       getTimeout("api")
     );

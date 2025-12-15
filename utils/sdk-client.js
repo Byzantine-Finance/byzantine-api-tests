@@ -37,10 +37,11 @@ export function createSdkClient(options = {}) {
     },
   });
 
-  // Set up automatic authentication middleware for authenticated endpoints
-  // The SDK requires manually setting auth headers, so we wrap the API methods
-  // to automatically apply authentication for methods that need it
-  setupAutoAuth(client, privateKey);
+  // Set up the auto authentication headers
+  setupAutoAuth(client);
+
+  // Set up debugging middleware if DEBUG_MODE flag is enabled
+  setupDebugging(client);
 
   return client;
 }
@@ -49,9 +50,8 @@ export function createSdkClient(options = {}) {
  * Set up automatic authentication for authenticated API methods
  * Uses middleware to dynamically generate auth headers for each request
  * @param {ByzantineClient} client - SDK client instance
- * @param {string} privateKey - Integrator private key
  */
-function setupAutoAuth(client, privateKey) {
+function setupAutoAuth(client) {
   // Set up middleware that automatically generates auth headers for authenticated endpoints
   client.api.client.use({
     async onRequest({ request }) {
@@ -73,41 +73,33 @@ function setupAutoAuth(client, privateKey) {
       );
 
       if (needsAuth) {
-        // Build path with query string for stamp generation
-        const pathAndQuery = url.pathname + (url.search || "");
+        // Extract method and path from the request
         const method = request.method;
+        const pathAndQuery = url.pathname + url.search;
 
         // Get request body if present
-        // Note: openapi-fetch may have already serialized the body
         let body = "";
         if (request.body) {
-          if (typeof request.body === "string") {
-            body = request.body;
-          } else if (
-            request.body instanceof FormData ||
-            request.body instanceof URLSearchParams
-          ) {
-            // For FormData/URLSearchParams, we can't easily stringify for signing
-            // These endpoints use JSON, so this shouldn't happen
-            body = "";
-          } else {
-            // Try to stringify the body
-            try {
-              body = JSON.stringify(request.body);
-            } catch (e) {
-              // If stringification fails, use empty string
-              body = "";
-            }
-          }
+          // Clone the request to read the body
+          const clonedRequest = request.clone();
+          body = await clonedRequest.text();
         }
 
-        // Generate stamp for this request
+        // Generate a fresh stamp for this request
         const stamp = await client.apiKey.getStamp(method, pathAndQuery, body);
 
-        // Set auth headers
+        // Add auth headers
         request.headers.set("X-Pubkey", stamp["X-Pubkey"]);
         request.headers.set("X-Timestamp", stamp["X-Timestamp"]);
         request.headers.set("X-Signature", stamp["X-Signature"]);
+
+        // Log auth headers if debugging is enabled
+        if (process.env.DEBUG_MODE === "true") {
+          console.log("🔑 Auth headers set:");
+          console.log(`   X-Pubkey: ${stamp["X-Pubkey"]}`);
+          console.log(`   X-Timestamp: ${stamp["X-Timestamp"]}`);
+          console.log(`   X-Signature: ${stamp["X-Signature"]}`);
+        }
       }
 
       return request;
@@ -121,6 +113,64 @@ function setupAutoAuth(client, privateKey) {
 let sdkClientInstance;
 
 /**
+ * Set up debugging middleware for SDK requests/responses
+ * Logs requests and responses when DEBUG_MODE=true
+ * @param {ByzantineClient} client - SDK client instance
+ */
+function setupDebugging(client) {
+  if (process.env.DEBUG_MODE !== "true") {
+    return; // Skip if debugging is not enabled
+  }
+
+  client.api.client.use({
+    async onRequest({ request }) {
+      const url = new URL(request.url);
+      console.log(
+        `→ SDK ${request.method?.toUpperCase()} ${url.origin}${url.pathname}${
+          url.search
+        }`
+      );
+
+      if (request.body) {
+        try {
+          const clonedRequest = request.clone();
+          const body = await clonedRequest.text();
+          if (body) {
+            console.log("  Body:", body);
+          }
+        } catch (e) {
+          console.log("  Body: [unable to read]");
+        }
+      }
+
+      return request;
+    },
+    async onResponse({ response }) {
+      const url = new URL(response.url);
+      console.log(`← SDK ${response.status} ${url.pathname}${url.search}`);
+
+      try {
+        const clonedResponse = response.clone();
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const data = await clonedResponse.json();
+          console.log("  Response:", JSON.stringify(data, null, 2));
+        } else {
+          const text = await clonedResponse.text();
+          if (text) {
+            console.log("  Response:", text);
+          }
+        }
+      } catch (e) {
+        console.log("  Response: [unable to read]");
+      }
+
+      return response;
+    },
+  });
+}
+
+/**
  * Get or create the singleton SDK client instance
  * @returns {ByzantineClient} SDK client instance
  */
@@ -129,32 +179,4 @@ export function getSdkClient() {
     sdkClientInstance = createSdkClient();
   }
   return sdkClientInstance;
-}
-
-/**
- * Format SDK response to match API client response format
- * SDK uses openapi-fetch which returns { data, error, response }
- * We convert it to { status, ok, data?, error? } format
- *
- * @param {object} sdkResponse - Response from SDK method
- * @returns {object} Formatted response matching api-client format
- */
-export function formatSdkResponse(sdkResponse) {
-  if (sdkResponse.error) {
-    return {
-      status: sdkResponse.response?.status || 500,
-      ok: false,
-      data: undefined,
-      error: sdkResponse.error,
-      headers: sdkResponse.response?.headers || {},
-    };
-  }
-
-  return {
-    status: sdkResponse.response?.status || 200,
-    ok: true,
-    data: sdkResponse.data,
-    error: undefined,
-    headers: sdkResponse.response?.headers || {},
-  };
 }

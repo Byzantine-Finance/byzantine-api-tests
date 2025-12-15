@@ -3,34 +3,42 @@
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
 
-import { describe, it } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { describe, it, expect } from "vitest";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import { getTimeout } from "../../config/test.config.js";
 import {
   assertSuccess,
   assertSuccessWithSchema,
-  assertHasFields,
-} from "../../utils/assertions.js";
+  assertDataHasFields,
+} from "../../utils/sdk-assertions.js";
 
 describe("Health SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
 
   it(
-    "should return 200 status",
+    "should return 200 status with health data",
     async () => {
       const sdkResponse = await client.api.healthCheck();
-      const response = formatSdkResponse(sdkResponse);
-      assertSuccess(response);
+      
+      // Assert SDK behavior: success response
+      assertSuccess(sdkResponse);
+      
+      // Assert expected data shape
+      expect(sdkResponse.data.status).toBeDefined();
+      expect(["healthy", "ok", "up"]).toContain(
+        sdkResponse.data.status.toLowerCase()
+      );
     },
     getTimeout("api")
   );
 
   it(
-    "should return valid health status with schema validation",
+    "should return valid health status with expected data shape",
     async () => {
       const sdkResponse = await client.api.healthCheck();
-      const response = formatSdkResponse(sdkResponse);
-      assertSuccessWithSchema(response, "HealthResponse");
+      
+      // Assert SDK behavior: success with expected data shape
+      assertSuccessWithSchema(sdkResponse, "HealthResponse");
     },
     getTimeout("api")
   );
@@ -39,9 +47,10 @@ describe("Health SDK - Using Integrator SDK", () => {
     "should have status field",
     async () => {
       const sdkResponse = await client.api.healthCheck();
-      const response = formatSdkResponse(sdkResponse);
-      assertSuccess(response);
-      assertHasFields(response.data, ["status"]);
+      
+      // Assert SDK behavior
+      assertSuccess(sdkResponse);
+      assertDataHasFields(sdkResponse, ["status"]);
     },
     getTimeout("api")
   );

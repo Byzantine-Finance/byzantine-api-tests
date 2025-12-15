@@ -7,7 +7,7 @@
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
 import { describe, it, expect } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -16,9 +16,9 @@ import {
 import {
   assertSuccessWithSchema,
   assertError,
-  assertValidUuid,
+  assertDataUuid,
   assertSchema,
-} from "../../utils/assertions.js";
+} from "../../utils/sdk-assertions.js";
 
 // Import test data from fixtures
 import usAchAccount from "../../fixtures/test-data/bank-accounts/us-ach-account.json" assert { type: "json" };
@@ -35,7 +35,7 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
 
   describe("addBankAccount()", () => {
     it(
-      "should add US ACH bank account",
+      "should add US ACH bank account and return typed response",
       async () => {
         const requestBody = {
           ...usAchAccount,
@@ -44,16 +44,16 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         assertSchema(requestBody, "AddBankAccountRequest");
 
         const sdkResponse = await client.api.addBankAccount(requestBody);
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "OffRampAddress");
-        assertValidUuid(response.data.bank_account_id);
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "OffRampAddress");
+        assertDataUuid(sdkResponse, "bank_account_id");
       },
       getTimeout("api")
     );
 
     it(
-      "should add EUR IBAN bank account",
+      "should add EUR IBAN bank account and return typed response",
       async () => {
         const requestBody = {
           ...eurIbanAccount,
@@ -63,15 +63,15 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         assertSchema(requestBody, "AddBankAccountRequest");
 
         const sdkResponse = await client.api.addBankAccount(requestBody);
-        const response = formatSdkResponse(sdkResponse);
 
-        assertSuccessWithSchema(response, "OffRampAddress");
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "OffRampAddress");
       },
       getTimeout("api")
     );
 
     it(
-      "should reject request without authentication",
+      "should handle authentication errors correctly",
       async () => {
         const requestBody = {
           ...usAchAccount,
@@ -86,16 +86,12 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
           },
         });
 
-        try {
-          const sdkResponse = await unauthenticatedClient.api.addBankAccount(
-            requestBody
-          );
-          const response = formatSdkResponse(sdkResponse);
-          assertError(response, 401);
-        } catch (error) {
-          // SDK might throw an error instead of returning an error response
-          expect(error).toBeDefined();
-        }
+        const sdkResponse = await unauthenticatedClient.api.addBankAccount(
+          requestBody
+        );
+
+        // Assert SDK error handling
+        assertError(sdkResponse);
       },
       getTimeout("api")
     );

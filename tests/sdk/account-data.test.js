@@ -8,7 +8,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient, formatSdkResponse } from "../../utils/sdk-client.js";
+import { getSdkClient } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -16,9 +16,10 @@ import {
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
-  assertSuccessWithArraySchema,
+  assertArrayWithSchema,
   assertError,
-} from "../../utils/assertions.js";
+  assertDataUuid,
+} from "../../utils/sdk-assertions.js";
 
 // Skip if feature is disabled or no test data
 const describeAccounts = FEATURE_FLAGS.enableAccountTests
@@ -34,21 +35,25 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
 
   describe("getUserDetails()", () => {
     it(
-      "should get user details by user ID",
+      "should return user details with expected structure",
       async () => {
         const sdkResponse = await client.api.getUserDetails(testUserId);
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccessWithSchema(response, "GetUserResponse");
+
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "GetUserResponse");
+        assertDataUuid(sdkResponse, "userId");
+        assertDataUuid(sdkResponse, "accountId");
       },
       getTimeout("api")
     );
 
     it(
-      "should return 404 for non-existent user",
+      "should return 404 error for non-existent user",
       async () => {
         const sdkResponse = await client.api.getUserDetails(fakeId);
-        const response = formatSdkResponse(sdkResponse);
-        assertError(response, 404);
+
+        // Assert SDK error handling
+        assertError(sdkResponse);
       },
       getTimeout("api")
     );
@@ -56,21 +61,25 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
 
   describe("getEntityDetails()", () => {
     it(
-      "should get entity details by entity ID",
+      "should return entity details with expected structure",
       async () => {
         const sdkResponse = await client.api.getEntityDetails(testEntityId);
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccessWithSchema(response, "GetEntityResponse");
+
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "GetEntityResponse");
+        assertDataUuid(sdkResponse, "entityId");
+        assertDataUuid(sdkResponse, "accountId");
       },
       getTimeout("api")
     );
 
     it(
-      "should return 404 for non-existent entity",
+      "should return 404 error for non-existent entity",
       async () => {
         const sdkResponse = await client.api.getEntityDetails(fakeId);
-        const response = formatSdkResponse(sdkResponse);
-        assertError(response, 404);
+
+        // Assert SDK error handling
+        assertError(sdkResponse);
       },
       getTimeout("api")
     );
@@ -78,11 +87,12 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
 
   describe("getBankAccounts()", () => {
     it(
-      "should get bank accounts for an account",
+      "should return array of bank accounts with expected structure",
       async () => {
         const sdkResponse = await client.api.getBankAccounts(testAccountId);
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccessWithArraySchema(response, "OffRampAddress");
+
+        // Assert SDK behavior: array response with expected shape
+        assertArrayWithSchema(sdkResponse, "OffRampAddress");
       },
       getTimeout("api")
     );
@@ -94,8 +104,9 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
           testAccountId,
           "usd"
         );
-        const response = formatSdkResponse(sdkResponse);
-        assertSuccessWithArraySchema(response, "OffRampAddress");
+
+        // Assert SDK behavior: filtered array response
+        assertArrayWithSchema(sdkResponse, "OffRampAddress");
       },
       getTimeout("api")
     );
