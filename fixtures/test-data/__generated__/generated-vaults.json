@@ -1,7 +1,17 @@
 [
   {
-    "vault_address": "0x30cACd22F178C9E57b0b010e1f9432881aa530C4",
+    "vault_address": "0x0863cf361ea7f92fd53223a2fa1e58f799544e82",
     "chain_id": 8453,
+    "is_active": true
+  },
+  {
+    "vault_address": "0x7c51228c60fe580249f0bd99f61740c0594b23b3",
+    "chain_id": 1,
+    "is_active": true
+  },
+  {
+    "vault_address": "0x30cacd22f178c9e57b0b010e1f9432881aa530c4",
+    "chain_id": 1,
     "is_active": true
   }
 ]

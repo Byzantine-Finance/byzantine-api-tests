@@ -6,6 +6,7 @@
 import dotenv from "dotenv";
 import { getEnvironment, isProduction, isCI } from "./environments.js";
 import { loadTestData } from "../utils/test-data-persistence.js";
+import vaultData from "../fixtures/test-data/__generated__/generated-vaults.json";
 
 dotenv.config();
 
@@ -52,14 +53,14 @@ export const TEST_DATA = {
       ? {
           address:
             process.env.TEST_VAULT_ETH ||
-            "0xbd9be389743674cd1eba663067eb83d294321a33",
+            vaultData.find((v) => v.chain_id === 1)?.vault_address,
           chainId: 1,
         }
       : {
           // Default to BASE
           address:
             process.env.TEST_VAULT_BASE ||
-            "0x0863cf361ea7f92fd53223a2fa1e58f799544e82",
+            vaultData.find((v) => v.chain_id === 8453)?.vault_address,
           chainId: 8453,
         },
   },
@@ -104,18 +105,27 @@ export const FEATURE_FLAGS = {
 
   // WebAuthn/Passkey tests
   enablePasskeyTests: process.env.ENABLE_PASSKEY_TESTS === "true",
-  enablePasskeyInitApproveTests: process.env.ENABLE_PASSKEY_INIT_APPROVE_TESTS === "true",
-  enablePasskeyInitDepositTests: process.env.ENABLE_PASSKEY_INIT_DEPOSIT_TESTS === "true",
-  enablePasskeyInitWithdrawTests: process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
-  enablePasskeyApproveTxTests: process.env.ENABLE_PASSKEY_APPROVE_TX_TESTS === "true",
-  enablePasskeyDepositTxTests: process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true",
-  enablePasskeyWithdrawTxTests: process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
+  enablePasskeyInitApproveTests:
+    process.env.ENABLE_PASSKEY_INIT_APPROVE_TESTS === "true",
+  enablePasskeyInitDepositTests:
+    process.env.ENABLE_PASSKEY_INIT_DEPOSIT_TESTS === "true",
+  enablePasskeyInitWithdrawTests:
+    process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
+  enablePasskeyApproveTxTests:
+    process.env.ENABLE_PASSKEY_APPROVE_TX_TESTS === "true",
+  enablePasskeyDepositTxTests:
+    process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true",
+  enablePasskeyWithdrawTxTests:
+    process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
 
   // OTP tests (require real OTP codes)
   enableOtpTests: process.env.ENABLE_OTP_TESTS === "true",
-  enableOtpInitApproveTests: process.env.ENABLE_OTP_INIT_APPROVE_TESTS === "true",
-  enableOtpInitDepositTests: process.env.ENABLE_OTP_INIT_DEPOSIT_TESTS === "true",
-  enableOtpInitWithdrawTests: process.env.ENABLE_OTP_INIT_WITHDRAW_TESTS === "true",
+  enableOtpInitApproveTests:
+    process.env.ENABLE_OTP_INIT_APPROVE_TESTS === "true",
+  enableOtpInitDepositTests:
+    process.env.ENABLE_OTP_INIT_DEPOSIT_TESTS === "true",
+  enableOtpInitWithdrawTests:
+    process.env.ENABLE_OTP_INIT_WITHDRAW_TESTS === "true",
   enableOtpApproveTxTests: process.env.ENABLE_OTP_APPROVE_TX_TESTS === "true",
   enableOtpDepositTxTests: process.env.ENABLE_OTP_DEPOSIT_TX_TESTS === "true",
   enableOtpWithdrawTxTests: process.env.ENABLE_OTP_WITHDRAW_TX_TESTS === "true",
