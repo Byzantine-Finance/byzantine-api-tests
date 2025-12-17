@@ -55,6 +55,9 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           },
         };
 
+        // log agreementId
+        console.log("agreementId of user", userWithUniqueEmail.bridgeSignedAgreementId);
+
         const response = await apiClient.post(
           endpoints.create.user,
           userWithUniqueEmail,
@@ -99,6 +102,9 @@ describeAccountCreation("Byzantine Account Creation API", () => {
             email: uniqueEmail,
           },
         };
+
+        // log agreementId
+        console.log("agreementId of entity", entityWithUniqueEmail.bridgeSignedAgreementId);
 
         const response = await apiClient.post(
           endpoints.create.entity,
