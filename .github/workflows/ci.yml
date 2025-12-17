@@ -47,11 +47,6 @@ jobs:
       - run: npm ci
 
       - run: npm run generate-schemas
-        env:
-          TEST_ENV: ${{ env.TEST_ENV }}
-          DEV_API_URL: ${{ vars.DEV_API_URL }}
-          PROD_API_URL: ${{ vars.PROD_API_URL }}
-          OPENAPI_URL: ${{ vars.OPENAPI_URL }}
       - run: npm run validate-schemas
       - name: Check for schema changes
         id: schema-changed
@@ -69,15 +64,7 @@ jobs:
           path: fixtures/__generated__/generated-schemas.json
 
       - run: npm run test:api:health
-        env:
-          TEST_ENV: ${{ env.TEST_ENV }}
-          DEV_API_URL: ${{ vars.DEV_API_URL }}
-          PROD_API_URL: ${{ vars.PROD_API_URL }}
       - run: npm run test:api:vaults
-        env:
-          TEST_ENV: ${{ env.TEST_ENV }}
-          DEV_API_URL: ${{ vars.DEV_API_URL }}
-          PROD_API_URL: ${{ vars.PROD_API_URL }}
 
   ############################
   # Job 1b: Setup & Manual Intervention
@@ -101,11 +88,7 @@ jobs:
 
       - name: Start server
         run: npm run serve &
-        env:
-          TEST_ENV: ${{ env.TEST_ENV }}
-          DEV_API_URL: ${{ vars.DEV_API_URL }}
-          PROD_API_URL: ${{ vars.PROD_API_URL }}
-
+        
       - name: Wait for server
         run: |
           timeout=30
