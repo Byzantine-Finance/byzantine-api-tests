@@ -28,7 +28,7 @@ env:
 
 jobs:
   ############################
-  # Job 1a: Foundation Tests
+  # Job 1: Foundation Tests
   ############################
   foundation-tests:
     name: Foundation Tests
@@ -66,13 +66,12 @@ jobs:
       - run: npm run test:api:vaults
 
   ############################
-  # Job 1b: Setup & Manual Intervention
+  # Job 2a: Start server & tunnel
   ############################
-  setup-and-manual-intervention:
-    name: Setup & Manual Intervention
+  setup-server-tunnel:
+    name: Setup Server & Tunnel
     runs-on: ubuntu-latest
     needs: foundation-tests
-    environment: setup-manual-intervention  # <-- this triggers the manual approval pause
     outputs:
       web_url: ${{ steps.tunnel.outputs.web_url }}
     steps:
@@ -85,7 +84,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Start server, tunnel & wait for manual approval
+      - name: Start server and tunnel
         id: tunnel
         run: |
           # Start server in background
@@ -112,25 +111,41 @@ jobs:
           URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
-          # Display notice for user
+          # Display URL for user
           echo "::notice::🌐 Web Interface ready: $URL/tests/web/api-testing.html"
           echo "═══════════════════════════════════════════════════════════════"
           echo "  🌐 Web Interface URL: $URL/tests/web/api-testing.html"
           echo "  📋 Please complete manual steps in the web interface"
-          echo "  before approving this deployment to continue."
+          echo "  before approving the next job."
           echo "═══════════════════════════════════════════════════════════════"
 
-          # Keep job running until manual approval
-          sleep infinity
+  ############################
+  # Job 1b-2: Manual intervention & downstream steps
+  ############################
+  manual-intervention:
+    name: Manual Intervention
+    runs-on: ubuntu-latest
+    needs: setup-server-tunnel
+    environment: setup-manual-intervention
+    steps:
+      - name: Display web URL from previous job
+        run: |
+          echo "🌐 Open this URL and complete manual steps:"
+          echo "${{ needs.setup-server-tunnel.outputs.web_url }}"
+
+      - name: Continue with downstream steps
+        run: |
+          echo "✅ Manual intervention approved, continuing workflow..."
+          # Place your downstream commands here
 
   ############################
-  # Job 2: Account Lifecycle
+  # Job 2b: Account Lifecycle
   ############################
   account-lifecycle:
     name: Account Lifecycle
     runs-on: ubuntu-latest
     environment: dev
-    needs: setup-and-manual-intervention
+    needs: manual-intervention
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

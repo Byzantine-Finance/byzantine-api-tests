@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Byzantine API Testing Widget</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@byzantine/integrator-sdk/webauthn-stamper": "../../node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js"
+        }
+      }
+    </script>
     <style>
       * {
         margin: 0;
@@ -256,8 +263,7 @@
     </div>
 
     <script type="module">
-      // Import only the WebauthnStamper directly to avoid Node.js dependencies
-      import { WebauthnStamper } from "./node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js";
+      import { WebauthnStamper } from "@byzantine/integrator-sdk/webauthn-stamper";
 
       // Check for ToS acceptance success message in URL
       const urlParams = new URLSearchParams(window.location.search);
