@@ -126,8 +126,8 @@ jobs:
         run: |
           echo "⏸️ Pausing workflow. Visit the URL above to accept the ToS."
           echo "You can cancel this step manually in GitHub UI if needed."
-          # Sleep for 1 minute
-          sleep 60
+          # Sleep for 40 seconds
+          sleep 40
 
       - name: Continue workflow
         run: |
@@ -145,7 +145,6 @@ jobs:
             fixtures/test-data/entities/valid-entity.json
           retention-days: 1
 
-          
   ############################
   # Job 2: Account Lifecycle
   ############################
@@ -168,7 +167,7 @@ jobs:
       - run: npm ci
       - run: npm run test:api:create
       - name: Wait 30 seconds
-        run: sleep 30     
+        run: sleep 30
       - run: DEBUG_MODE=true npm run test:api:management
       - run: npm run test:api:accounts
       - uses: actions/upload-artifact@v4
@@ -182,7 +181,6 @@ jobs:
   passkey-init-approve:
     name: Passkey Init & Manual Approve
     runs-on: ubuntu-latest
-    needs: account-lifecycle
     env:
       ENABLE_PASSKEY_INIT_APPROVE_TESTS: "true"
     environment:
@@ -201,8 +199,6 @@ jobs:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/generated-tx-passkey.json
           retention-days: 1
-      - run: |
-          echo "::notice::Complete manual steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
   ###################################
   # Job 3b: Passkey Approve Transaction
@@ -219,11 +215,62 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+
+      # Download the transaction data from job 3a
       - name: Download passkey transaction data
         uses: actions/download-artifact@v4
         with:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/
+
+      # Start the server
+      - name: Start server & Cloudflare tunnel
+        id: tunnel
+        run: |
+          # Start server in background
+          npm run serve &
+
+          # Wait for server to be ready
+          echo "⏳ Waiting for server to start..."
+          timeout=30
+          counter=0
+          while ! node -e "require('http').get('http://localhost:3000/tests/web/api-testing.html', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; do
+            if [ $counter -ge $timeout ]; then
+              echo "Server failed to start within $timeout seconds"
+              exit 1
+            fi
+            sleep 1
+            counter=$((counter+1))
+          done
+
+          # Start Cloudflare tunnel
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
+          sleep 5
+          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
+
+          # Display notice for user
+          echo "::notice::🌐 Web Interface ready: $URL/tests/web/api-testing.html"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  🌐 Web Interface URL: $URL/tests/web/api-testing.html"
+          echo "  📋 Please complete manual steps in the web interface"
+          echo "  before continuing."
+          echo "═══════════════════════════════════════════════════════════════"
+
+      - name: Pause for manual intervention
+        run: |
+          echo "⏸️ Pausing workflow. Visit the URL above to accept the ToS."
+          echo "You can cancel this step manually in GitHub UI if needed."
+          # Sleep for 40 seconds
+          sleep 40
+
+      - name: Continue workflow
+        run: |
+          echo "✅ Manual intervention completed. Continuing workflow..."
+          echo "Web URL: ${{ steps.tunnel.outputs.web_url }}"
+
       - run: npm run test:api:transaction-passkey
 
   ###################################
@@ -256,8 +303,6 @@ jobs:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/generated-tx-passkey.json
           retention-days: 1
-      - run: |
-          echo "::notice::Complete manual deposit steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
   ###################################
   # Job 4b: Passkey Deposit Transaction
@@ -274,11 +319,62 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+
+      # Download the transaction data from job 3a
       - name: Download passkey transaction data
         uses: actions/download-artifact@v4
         with:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/
+
+      # Start the server
+      - name: Start server & Cloudflare tunnel
+        id: tunnel
+        run: |
+          # Start server in background
+          npm run serve &
+
+          # Wait for server to be ready
+          echo "⏳ Waiting for server to start..."
+          timeout=30
+          counter=0
+          while ! node -e "require('http').get('http://localhost:3000/tests/web/api-testing.html', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; do
+            if [ $counter -ge $timeout ]; then
+              echo "Server failed to start within $timeout seconds"
+              exit 1
+            fi
+            sleep 1
+            counter=$((counter+1))
+          done
+
+          # Start Cloudflare tunnel
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
+          sleep 5
+          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
+
+          # Display notice for user
+          echo "::notice::🌐 Web Interface ready: $URL/tests/web/api-testing.html"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  🌐 Web Interface URL: $URL/tests/web/api-testing.html"
+          echo "  📋 Please complete manual steps in the web interface"
+          echo "  before continuing."
+          echo "═══════════════════════════════════════════════════════════════"
+
+      - name: Pause for manual intervention
+        run: |
+          echo "⏸️ Pausing workflow. Visit the URL above to accept the ToS."
+          echo "You can cancel this step manually in GitHub UI if needed."
+          # Sleep for 40 seconds
+          sleep 40
+
+      - name: Continue workflow
+        run: |
+          echo "✅ Manual intervention completed. Continuing workflow..."
+          echo "Web URL: ${{ steps.tunnel.outputs.web_url }}"
+
       - run: npm run test:api:transaction-passkey
 
   ###################################
@@ -311,8 +407,6 @@ jobs:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/generated-tx-passkey.json
           retention-days: 1
-      - run: |
-          echo "::notice::Complete manual withdraw steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
   ###################################
   # Job 5b: Passkey Withdraw Transaction
@@ -329,11 +423,62 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+
+      # Download the transaction data from job 3a
       - name: Download passkey transaction data
         uses: actions/download-artifact@v4
         with:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/
+
+      # Start the server
+      - name: Start server & Cloudflare tunnel
+        id: tunnel
+        run: |
+          # Start server in background
+          npm run serve &
+
+          # Wait for server to be ready
+          echo "⏳ Waiting for server to start..."
+          timeout=30
+          counter=0
+          while ! node -e "require('http').get('http://localhost:3000/tests/web/api-testing.html', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; do
+            if [ $counter -ge $timeout ]; then
+              echo "Server failed to start within $timeout seconds"
+              exit 1
+            fi
+            sleep 1
+            counter=$((counter+1))
+          done
+
+          # Start Cloudflare tunnel
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
+          sleep 5
+          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
+
+          # Display notice for user
+          echo "::notice::🌐 Web Interface ready: $URL/tests/web/api-testing.html"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  🌐 Web Interface URL: $URL/tests/web/api-testing.html"
+          echo "  📋 Please complete manual steps in the web interface"
+          echo "  before continuing."
+          echo "═══════════════════════════════════════════════════════════════"
+
+      - name: Pause for manual intervention
+        run: |
+          echo "⏸️ Pausing workflow. Visit the URL above to accept the ToS."
+          echo "You can cancel this step manually in GitHub UI if needed."
+          # Sleep for 40 seconds
+          sleep 40
+
+      - name: Continue workflow
+        run: |
+          echo "✅ Manual intervention completed. Continuing workflow..."
+          echo "Web URL: ${{ steps.tunnel.outputs.web_url }}"
+
       - run: npm run test:api:transaction-passkey
 
   ###################################
