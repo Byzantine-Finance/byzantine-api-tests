@@ -126,15 +126,26 @@ jobs:
         run: |
           echo "⏸️ Pausing workflow. Visit the URL above to accept the ToS."
           echo "You can cancel this step manually in GitHub UI if needed."
-          # Sleep for 10 minutes
-          sleep 180
+          # Sleep for 2 minutes
+          sleep 120
 
       - name: Continue workflow
         run: |
           echo "✅ Manual intervention completed. Continuing workflow..."
           echo "Web URL: ${{ steps.tunnel.outputs.web_url }}"
-          # Add any downstream steps here
 
+      # Upload updated files after manual intervention
+      - name: Upload updated test data files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-test-data
+          path: |
+            fixtures/test-data/users/valid-user.json
+            fixtures/test-data/entities/valid-entity.json
+          retention-days: 1
+
+          
   ############################
   # Job 2: Account Lifecycle
   ############################
@@ -148,6 +159,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      # Download updated files BEFORE running tests
+      - name: Download updated test data files
+        uses: actions/download-artifact@v4
+        with:
+          name: updated-test-data
+          path: fixtures/test-data/
       - run: npm ci
       - run: npm run test:api:create
       - run: npm run test:api:management
