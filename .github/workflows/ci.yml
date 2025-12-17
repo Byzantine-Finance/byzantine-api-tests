@@ -126,8 +126,8 @@ jobs:
         run: |
           echo "⏸️ Pausing workflow. Visit the URL above to accept the ToS."
           echo "You can cancel this step manually in GitHub UI if needed."
-          # Sleep for 2 minutes
-          sleep 120
+          # Sleep for 1 minute
+          sleep 60
 
       - name: Continue workflow
         run: |
@@ -167,6 +167,8 @@ jobs:
           path: fixtures/test-data/
       - run: npm ci
       - run: npm run test:api:create
+      - name: Wait 30 seconds
+        run: sleep 30     
       - run: DEBUG_MODE=true npm run test:api:management
       - run: npm run test:api:accounts
       - uses: actions/upload-artifact@v4
