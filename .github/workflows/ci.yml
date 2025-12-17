@@ -167,7 +167,7 @@ jobs:
           path: fixtures/test-data/
       - run: npm ci
       - run: npm run test:api:create
-      - run: npm run test:api:management
+      - run: DEBUG_MODE=true npm run test:api:management
       - run: npm run test:api:accounts
       - uses: actions/upload-artifact@v4
         with:
