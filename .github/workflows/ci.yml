@@ -27,7 +27,6 @@ env:
   CI: "true"
 
 jobs:
-
   ############################
   # Job 1a: Foundation Tests
   ############################
@@ -88,7 +87,7 @@ jobs:
 
       - name: Start server
         run: npm run serve &
-        
+
       - name: Wait for server
         run: |
           timeout=30
@@ -161,12 +160,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
-      - name: Download account data
-        uses: actions/download-artifact@v4
-        with:
-          name: test-data-accounts
-          path: fixtures/test-data/__generated__/
       - run: npm run test:api:init-passkey
+      - name: Upload passkey transaction data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/generated-tx-passkey.json
+          retention-days: 1
       - run: |
           echo "::notice::Complete manual steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
@@ -183,11 +184,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
-      - run: npm run test:api:transaction-passkey
-      - uses: actions/upload-artifact@v4
+      - name: Download passkey transaction data
+        uses: actions/download-artifact@v4
         with:
           name: test-data-passkey
-          path: fixtures/test-data/__generated__/generated-tx-passkey.json
+          path: fixtures/test-data/__generated__/
+      - run: npm run test:api:transaction-passkey
 
   ###################################
   # Job 4a: Passkey Deposit Init + Manual Deposit
@@ -204,7 +206,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+      - name: Download passkey transaction data
+        uses: actions/download-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/
       - run: npm run test:api:init-passkey
+      - name: Upload passkey transaction data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/generated-tx-passkey.json
+          retention-days: 1
       - run: |
           echo "::notice::Complete manual deposit steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
@@ -221,6 +235,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+      - name: Download passkey transaction data
+        uses: actions/download-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/
       - run: npm run test:api:transaction-passkey
 
   ###################################
@@ -238,7 +257,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+      - name: Download passkey transaction data
+        uses: actions/download-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/
       - run: npm run test:api:init-passkey
+      - name: Upload passkey transaction data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/generated-tx-passkey.json
+          retention-days: 1
       - run: |
           echo "::notice::Complete manual withdraw steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
@@ -255,9 +286,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+      - name: Download passkey transaction data
+        uses: actions/download-artifact@v4
+        with:
+          name: test-data-passkey
+          path: fixtures/test-data/__generated__/
       - run: npm run test:api:transaction-passkey
 
   ###################################
   # Job 6: Transaction OTP + Final
   ###################################
- # TODO: Add transaction OTP tests 
+  # TODO: Add transaction OTP tests
