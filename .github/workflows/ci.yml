@@ -71,8 +71,8 @@ jobs:
   setup-and-manual-intervention:
     name: Setup & Manual Intervention
     runs-on: ubuntu-latest
-    environment: setup-manual-intervention
     needs: foundation-tests
+    environment: setup-manual-intervention  # <-- this triggers the manual approval pause
     outputs:
       web_url: ${{ steps.tunnel.outputs.web_url }}
     steps:
@@ -85,11 +85,14 @@ jobs:
 
       - run: npm ci
 
-      - name: Start server
-        run: npm run serve &
-
-      - name: Wait for server
+      - name: Start server, tunnel & wait for manual approval
+        id: tunnel
         run: |
+          # Start server in background
+          npm run serve &
+
+          # Wait for server to be ready
+          echo "⏳ Waiting for server to start..."
           timeout=30
           counter=0
           while ! node -e "require('http').get('http://localhost:3000/tests/web/api-testing.html', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; do
@@ -101,9 +104,7 @@ jobs:
             counter=$((counter+1))
           done
 
-      - name: Start tunnel
-        id: tunnel
-        run: |
+          # Start Cloudflare tunnel
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
           ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
@@ -111,17 +112,16 @@ jobs:
           URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
-      - name: Display web interface
-        run: |
-          echo "::notice::🌐 Web Interface ready: ${{ steps.tunnel.outputs.web_url }}"
-          echo ""
+          # Display notice for user
+          echo "::notice::🌐 Web Interface ready: $URL/tests/web/api-testing.html"
           echo "═══════════════════════════════════════════════════════════════"
-          echo "  🌐 Web Interface URL:"
-          echo "  ${{ steps.tunnel.outputs.web_url }}"
-          echo ""
+          echo "  🌐 Web Interface URL: $URL/tests/web/api-testing.html"
           echo "  📋 Please complete manual steps in the web interface"
           echo "  before approving this deployment to continue."
           echo "═══════════════════════════════════════════════════════════════"
+
+          # Keep job running until manual approval
+          sleep infinity
 
   ############################
   # Job 2: Account Lifecycle
