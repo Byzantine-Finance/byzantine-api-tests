@@ -29,13 +29,64 @@ env:
 jobs:
 
   ############################
-  # Job 1: Setup & Foundation
+  # Job 1a: Foundation Tests
   ############################
-  setup-and-foundation:
-    name: Setup & Foundation
+  foundation-tests:
+    name: Foundation Tests
     runs-on: ubuntu-latest
     environment: dev
     if: ${{ !contains(github.event.inputs.skip_jobs || '', 'setup-and-foundation') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run generate-schemas
+        env:
+          TEST_ENV: ${{ env.TEST_ENV }}
+          DEV_API_URL: ${{ vars.DEV_API_URL }}
+          PROD_API_URL: ${{ vars.PROD_API_URL }}
+          OPENAPI_URL: ${{ vars.OPENAPI_URL }}
+      - run: npm run validate-schemas
+      - name: Check for schema changes
+        id: schema-changed
+        run: |
+          if git diff --quiet fixtures/__generated__/generated-schemas.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Upload schema changes
+        if: ${{ steps.schema-changed.outputs.changed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-changes
+          path: fixtures/__generated__/generated-schemas.json
+
+      - run: npm run test:api:health
+        env:
+          TEST_ENV: ${{ env.TEST_ENV }}
+          DEV_API_URL: ${{ vars.DEV_API_URL }}
+          PROD_API_URL: ${{ vars.PROD_API_URL }}
+      - run: npm run test:api:vaults
+        env:
+          TEST_ENV: ${{ env.TEST_ENV }}
+          DEV_API_URL: ${{ vars.DEV_API_URL }}
+          PROD_API_URL: ${{ vars.PROD_API_URL }}
+
+  ############################
+  # Job 1b: Setup & Manual Intervention
+  ############################
+  setup-and-manual-intervention:
+    name: Setup & Manual Intervention
+    runs-on: ubuntu-latest
+    environment: setup-manual-intervention
+    needs: foundation-tests
     outputs:
       web_url: ${{ steps.tunnel.outputs.web_url }}
     steps:
@@ -50,6 +101,10 @@ jobs:
 
       - name: Start server
         run: npm run serve &
+        env:
+          TEST_ENV: ${{ env.TEST_ENV }}
+          DEV_API_URL: ${{ vars.DEV_API_URL }}
+          PROD_API_URL: ${{ vars.PROD_API_URL }}
 
       - name: Wait for server
         run: |
@@ -74,17 +129,17 @@ jobs:
           URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
-      - run: npm run generate-schemas
-      - run: npm run validate-schemas
-      - name: Upload schema changes
-        if: ${{ steps.schema-changed.outputs.changed == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: schema-changes
-          path: fixtures/__generated__/generated-schemas.json
-
-      - run: npm run test:api:health
-      - run: npm run test:api:vaults
+      - name: Display web interface
+        run: |
+          echo "::notice::🌐 Web Interface ready: ${{ steps.tunnel.outputs.web_url }}"
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  🌐 Web Interface URL:"
+          echo "  ${{ steps.tunnel.outputs.web_url }}"
+          echo ""
+          echo "  📋 Please complete manual steps in the web interface"
+          echo "  before approving this deployment to continue."
+          echo "═══════════════════════════════════════════════════════════════"
 
   ############################
   # Job 2: Account Lifecycle
@@ -93,7 +148,7 @@ jobs:
     name: Account Lifecycle
     runs-on: ubuntu-latest
     environment: dev
-    needs: setup-and-foundation
+    needs: setup-and-manual-intervention
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -130,7 +185,7 @@ jobs:
           path: fixtures/test-data/__generated__/
       - run: npm run test:api:init-passkey
       - run: |
-          echo "::notice::Complete manual steps at ${{ needs.setup-and-foundation.outputs.web_url }} before approval"
+          echo "::notice::Complete manual steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
   ###################################
   # Job 3b: Passkey Approve Transaction
@@ -168,7 +223,7 @@ jobs:
       - run: npm ci
       - run: npm run test:api:init-passkey
       - run: |
-          echo "::notice::Complete manual deposit steps at ${{ needs.setup-and-foundation.outputs.web_url }} before approval"
+          echo "::notice::Complete manual deposit steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
   ###################################
   # Job 4b: Passkey Deposit Transaction
@@ -202,7 +257,7 @@ jobs:
       - run: npm ci
       - run: npm run test:api:init-passkey
       - run: |
-          echo "::notice::Complete manual withdraw steps at ${{ needs.setup-and-foundation.outputs.web_url }} before approval"
+          echo "::notice::Complete manual withdraw steps at ${{ needs.setup-and-manual-intervention.outputs.web_url }} before approval"
 
   ###################################
   # Job 5b: Passkey Withdraw Transaction
