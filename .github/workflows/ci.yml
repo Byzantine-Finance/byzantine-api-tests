@@ -223,6 +223,23 @@ jobs:
           name: test-data-passkey
           path: fixtures/test-data/__generated__/
 
+      # TODO: to delete - Verify the file exists and has content
+      - name: Verify downloaded file
+        run: |
+          FILE="fixtures/test-data/__generated__/generated-tx-passkey.json"
+          if [ ! -f "$FILE" ]; then
+            echo "❌ Error: File $FILE does not exist!"
+            exit 1
+          fi
+          if [ ! -s "$FILE" ]; then
+            echo "❌ Error: File $FILE is empty!"
+            exit 1
+          fi
+          echo "✅ File exists and has content:"
+          cat "$FILE" | head -20
+          echo ""
+          echo "File size: $(wc -c < "$FILE") bytes"
+
       # Start the server
       - name: Start server & Cloudflare tunnel
         id: tunnel
