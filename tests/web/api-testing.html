@@ -305,7 +305,7 @@
       }
 
       // Load user data from JSON
-      fetch("/fixtures/test-data/users/valid-user.json")
+      fetch("./fixtures/test-data/users/valid-user.json")
         .then((r) => r.json())
         .then((d) => {
           const email = d.userInfo.email || "";
@@ -321,7 +321,7 @@
         const txTypeSelect = document.getElementById("txType");
         const txType = txTypeSelect ? txTypeSelect.value : "approve";
 
-        fetch("/fixtures/test-data/__generated__/generated-tx-passkey.json")
+        fetch("./fixtures/test-data/__generated__/generated-tx-passkey.json")
           .then((r) => r.json())
           .then((data) => {
             const bodyToSign = data?.[txType]?.bodyToSign;
@@ -446,7 +446,7 @@
           // Save to valid-user.json
           try {
             const userDataResponse = await fetch(
-              "/fixtures/test-data/users/valid-user.json"
+              "./fixtures/test-data/users/valid-user.json"
             );
             const userData = await userDataResponse.json();
 
