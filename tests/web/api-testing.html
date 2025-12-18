@@ -265,6 +265,31 @@
     <script type="module">
       import { WebauthnStamper } from "@byzantine/integrator-sdk/webauthn-stamper";
 
+      // Auto-set rpId based on current origin (works for both localhost and Cloudflare tunnel)
+      function setRpIdFromOrigin() {
+        const hostname = window.location.hostname;
+
+        // Set rpId for "Sign with Passkey" tab
+        const rpIdInput = document.getElementById("rpId");
+        if (rpIdInput) {
+          rpIdInput.value = hostname;
+        }
+
+        // Set rpId for "Create Passkey" tab
+        const rpIdCreateInput = document.getElementById("rpIdCreate");
+        if (rpIdCreateInput) {
+          rpIdCreateInput.value = hostname;
+        }
+      }
+
+      // Call it when page loads (after DOM is ready)
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", setRpIdFromOrigin);
+      } else {
+        // DOM already loaded
+        setRpIdFromOrigin();
+      }
+
       // Check for ToS acceptance success message in URL
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("tosAccepted") === "true") {
