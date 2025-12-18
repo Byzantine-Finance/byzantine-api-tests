@@ -110,8 +110,8 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
           ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
-          sleep 5
-          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          sleep 10
+          URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
           # Display notice for user
@@ -264,8 +264,8 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
           ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
-          sleep 5
-          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          sleep 10
+          URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
           # Display notice for user
@@ -368,8 +368,8 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
           ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
-          sleep 5
-          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          sleep 10
+          URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
           # Display notice for user
@@ -472,8 +472,8 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
           ./cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
-          sleep 5
-          URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
+          sleep 10
+          URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' tunnel.log | head -1 || echo "http://localhost:3000")
           echo "web_url=${URL}/tests/web/api-testing.html" >> $GITHUB_OUTPUT
 
           # Display notice for user
