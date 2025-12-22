@@ -118,6 +118,9 @@ export const FEATURE_FLAGS = {
   enablePasskeyWithdrawTxTests:
     process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
 
+  enableSignActivateAccount:
+    process.env.ENABLE_SIGN_ACTIVATE_ACCOUNT === "true",
+
   // OTP tests (require real OTP codes)
   enableOtpTests: process.env.ENABLE_OTP_TESTS === "true",
   enableOtpInitApproveTests:

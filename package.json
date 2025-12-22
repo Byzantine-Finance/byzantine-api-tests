@@ -8,6 +8,7 @@
     "test:watch": "vitest",
     "test:api:health": "vitest run tests/api/health.test.js",
     "test:api:create": "vitest run tests/api/account-creation.test.js",
+    "test:api:activate": "vitest run tests/api/activate-account.test.js",
     "test:api:management": "vitest run tests/api/account-management.test.js",
     "test:api:vaults": "vitest run tests/api/vault-data.test.js",
     "test:api:accounts": "vitest run tests/api/account-data.test.js",

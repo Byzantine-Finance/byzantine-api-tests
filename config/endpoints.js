@@ -102,6 +102,20 @@ export const endpoints = {
   // ============================================
   passkey: {
     /**
+     * Get payload to sign to activate an account
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    getActivateAccountPayloadPasskey: (chainId) =>
+      `/v1/query/get-activate-account-payload-passkey?chain_id=${chainId}`,
+
+    /**
+     * Submit signed raw payload (passkey auth)
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    signActivateAccountPayloadPasskey: (chainId) =>
+      `/v1/submit/sign-payload-passkey?chain_id=${chainId}`,
+
+    /**
      * Get approve transaction body to sign
      * @param {number} chainId - 1 for Ethereum, 8453 for Base
      */
@@ -189,6 +203,11 @@ export const endpoints = {
      * Add bank account for withdrawals
      */
     addBankAccount: "/v1/submit/add-bank-account",
+
+    /**
+     * Activate an account
+     */
+    activateAccount: "/v1/submit/activate-account",
   },
 };
 

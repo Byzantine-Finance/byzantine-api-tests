@@ -44,5 +44,20 @@
   "depositAmount": "0.00012",
   "sourceCurrency": "usdc",
   "withdrawAmount": "0.00011",
-  "destinationCurrency": "usdc"
+  "destinationCurrency": "usdc",
+  "activateAccount": {
+    "bodyToSign": {
+      "type": "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
+      "timestampMs": "1766395932403",
+      "organizationId": "5d461b35-91de-4627-aa10-7bfd2d6a812a",
+      "parameters": {
+        "signWith": "0x95548FE6E2D51EB9e18Ee835b71836B1c82F24c9",
+        "payload": "{\"chainId\":\"0x2105\",\"address\":\"0x3d965cfdda791589ccab955498d509f2f7e30b79\",\"nonce\":\"0x6\"}",
+        "encoding": "PAYLOAD_ENCODING_EIP7702_AUTHORIZATION",
+        "hashFunction": "HASH_FUNCTION_NO_OP"
+      }
+    },
+    "transactionId": "e4bb65f4-8981-4552-9f3e-5cf1a3eadf33",
+    "webAuthnStamp": "{\"credentialId\":\"DJZPqa04iPOjh2yA2NCMFQ\",\"authenticatorData\":\"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAA\",\"clientDataJson\":\"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiWVRaaU0yWXhZakUyWldRd05UbGhZalkxWkdZMllUazVOR1V3TnpJNE5qSmlNMk16TjJWbFptVm1OMlUyTkdZd05qTmtORGN3TkdGalkySTROV0l5WXciLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9\",\"signature\":\"MEUCIQDbrnKvmmWYXHZ5hCkmu97LBG1kc5qZGYjt_TvQFwkKcwIgEem_QyoZUFY1XTwrPX6q8U6m7hHUT7cf9fMeZHDdZqk\"}"
+  }
 }

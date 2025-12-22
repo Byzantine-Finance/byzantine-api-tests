@@ -146,7 +146,7 @@ export function saveEntityIds(entityId, accountId) {
 /**
  * Save bodyToSign and transactionId to generated-tx-passkey.json
  * Excludes the two "type" fields (bodyToSign.type and parameters.type)
- * @param {string} transactionType - Type of transaction: "approve", "deposit", or "withdraw"
+ * @param {string} transactionType - Type of transaction: "approve", "deposit", "withdraw", or "activateAccount"
  * @param {object} bodyToSign - The bodyToSign object from the API response
  * @param {string} transactionId - The transaction ID from the API response
  */
@@ -157,7 +157,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   );
 
   // Validate transaction type
-  const validTypes = ["approve", "deposit", "withdraw"];
+  const validTypes = ["approve", "deposit", "withdraw", "activateAccount"];
   if (!validTypes.includes(transactionType)) {
     throw new Error(
       `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
@@ -172,17 +172,27 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
       ? JSON.parse(readFileSync(TX_REQUEST_FILE, "utf-8"))
       : {};
 
-    // Extract data excluding the two "type" fields
+    // Extract data - handle different parameter structures based on transaction type
     const bodyToSignData = {
       type: bodyToSign.type,
       timestampMs: bodyToSign.timestampMs,
       organizationId: bodyToSign.organizationId,
       parameters: {
         signWith: bodyToSign.parameters.signWith,
-        unsignedTransaction: bodyToSign.parameters.unsignedTransaction,
-        type: bodyToSign.parameters.type,
       },
     };
+
+    // For activateAccount, use SignRawPayloadParams structure (payload, encoding, hashFunction)
+    // For other types, use SignTransactionParams structure (unsignedTransaction, type)
+    if (transactionType === "activateAccount") {
+      bodyToSignData.parameters.payload = bodyToSign.parameters.payload;
+      bodyToSignData.parameters.encoding = bodyToSign.parameters.encoding;
+      bodyToSignData.parameters.hashFunction = bodyToSign.parameters.hashFunction;
+    } else {
+      bodyToSignData.parameters.unsignedTransaction =
+        bodyToSign.parameters.unsignedTransaction;
+      bodyToSignData.parameters.type = bodyToSign.parameters.type;
+    }
 
     // Update the appropriate section based on transaction type
     const updatedData = {

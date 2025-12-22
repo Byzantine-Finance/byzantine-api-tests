@@ -3,8 +3,6 @@
  * - query/get-approve-transaction-passkey
  * - query/get-deposit-transaction-passkey
  *
- * Note: OTP tests require receiving real OTP codes via email
- * Enable with: ENABLE_OTP_TESTS=true ENABLE_AUTH_TESTS=true
  */
 
 import { describe, it } from "vitest";
