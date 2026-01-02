@@ -49,7 +49,7 @@ describeManagement("Account Management API", () => {
         );
 
         assertSuccessWithSchema(response, "OffRampAddress");
-        assertValidUuid(response.data.bank_account_id);
+        assertValidUuid(response.data.bankAccountId);
       },
       getTimeout("api")
     );

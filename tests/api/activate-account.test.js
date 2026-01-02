@@ -24,9 +24,8 @@ const describeSignPayload = FEATURE_FLAGS.enableSignActivateAccount
   : describe.skip;
 
 describe("Activate an Byzantine account with Passkey", () => {
-//   const testAccountId = TEST_DATA.accounts.testAccountId;
+  const testAccountId = TEST_DATA.accounts.testAccountId;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const testAccountId = "5d461b35-91de-4627-aa10-7bfd2d6a812a";
 
   describeGetPayload(
     "POST /v1/query/get-activate-account-payload-passkey",

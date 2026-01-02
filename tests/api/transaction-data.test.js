@@ -7,10 +7,7 @@
 import { describe, it } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
-import {
-  getTimeout,
-  FEATURE_FLAGS,
-} from "../../config/test.config.js";
+import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
   assertSuccessWithArraySchema,
@@ -25,7 +22,8 @@ const describeTransactionData = FEATURE_FLAGS.enableAccountTests
 
 describeTransactionData("Transaction Data API", () => {
   const testAccountId = passkeyData.accountId;
-  let transactionId;
+  let depositTransaction;
+  let withdrawTransaction;
 
   describe("GET /v1/query/get-transactions", () => {
     it(
@@ -37,7 +35,13 @@ describeTransactionData("Transaction Data API", () => {
 
         assertSuccessWithArraySchema(response, "TurnkeyTransaction");
 
-        transactionId = response.data[0].transactionId;
+        // Find first deposit transaction
+        depositTransaction = response.data.find((tx) => tx.type === "deposit");
+
+        // Find first withdrawal transaction
+        withdrawTransaction = response.data.find(
+          (tx) => tx.type === "withdraw"
+        );
       },
       getTimeout("api")
     );
@@ -45,13 +49,14 @@ describeTransactionData("Transaction Data API", () => {
 
   describe("GET /v1/query/get-transaction", () => {
     it(
-      "should get transaction by transaction ID",
+      "should get deposit transaction by transaction ID",
       async () => {
         const response = await apiClient.get(
-          endpoints.transactions.getById(transactionId)
+          endpoints.transactions.getById(depositTransaction.transactionId)
         );
 
         assertSuccessWithSchema(response, "TurnkeyTransaction");
+        assertSuccessWithSchema(response, "GetTransactionResponse");
       },
       getTimeout("api")
     );
@@ -65,6 +70,21 @@ describeTransactionData("Transaction Data API", () => {
         );
 
         assertError(response, 404);
+      },
+      getTimeout("api")
+    );
+  });
+
+  describe("GET /v1/query/get-transaction", () => {
+    it(
+      "should get withdrawal transaction by transaction ID",
+      async () => {
+        const response = await apiClient.get(
+          endpoints.transactions.getById(withdrawTransaction.transactionId)
+        );
+
+        assertSuccessWithSchema(response, "TurnkeyTransaction");
+        assertSuccessWithSchema(response, "GetTransactionResponse");
       },
       getTimeout("api")
     );

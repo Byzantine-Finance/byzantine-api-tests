@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-19T13:29:33.926Z\nSpec SHA-256: 4793ef4d69a9f7192566597ea1d1896933c59e9223b6dfb20c90154e3472be27",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-29T16:28:16.150Z\nSpec SHA-256: ddd4dd057fa2a80da8422136620c779a40ac2dbd0e2acad0aae21ce6749eaa78",
   "AchAccountPayload": {
     "type": "object",
     "required": [
@@ -426,6 +426,18 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "BankAccount": {
+    "oneOf": [
+      {
+        "$ref": "#/components/schemas/BridgeGetIbanAccountDetails"
+      },
+      {
+        "$ref": "#/components/schemas/BridgeGetAchAccountDetails"
+      }
+    ],
+    "description": "Bank account details where the funds will be transferred to (withdrawals only).",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "BeneficiaryDetails": {
     "type": "object",
     "description": "Additional details about beneficiaries.",
@@ -471,6 +483,58 @@
   "BigDecimal": {
     "type": "string",
     "description": "A decimal number represented as a string",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BridgeGetAchAccountDetails": {
+    "type": "object",
+    "description": "ACH bank account informations",
+    "required": [
+      "routingNumber",
+      "last4"
+    ],
+    "properties": {
+      "routingNumber": {
+        "type": "string",
+        "description": "The bank routing number."
+      },
+      "last4": {
+        "type": "string",
+        "description": "Last 4 digits of the bank account number."
+      },
+      "checkingOrSavings": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CheckingOrSavings"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BridgeGetIbanAccountDetails": {
+    "type": "object",
+    "description": "IBAN bank account informations",
+    "required": [
+      "country",
+      "last4"
+    ],
+    "properties": {
+      "country": {
+        "type": "string",
+        "description": "The ISO 3166-1 (three-character) country code of the relevant country. See the full list of [countries](https://docs.byzantine.fi/api-reference/lists/countries)."
+      },
+      "last4": {
+        "type": "string",
+        "description": "Last 4 digits of the bank account number"
+      },
+      "bic": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The Bank Identifier Code (BIC) that will be used to send the funds"
+      }
+    },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "BusinessActivityInfo": {
@@ -1241,6 +1305,59 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "GetBankAccountItemResponse": {
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/OffRampAddress"
+      },
+      {
+        "type": "object",
+        "required": [
+          "bankAccountDetails"
+        ],
+        "properties": {
+          "bankAccountDetails": {
+            "$ref": "#/components/schemas/BankAccount"
+          }
+        }
+      }
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetBankAccountsQuery": {
+    "type": "object",
+    "required": [
+      "account_id"
+    ],
+    "properties": {
+      "account_id": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "currency": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Currency"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetBankAccountsResponse": {
+    "type": "object",
+    "required": [
+      "bankAccounts"
+    ],
+    "properties": {
+      "bankAccounts": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/GetBankAccountItemResponse"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "GetEntityInfo": {
     "type": "object",
     "description": "Response body for entity information",
@@ -1311,40 +1428,6 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "GetOffRampAddressesQuery": {
-    "type": "object",
-    "required": [
-      "account_id"
-    ],
-    "properties": {
-      "account_id": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "currency": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Currency"
-          }
-        ]
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "GetOffRampAddressesResponse": {
-    "type": "object",
-    "required": [
-      "offRampAddresses"
-    ],
-    "properties": {
-      "offRampAddresses": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/OffRampAddress"
-        }
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
   "GetTosAcceptanceLinkRequest": {
     "type": "object",
     "properties": {
@@ -1388,7 +1471,23 @@
         "$ref": "#/components/schemas/TurnkeyTransaction"
       },
       {
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "fiat_deposit_instructions": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceDepositInstructions"
+              }
+            ]
+          },
+          "destination_bank_account": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          }
+        }
       }
     ],
     "description": "Response for getting a single transaction by ID",
@@ -1644,7 +1743,7 @@
   "OffRampAddress": {
     "type": "object",
     "required": [
-      "bank_account_id",
+      "bankAccountId",
       "accountId",
       "name",
       "liquidationAddress",
@@ -1652,7 +1751,7 @@
       "currency"
     ],
     "properties": {
-      "bank_account_id": {
+      "bankAccountId": {
         "$ref": "#/components/schemas/Uuid"
       },
       "accountId": {
@@ -1702,6 +1801,13 @@
       },
       "transaction_id": {
         "$ref": "#/components/schemas/Uuid"
+      },
+      "destinationBankAccount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BankAccount"
+          }
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1734,6 +1840,13 @@
       },
       "transactionId": {
         "$ref": "#/components/schemas/Uuid"
+      },
+      "destinationBankAccount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BankAccount"
+          }
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1819,6 +1932,13 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/SourceDepositInstructions"
+          }
+        ]
+      },
+      "destinationBankAccount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BankAccount"
           }
         ]
       }

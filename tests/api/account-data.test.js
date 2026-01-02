@@ -87,7 +87,7 @@ describeAccounts("Account Data API", () => {
           endpoints.accounts.getBankAccounts(testAccountId)
         );
         assertSuccess(response);
-        assertArraySchema(response.data.offRampAddresses, "OffRampAddress");
+        assertSuccessWithSchema(response, "GetBankAccountsResponse");
       },
       getTimeout("api")
     );
@@ -99,7 +99,7 @@ describeAccounts("Account Data API", () => {
           endpoints.accounts.getBankAccounts(testAccountId, "usd")
         );
         assertSuccess(response);
-        assertArraySchema(response.data.offRampAddresses, "OffRampAddress");
+        assertSuccessWithSchema(response, "GetBankAccountsResponse");
       },
       getTimeout("api")
     );
