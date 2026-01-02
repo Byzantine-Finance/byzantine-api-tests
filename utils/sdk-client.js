@@ -65,6 +65,8 @@ function setupAutoAuth(client) {
         "/v1/submit/add-bank-account",
         "/v1/submit/send-transaction-otp",
         "/v1/submit/send-transaction-passkey",
+        "/v1/query/get-activate-account-payload-passkey",
+        "/v1/submit/sign-payload-passkey",
       ];
 
       // Check if this path requires authentication

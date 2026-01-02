@@ -47,7 +47,7 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "OffRampAddress");
-        assertDataUuid(sdkResponse, "bank_account_id");
+        assertDataUuid(sdkResponse, "bankAccountId");
       },
       getTimeout("api")
     );

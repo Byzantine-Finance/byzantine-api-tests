@@ -89,7 +89,7 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
         const sdkResponse = await client.api.getBankAccounts(testAccountId);
 
         assertSuccess(sdkResponse);
-        assertArraySchema(sdkResponse.data.offRampAddresses, "OffRampAddress");
+        assertSuccessWithSchema(sdkResponse, "GetBankAccountsResponse");
       },
       getTimeout("api")
     );
@@ -103,7 +103,7 @@ describeAccounts("Account Data SDK - Using Integrator SDK", () => {
         );
 
         assertSuccess(sdkResponse);
-        assertArraySchema(sdkResponse.data.offRampAddresses, "OffRampAddress");
+        assertSuccessWithSchema(sdkResponse, "GetBankAccountsResponse");
       },
       getTimeout("api")
     );

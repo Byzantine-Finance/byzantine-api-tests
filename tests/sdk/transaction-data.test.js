@@ -27,7 +27,8 @@ const describeTransactionData = FEATURE_FLAGS.enableAccountTests
 describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
   const testAccountId = passkeyData.accountId;
-  let transactionId;
+  let depositTransaction;
+  let withdrawTransaction;
 
   describe("getTransactions()", () => {
     it(
@@ -38,7 +39,13 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
         // Assert SDK behavior: array with expected data shape
         assertArrayWithSchema(sdkResponse, "TurnkeyTransaction");
 
-        transactionId = sdkResponse.data[0].transactionId;
+        // Find first deposit transaction
+        depositTransaction = sdkResponse.data.find((tx) => tx.type === "deposit");
+
+        // Find first withdrawal transaction
+        withdrawTransaction = sdkResponse.data.find(
+          (tx) => tx.type === "withdraw"
+        );
       },
       getTimeout("api")
     );
@@ -46,12 +53,15 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
 
   describe("getTransaction()", () => {
     it(
-      "should return transaction with expected structure",
+      "should get deposit transaction by transaction ID",
       async () => {
-        const sdkResponse = await client.api.getTransaction(transactionId);
+        const sdkResponse = await client.api.getTransaction(
+          depositTransaction.transactionId
+        );
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
+        assertSuccessWithSchema(sdkResponse, "GetTransactionResponse");
       },
       getTimeout("api")
     );
@@ -64,6 +74,22 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
 
         // Assert SDK error handling
         assertError(sdkResponse);
+      },
+      getTimeout("api")
+    );
+  });
+
+  describe("getTransaction()", () => {
+    it(
+      "should get withdrawal transaction by transaction ID",
+      async () => {
+        const sdkResponse = await client.api.getTransaction(
+          withdrawTransaction.transactionId
+        );
+
+        // Assert SDK behavior: success with expected data shape
+        assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
+        assertSuccessWithSchema(sdkResponse, "GetTransactionResponse");
       },
       getTimeout("api")
     );
