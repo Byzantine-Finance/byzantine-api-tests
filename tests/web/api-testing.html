@@ -226,7 +226,7 @@
         </div>
 
         <div class="section">
-          <div class="section-title">Transaction Body to Sign</div>
+          <div class="section-title">Payload to Sign</div>
 
           <div class="input-group">
             <label for="payload">Payload (JSON)</label>
@@ -237,7 +237,7 @@
           </div>
         </div>
 
-        <button id="testBtn">Sign transaction</button>
+        <button id="testBtn">Sign payload</button>
 
         <div id="result"></div>
       </div>
@@ -432,7 +432,7 @@
       ${result.timestamp}
 
       <strong>⚠️ IMPORTANT:</strong>
-      Save this Credential ID! You'll need it to sign transactions.`;
+      Save this Credential ID! You'll need it to sign payloads.`;
 
           // Auto-fill the credential ID in the sign tab
           document.getElementById("credentialId").value =

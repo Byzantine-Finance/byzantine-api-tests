@@ -1,6 +1,6 @@
 /**
  * Passkey transactions API Tests, what are tested:
- * - submit/send-transaction-passkey
+ * - submit/sign-payload-passkey
  */
 
 import { describe, it, beforeAll } from "vitest";
@@ -63,13 +63,13 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
         transactionId: test.transactionId,
         webAuthnStamp: test.webAuthnStamp,
       };
-      assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
+      assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
     });
   });
 
-  describe("POST /v1/submit/send-transaction-passkey", () => {
+  describe("POST /v1/submit/sign-payload-passkey", () => {
     it.each(transactionTests)(
-      "should submit $type transaction with Passkey",
+      "should sign $type payload with Passkey",
       async ({ bodyToSign, transactionId, webAuthnStamp }) => {
         const requestBody = {
           signedBody: bodyToSign,
@@ -77,8 +77,10 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
           webAuthnStamp: webAuthnStamp,
         };
 
+        assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
+
         const response = await apiClient.post(
-          endpoints.passkey.sendTransaction(chainId),
+          endpoints.passkey.signPayloadPasskey(chainId),
           requestBody,
           { authenticated: true }
         );

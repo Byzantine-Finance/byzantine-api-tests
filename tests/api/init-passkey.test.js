@@ -1,7 +1,8 @@
 /**
  * Passkey deposit Transactions API Tests, what are tested:
- * - query/get-approve-transaction-passkey
- * - query/get-deposit-transaction-passkey
+ * - query/get-approve-payload-passkey
+ * - query/get-deposit-payload-passkey
+ * - query/get-withdraw-payload-passkey
  *
  */
 
@@ -46,10 +47,10 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
 
   // Deposit using Passkey
   describeInitApprovePasskey(
-    "POST /v1/query/get-approve-transaction-passkey",
+    "POST /v1/query/get-approve-payload-passkey",
     () => {
       it(
-        "should get approve transaction body to sign",
+        "should get approve payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
@@ -59,11 +60,12 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSchema(requestBody, "ApproveRequestBody");
 
           const response = await apiClient.post(
-            endpoints.passkey.getApproveTransaction(chainId),
-            requestBody
+            endpoints.passkey.getApprovePayloadPasskey(chainId),
+            requestBody,
+            { authenticated: true }
           );
 
-          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
+          assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
           // Save approve bodyToSign and transactionId to generated-tx-passkey.json
@@ -87,8 +89,9 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSchema(requestBody, "ApproveRequestBody");
 
           const response = await apiClient.post(
-            endpoints.passkey.getApproveTransaction(99999), // Invalid chain ID
-            requestBody
+            endpoints.passkey.getApprovePayloadPasskey(99999), // Invalid chain ID
+            requestBody,
+            { authenticated: true }
           );
 
           assertError(response, 400);
@@ -99,10 +102,10 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
   );
 
   describeInitDepositPasskey(
-    "POST /v1/query/get-deposit-transaction-passkey",
+    "POST /v1/query/get-deposit-payload-passkey",
     () => {
       it(
-        "should get deposit transaction body to sign",
+        "should get deposit payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
@@ -114,11 +117,12 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSchema(requestBody, "DepositRequestBody");
 
           const response = await apiClient.post(
-            endpoints.passkey.getDepositTransaction(chainId),
-            requestBody
+            endpoints.passkey.getDepositPayloadPasskey(chainId),
+            requestBody,
+            { authenticated: true }
           );
 
-          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
+          assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
           // Save deposit bodyToSign and transactionId to generated-tx-passkey.json
@@ -134,10 +138,10 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
   );
 
   describeInitWithdrawPasskey(
-    "POST /v1/query/get-withdraw-transaction-passkey",
+    "POST /v1/query/get-withdraw-payload-passkey",
     () => {
       it(
-        "should get withdraw transaction body to sign",
+        "should get withdraw payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
@@ -149,11 +153,12 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSchema(requestBody, "WithdrawRequestBody");
 
           const response = await apiClient.post(
-            endpoints.passkey.getWithdrawTransaction(chainId),
-            requestBody
+            endpoints.passkey.getWithdrawPayloadPasskey(chainId),
+            requestBody,
+            { authenticated: true }
           );
 
-          assertSuccessWithSchema(response, "PasskeyTxRequestResponse");
+          assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
           // Save withdraw bodyToSign and transactionId to generated-tx-passkey.json

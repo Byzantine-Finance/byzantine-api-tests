@@ -109,10 +109,31 @@ export const endpoints = {
       `/v1/query/get-activate-account-payload-passkey?chain_id=${chainId}`,
 
     /**
+     * Get approve payload to sign (passkey auth)
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    getApprovePayloadPasskey: (chainId) =>
+      `/v1/query/get-approve-payload-passkey?chain_id=${chainId}`,
+
+    /**
+     * Get deposit payload to sign (passkey auth)
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    getDepositPayloadPasskey: (chainId) =>
+      `/v1/query/get-deposit-payload-passkey?chain_id=${chainId}`,
+
+    /**
+     * Get withdraw payload to sign (passkey auth)
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    getWithdrawPayloadPasskey: (chainId) =>
+      `/v1/query/get-withdraw-payload-passkey?chain_id=${chainId}`,
+
+    /**
      * Submit signed raw payload (passkey auth)
      * @param {number} chainId - 1 for Ethereum, 8453 for Base
      */
-    signActivateAccountPayloadPasskey: (chainId) =>
+    signPayloadPasskey: (chainId) =>
       `/v1/submit/sign-payload-passkey?chain_id=${chainId}`,
 
     /**

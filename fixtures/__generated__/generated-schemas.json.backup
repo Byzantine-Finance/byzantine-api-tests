@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-26T16:34:48.085Z\nSpec SHA-256: 19c8452f73e812e2a75b45f88171d2c0e0ae758a1cb82d1bf25f6713603d1564",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-01-08T10:26:15.012Z\nSpec SHA-256: d3993070581ca1846217e14c56072a719c1d84d49d04445fa00bd6806d0b95c4",
   "AchAccountPayload": {
     "type": "object",
     "required": [
@@ -489,19 +489,19 @@
     "type": "object",
     "description": "ACH bank account informations",
     "required": [
-      "routing_number",
-      "last_4"
+      "routingNumber",
+      "last4"
     ],
     "properties": {
-      "routing_number": {
+      "routingNumber": {
         "type": "string",
         "description": "The bank routing number."
       },
-      "last_4": {
+      "last4": {
         "type": "string",
         "description": "Last 4 digits of the bank account number."
       },
-      "checking_or_savings": {
+      "checkingOrSavings": {
         "allOf": [
           {
             "$ref": "#/components/schemas/CheckingOrSavings"
@@ -516,14 +516,14 @@
     "description": "IBAN bank account informations",
     "required": [
       "country",
-      "last_4"
+      "last4"
     ],
     "properties": {
       "country": {
         "type": "string",
         "description": "The ISO 3166-1 (three-character) country code of the relevant country. See the full list of [countries](https://docs.byzantine.fi/api-reference/lists/countries)."
       },
-      "last_4": {
+      "last4": {
         "type": "string",
         "description": "Last 4 digits of the bank account number"
       },
@@ -1824,6 +1824,13 @@
       },
       "transactionId": {
         "$ref": "#/components/schemas/Uuid"
+      },
+      "destinationBankAccount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BankAccount"
+          }
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1990,7 +1997,7 @@
       },
       "hashFunction": {
         "type": "string",
-        "description": "Rather Turnkey should hash the message or not: `HASH_FUNCTION_NOT_APPLICABLE` or `HASH_FUNCTION_KECCAK256`"
+        "description": "Rather Turnkey should hash the message or not: `HASH_FUNCTION_NO_OP` or `HASH_FUNCTION_KECCAK256`"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -2079,60 +2086,60 @@
     "type": "object",
     "required": [
       "currency",
-      "bank_name",
-      "bank_address",
-      "payment_rails",
-      "bank_beneficiary_name",
-      "bank_beneficiary_address"
+      "bankName",
+      "bankAddress",
+      "paymentRails",
+      "bankBeneficiaryName",
+      "bankBeneficiaryAddress"
     ],
     "properties": {
       "currency": {
         "$ref": "#/components/schemas/Currency"
       },
-      "bank_name": {
+      "bankName": {
         "type": "string",
         "description": "The name of the beneficiary bank."
       },
-      "bank_address": {
+      "bankAddress": {
         "type": "string",
         "description": "The address of the beneficiary bank."
       },
-      "payment_rails": {
+      "paymentRails": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/PaymentRailVirtualAccount"
         }
       },
-      "bank_beneficiary_name": {
+      "bankBeneficiaryName": {
         "type": "string",
         "description": "The name of the beneficiary. Either first and last name, or a business name."
       },
-      "bank_beneficiary_address": {
+      "bankBeneficiaryAddress": {
         "type": "string",
         "description": "The address of the beneficiary."
       },
-      "bank_account_number": {
+      "bankAccountNumber": {
         "type": [
           "string",
           "null"
         ],
         "description": "In case of a USD deposit, the bank account number to deposit to."
       },
-      "bank_routing_number": {
+      "bankRoutingNumber": {
         "type": [
           "string",
           "null"
         ],
         "description": "In case of a USD deposit, the ban routing number to deposit to."
       },
-      "iban_number": {
+      "iban": {
         "type": [
           "string",
           "null"
         ],
         "description": "In case of a EUR deposit, the IBAN to deposit to."
       },
-      "iban_bic": {
+      "bic": {
         "type": [
           "string",
           "null"
@@ -2147,7 +2154,8 @@
     "required": [
       "vault_address",
       "chain_id",
-      "is_active"
+      "is_active",
+      "is_asynchronous"
     ],
     "properties": {
       "vault_address": {
@@ -2160,6 +2168,9 @@
         "maximum": 2147483647
       },
       "is_active": {
+        "type": "boolean"
+      },
+      "is_asynchronous": {
         "type": "boolean"
       }
     },

@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2025-12-29T16:28:16.150Z\nSpec SHA-256: ddd4dd057fa2a80da8422136620c779a40ac2dbd0e2acad0aae21ce6749eaa78",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-01-08T16:32:01.320Z\nSpec SHA-256: 7e2c3d0fb67a01bf27e7c31bf1e0921fd32bae5e1dcabd156181c6c6c1d4a5cb",
   "AchAccountPayload": {
     "type": "object",
     "required": [
@@ -54,16 +54,30 @@
         "type": "string"
       },
       "achBankAccountDetails": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/AchAccountPayload"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AchAccountPayload"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "ibanBankAccountDetails": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/IbanAccountPayload"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IbanAccountPayload"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -86,23 +100,44 @@
     "description": "Additional user information for KYC. This information is required for users considered high risk or over 60 years of age.",
     "properties": {
       "employmentStatus": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/EmploymentStatus"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmploymentStatus"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "expectedMonthlyPaymentsUsd": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/ExpectedMonthlyPayments"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExpectedMonthlyPayments"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "sourceOfFunds": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/UserSourceOfFunds"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserSourceOfFunds"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -502,9 +537,16 @@
         "description": "Last 4 digits of the bank account number."
       },
       "checkingOrSavings": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/CheckingOrSavings"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CheckingOrSavings"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -552,9 +594,16 @@
         "$ref": "#/components/schemas/EntitySourceOfFunds"
       },
       "estimatedAnnualRevenueUsd": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/EstimatedAnnualRevenue"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstimatedAnnualRevenue"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -576,9 +625,16 @@
         "description": "Must be set to `true` if the business has any activity in or relation to Cuba, Iran, Myanmar, North Korea, or Syria."
       },
       "highRiskActivities": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/HighRiskActivity"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighRiskActivity"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -882,9 +938,16 @@
         "$ref": "#/components/schemas/UserInfo"
       },
       "additionalUserInfo": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/AdditionalUserInfo"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdditionalUserInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -948,9 +1011,16 @@
         "$ref": "#/components/schemas/UserInfo"
       },
       "additionalUserInfo": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/AdditionalUserInfo"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdditionalUserInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -1266,9 +1336,16 @@
     ],
     "properties": {
       "userId": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Uuid"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -1334,9 +1411,16 @@
         "$ref": "#/components/schemas/Uuid"
       },
       "currency": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Currency"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -1803,9 +1887,16 @@
         "$ref": "#/components/schemas/Uuid"
       },
       "destinationBankAccount": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/BankAccount"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -1824,6 +1915,20 @@
       },
       "transactionId": {
         "$ref": "#/components/schemas/Uuid"
+      },
+      "destinationBankAccount": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1842,9 +1947,16 @@
         "$ref": "#/components/schemas/Uuid"
       },
       "destinationBankAccount": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/BankAccount"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -1854,11 +1966,11 @@
   "PaymentRailVirtualAccount": {
     "type": "string",
     "enum": [
-      "AchPush",
-      "Pix",
-      "Sepa",
-      "Spei",
-      "Wire"
+      "achPush",
+      "pix",
+      "sepa",
+      "spei",
+      "wire"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -1922,23 +2034,44 @@
         "description": "Exact timestamp when the transaction was broadcasted on-chain. Only available for `completed` transactions."
       },
       "transactionReceipt": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/TransactionReceipt"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionReceipt"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "fiatDepositInstructions": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/SourceDepositInstructions"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceDepositInstructions"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "destinationBankAccount": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/BankAccount"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -1990,7 +2123,7 @@
       },
       "hashFunction": {
         "type": "string",
-        "description": "Rather Turnkey should hash the message or not: `HASH_FUNCTION_NOT_APPLICABLE` or `HASH_FUNCTION_KECCAK256`"
+        "description": "Rather Turnkey should hash the message or not: `HASH_FUNCTION_NO_OP` or `HASH_FUNCTION_KECCAK256`"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -2079,60 +2212,74 @@
     "type": "object",
     "required": [
       "currency",
-      "bank_name",
-      "bank_address",
-      "payment_rails",
-      "bank_beneficiary_name",
-      "bank_beneficiary_address"
+      "bankName",
+      "bankAddress",
+      "paymentRails",
+      "bankBeneficiaryName",
+      "bankBeneficiaryAddress"
     ],
     "properties": {
       "currency": {
         "$ref": "#/components/schemas/Currency"
       },
-      "bank_name": {
+      "expectedDepositAmount": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "bankName": {
         "type": "string",
         "description": "The name of the beneficiary bank."
       },
-      "bank_address": {
+      "bankAddress": {
         "type": "string",
         "description": "The address of the beneficiary bank."
       },
-      "payment_rails": {
+      "paymentRails": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/PaymentRailVirtualAccount"
         }
       },
-      "bank_beneficiary_name": {
+      "bankBeneficiaryName": {
         "type": "string",
         "description": "The name of the beneficiary. Either first and last name, or a business name."
       },
-      "bank_beneficiary_address": {
+      "bankBeneficiaryAddress": {
         "type": "string",
         "description": "The address of the beneficiary."
       },
-      "bank_account_number": {
+      "bankAccountNumber": {
         "type": [
           "string",
           "null"
         ],
         "description": "In case of a USD deposit, the bank account number to deposit to."
       },
-      "bank_routing_number": {
+      "bankRoutingNumber": {
         "type": [
           "string",
           "null"
         ],
         "description": "In case of a USD deposit, the ban routing number to deposit to."
       },
-      "iban_number": {
+      "iban": {
         "type": [
           "string",
           "null"
         ],
         "description": "In case of a EUR deposit, the IBAN to deposit to."
       },
-      "iban_bic": {
+      "bic": {
         "type": [
           "string",
           "null"
@@ -2147,7 +2294,8 @@
     "required": [
       "vault_address",
       "chain_id",
-      "is_active"
+      "is_active",
+      "is_asynchronous"
     ],
     "properties": {
       "vault_address": {
@@ -2160,6 +2308,9 @@
         "maximum": 2147483647
       },
       "is_active": {
+        "type": "boolean"
+      },
+      "is_asynchronous": {
         "type": "boolean"
       }
     },
@@ -2295,9 +2446,16 @@
         "$ref": "#/components/schemas/TransactionStatus"
       },
       "fiatAccountId": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Uuid"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -2329,16 +2487,30 @@
         "format": "date-time"
       },
       "sourceCurrency": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Currency"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "destinationCurrency": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Currency"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -2349,16 +2521,30 @@
         ]
       },
       "destinationAmount": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Decimal"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
       "sourceAmount": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Decimal"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }
@@ -2708,9 +2894,16 @@
         "$ref": "#/components/schemas/Currency"
       },
       "bankAccountId": {
-        "allOf": [
+        "anyOf": [
           {
-            "$ref": "#/components/schemas/Uuid"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       }

@@ -66,7 +66,7 @@ describe("Activate an Byzantine account with Passkey", () => {
         assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
 
         const response = await apiClient.post(
-          endpoints.passkey.signActivateAccountPayloadPasskey(chainId),
+          endpoints.passkey.signPayloadPasskey(chainId),
           requestBody,
           { authenticated: true }
         );

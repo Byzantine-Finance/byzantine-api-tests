@@ -5,7 +5,7 @@
  * 1. Fetches OpenAPI spec from the API
  * 2. Converts OpenAPI schemas to JSON Schema format
  * 3. Saves generated schemas to fixtures/schemas/
- * 
+ *
  * To see the changes in the generated schemas, you can:
  * 1. Backup the current generated schemas
  * cp fixtures/__generated__/generated-schemas.json fixtures/__generated__/generated-schemas.json.backup
@@ -24,6 +24,52 @@ import { getEnvironmentBaseURL } from "../config/environments.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Post-process schema to fix nullable fields in allOf
+ * When OpenAPI has nullable: true with allOf, convert to anyOf to properly handle null
+ * @dev The openapiSchemaToJsonSchema library doesn't handle the case where nullable is true with allOf correctly.
+ */
+function fixNullableInAllOf(schema, openApiSchema) {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema))
+    return schema;
+
+  if (openApiSchema?.nullable === true && schema.allOf) {
+    const refSchema = schema.allOf?.[0];
+    if (refSchema && refSchema.$ref) {
+      // Convert allOf to anyOf to properly handle nullable
+      // anyOf means "at least one of these must match"
+      // So we create two branches: one for the actual schema, one for null
+      const allOfSchema = {
+        allOf: schema.allOf,
+      };
+      // Preserve any other properties except type (which conflicts)
+      if (schema.description) allOfSchema.description = schema.description;
+      if (schema.examples) allOfSchema.examples = schema.examples;
+
+      schema.anyOf = [
+        allOfSchema, // The allOf schema (for non-null values)
+        { type: "null" }, // Allow null values
+      ];
+      delete schema.allOf; // Remove allOf since we're using anyOf now
+      delete schema.type; // Remove type since anyOf handles it
+    }
+  }
+
+  // Recursively process nested schemas
+  if (schema.properties && openApiSchema?.properties) {
+    for (const [key, value] of Object.entries(schema.properties)) {
+      if (openApiSchema.properties[key]) {
+        schema.properties[key] = fixNullableInAllOf(
+          value,
+          openApiSchema.properties[key]
+        );
+      }
+    }
+  }
+
+  return schema;
+}
 
 /**
  * Generate JSON Schema files from OpenAPI spec
@@ -61,7 +107,10 @@ async function generateSchemasFromOpenAPI() {
 
     // Generate checksum for the spec
     const specString = JSON.stringify(openApiSpec);
-    const specHash = crypto.createHash("sha256").update(specString).digest("hex");
+    const specHash = crypto
+      .createHash("sha256")
+      .update(specString)
+      .digest("hex");
     console.log(`Spec SHA-256: ${specHash.substring(0, 16)}...`);
 
     // Check if spec has changed
@@ -99,8 +148,11 @@ async function generateSchemasFromOpenAPI() {
             strictMode: false,
           });
 
+          // Fix nullable fields in allOf
+          const fixedSchema = fixNullableInAllOf(jsonSchema, openApiSchema);
+
           // Store with OpenAPI component name
-          schemas[schemaName] = jsonSchema;
+          schemas[schemaName] = fixedSchema;
         } catch (error) {
           console.warn(
             `  ⚠️ Failed to convert schema "${schemaName}": ${error.message}`
@@ -125,7 +177,7 @@ async function generateSchemasFromOpenAPI() {
                 const openApiSchema =
                   response.content["application/json"].schema;
 
-                // Skip if schema is just a $ref 
+                // Skip if schema is just a $ref
                 if (
                   openApiSchema.$ref &&
                   Object.keys(openApiSchema).length === 1
@@ -144,7 +196,13 @@ async function generateSchemasFromOpenAPI() {
                     strictMode: false,
                   });
 
-                  schemas[schemaName] = jsonSchema;
+                  // Fix nullable fields in allOf
+                  const fixedSchema = fixNullableInAllOf(
+                    jsonSchema,
+                    openApiSchema
+                  );
+
+                  schemas[schemaName] = fixedSchema;
                   pathSchemaCount++;
                 } catch (error) {
                   console.warn(
@@ -175,7 +233,10 @@ async function generateSchemasFromOpenAPI() {
                 strictMode: false,
               });
 
-              schemas[schemaName] = jsonSchema;
+              // Fix nullable fields in allOf
+              const fixedSchema = fixNullableInAllOf(jsonSchema, openApiSchema);
+
+              schemas[schemaName] = fixedSchema;
               pathSchemaCount++;
             } catch (error) {
               console.warn(
