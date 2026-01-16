@@ -24,6 +24,7 @@ import {
 } from "../../utils/sdk-assertions.js";
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
 // Skip if Passkey tests are disabled
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -46,8 +47,8 @@ describeInitPasskey(
     const testAccountId = passkeyData.accountId;
     const testVaultAddr = TEST_DATA.vaults.selected.address;
     const chainId = TEST_DATA.vaults.selected.chainId;
-    const depositAmount = txRequest.depositAmount;
-    const sourceCurrency = txRequest.sourceCurrency;
+    const depositAmount = passkeyData.depositAmount;
+    const sourceCurrency = passkeyData.sourceCurrency;
 
     // Deposit using Passkey
     describeInitApprovePasskey("getApproveTransactionPasskey()", () => {
@@ -142,8 +143,8 @@ describeInitPasskey(
           const requestBody = {
             accountId: testAccountId,
             vaultAddr: testVaultAddr,
-            amount: txRequest.withdrawAmount,
-            destinationCurrency: txRequest.destinationCurrency,
+            amount: passkeyData.withdrawAmount,
+            destinationCurrency: passkeyData.destinationCurrency,
           };
 
           assertSchema(requestBody, "WithdrawRequestBody");

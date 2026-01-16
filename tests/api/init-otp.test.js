@@ -23,6 +23,7 @@ import {
 } from "../../utils/api-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
 import txRequest from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
+import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
@@ -40,8 +41,8 @@ describeInitOtp("Initiate OTP transactions API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const depositAmount = txRequest.depositAmount;
-  const sourceCurrency = txRequest.sourceCurrency;
+  const depositAmount = passkeyData.depositAmount;
+  const sourceCurrency = passkeyData.sourceCurrency;
 
   describeInitApproveOtp("POST /v1/query/init-approve-otp", () => {
     it(
@@ -129,8 +130,8 @@ describeInitOtp("Initiate OTP transactions API", () => {
         const requestBody = {
           accountId: testAccountId,
           vaultAddr: testVaultAddr,
-          amount: txRequest.withdrawAmount,
-          destinationCurrency: txRequest.destinationCurrency,
+          amount: passkeyData.withdrawAmount,
+          destinationCurrency: passkeyData.destinationCurrency,
         };
 
         assertSchema(requestBody, "WithdrawRequestBody");

@@ -246,20 +246,6 @@ export function saveOtpTransactionId(transactionType, transactionId) {
       },
     };
 
-    // Preserve other fields like depositAmount, sourceCurrency, etc.
-    if (currentData.depositAmount) {
-      updatedData.depositAmount = currentData.depositAmount;
-    }
-    if (currentData.sourceCurrency) {
-      updatedData.sourceCurrency = currentData.sourceCurrency;
-    }
-    if (currentData.withdrawAmount) {
-      updatedData.withdrawAmount = currentData.withdrawAmount;
-    }
-    if (currentData.destinationCurrency) {
-      updatedData.destinationCurrency = currentData.destinationCurrency;
-    }
-
     // Write back to file
     writeFileSync(TX_OTP_FILE, JSON.stringify(updatedData, null, 4), "utf-8");
     console.log(`✅ Saved ${transactionType} OTP transactionId to generated-tx-otp.json`);

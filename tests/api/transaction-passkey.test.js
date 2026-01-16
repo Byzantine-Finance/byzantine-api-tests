@@ -82,7 +82,10 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
         const response = await apiClient.post(
           endpoints.passkey.signPayloadPasskey(chainId),
           requestBody,
-          { authenticated: true }
+          { 
+            authenticated: true,
+            timeout: getTimeout("integration")
+          }
         );
 
         assertSuccessWithSchema(response, "SendTransactionResponseBody");

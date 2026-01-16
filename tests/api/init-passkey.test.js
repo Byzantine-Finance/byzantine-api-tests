@@ -42,8 +42,8 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
   const testAccountId = passkeyData.accountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const depositAmount = txRequest.depositAmount;
-  const sourceCurrency = txRequest.sourceCurrency;
+  const depositAmount = passkeyData.depositAmount;
+  const sourceCurrency = passkeyData.sourceCurrency;
 
   // Deposit using Passkey
   describeInitApprovePasskey(
@@ -146,8 +146,9 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           const requestBody = {
             accountId: testAccountId,
             vaultAddr: testVaultAddr,
-            amount: txRequest.withdrawAmount,
-            destinationCurrency: txRequest.destinationCurrency,
+            amount: passkeyData.withdrawAmount,
+            destinationCurrency: passkeyData.destinationCurrency,
+            // bankAccountId: passkeyData.bankAccountId,
           };
 
           assertSchema(requestBody, "WithdrawRequestBody");
