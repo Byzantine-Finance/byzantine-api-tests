@@ -111,6 +111,10 @@ export const FEATURE_FLAGS = {
   enableSignActivateAccount:
     process.env.ENABLE_SIGN_ACTIVATE_ACCOUNT === "true",
 
+  // Account creation tests
+  createUser: process.env.CREATE_USER !== "false", // Enabled by default
+  createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
+
   // OTP tests (require real OTP codes)
   enableOtpTests: process.env.ENABLE_OTP_TESTS === "true",
   enableOtpInitApproveTests:

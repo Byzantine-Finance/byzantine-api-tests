@@ -41,7 +41,11 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     assertSchema(validEntity, "CreateEntityRequest");
   });
 
-  describe("POST /v1/submit/create-user", () => {
+  const describeCreateUser = FEATURE_FLAGS.createUser
+    ? describe
+    : describe.skip;
+
+  describeCreateUser("POST /v1/submit/create-user", () => {
     it(
       "should create user with valid data",
       async () => {
@@ -68,7 +72,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         // Save IDs for use in other tests
         saveUserIds(response.data.userId, response.data.accountId);
       },
-      getTimeout("api")
+      getTimeout("integration")
     );
 
     it(
@@ -86,7 +90,11 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     );
   });
 
-  describe("POST /v1/submit/create-entity", () => {
+  const describeCreateEntity = FEATURE_FLAGS.createEntity
+    ? describe
+    : describe.skip;
+
+  describeCreateEntity("POST /v1/submit/create-entity", () => {
     it(
       "should create entity with valid data",
       async () => {

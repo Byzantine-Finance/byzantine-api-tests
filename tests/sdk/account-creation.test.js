@@ -43,7 +43,11 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     assertSchema(validEntity, "CreateEntityRequest");
   });
 
-  describe("createUser()", () => {
+  const describeCreateUser = FEATURE_FLAGS.createUser
+    ? describe
+    : describe.skip;
+
+  describeCreateUser("createUser()", () => {
     it(
       "should create user with valid data and return typed response",
       async () => {
@@ -91,7 +95,11 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     );
   });
 
-  describe("createEntity()", () => {
+  const describeCreateEntity = FEATURE_FLAGS.createEntity
+    ? describe
+    : describe.skip;
+
+  describeCreateEntity("createEntity()", () => {
     it(
       "should create entity with valid data and return typed response",
       async () => {
