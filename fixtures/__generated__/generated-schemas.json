@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-01-08T16:32:01.320Z\nSpec SHA-256: 7e2c3d0fb67a01bf27e7c31bf1e0921fd32bae5e1dcabd156181c6c6c1d4a5cb",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-01-14T11:47:14.518Z\nSpec SHA-256: c3993bcd1cfdfd472b6427a0da2019df73c4daeec46dea061b6d20fcf154ed2f",
   "AchAccountPayload": {
     "type": "object",
     "required": [
@@ -1933,36 +1933,6 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "PasskeyTxRequestResponse": {
-    "type": "object",
-    "required": [
-      "bodyToSign",
-      "transactionId"
-    ],
-    "properties": {
-      "bodyToSign": {
-        "$ref": "#/components/schemas/SignTransactionRequest"
-      },
-      "transactionId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "destinationBankAccount": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/BankAccount"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
   "PaymentRailVirtualAccount": {
     "type": "string",
     "enum": [
@@ -1987,27 +1957,6 @@
       "otpCode": {
         "type": "string",
         "description": "The OTp code that the user received via email."
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "SendPasskeyTransactionRequestBody": {
-    "type": "object",
-    "required": [
-      "signedBody",
-      "transactionId",
-      "webAuthnStamp"
-    ],
-    "properties": {
-      "signedBody": {
-        "$ref": "#/components/schemas/SignTransactionRequest"
-      },
-      "transactionId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "webAuthnStamp": {
-        "type": "string",
-        "description": "Cryptographically passkey signed (stamped). For more info, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"

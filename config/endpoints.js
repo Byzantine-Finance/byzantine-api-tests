@@ -135,36 +135,8 @@ export const endpoints = {
      */
     signPayloadPasskey: (chainId) =>
       `/v1/submit/sign-payload-passkey?chain_id=${chainId}`,
-
-    /**
-     * Get approve transaction body to sign
-     * @param {number} chainId - 1 for Ethereum, 8453 for Base
-     */
-    getApproveTransaction: (chainId) =>
-      `/v1/query/get-approve-transaction-passkey?chain_id=${chainId}`,
-
-    /**
-     * Get deposit transaction body to sign
-     * @param {number} chainId - 1 for Ethereum, 8453 for Base
-     */
-    getDepositTransaction: (chainId) =>
-      `/v1/query/get-deposit-transaction-passkey?chain_id=${chainId}`,
-
-    /**
-     * Get withdraw transaction body to sign
-     * @param {number} chainId - 1 for Ethereum, 8453 for Base
-     */
-    getWithdrawTransaction: (chainId) =>
-      `/v1/query/get-withdraw-transaction-passkey?chain_id=${chainId}`,
-
-    /**
-     * Submit a signed transaction (passkey auth)
-     * @param {number} chainId - 1 for Ethereum, 8453 for Base
-     */
-    sendTransaction: (chainId) =>
-      `/v1/submit/send-transaction-passkey?chain_id=${chainId}`,
   },
-
+  
   // ============================================
   // Transactions with OTP
   // ============================================
