@@ -19,6 +19,7 @@ export const TEST_TIMEOUTS = {
   api: 15000, // 15 seconds for API tests
   integration: 30000, // 30 seconds for integration tests
   e2e: 60000, // 60 seconds for E2E tests
+  passkey: 90000, // 90 seconds for Passkey tests
 
   // CI typically needs longer timeouts
   ciMultiplier: isCI() ? 2 : 1,
@@ -42,51 +43,40 @@ export function getTimeout(type = "default") {
  * 2. Environment variables
  * 3. Default values (for vaults)
  *
- * WARNING: Update these with valid test data from your environment
  */
 const generatedTestData = loadTestData();
 const useEthereum = process.env.CHAIN?.toUpperCase() === "ETH";
 
-export const TEST_DATA = {
-  vaults: {
-    selected: useEthereum
-      ? {
-          address:
-            process.env.TEST_VAULT_ETH ||
-            vaultData.find((v) => v.chain_id === 1)?.vault_address,
-          chainId: 1,
-        }
-      : {
-          // Default to BASE
-          address:
-            process.env.TEST_VAULT_BASE ||
-            vaultData.find((v) => v.chain_id === 8453)?.vault_address,
-          chainId: 8453,
-        },
-  },
+/**
+ * Select vault based on currency type and chain ID
+ * Uses is_asynchronous field to identify EUR (true) vs USD (false) vaults
+ * @param {boolean} useEurVault - Whether to use EUR vault (default: false for USD)
+ * @param {number} chainId - Chain ID (1 for ETH, 8453 for BASE)
+ * Notes:
+ * - Vaults are identified by is_asynchronous field:
+ *   - is_asynchronous: true = EUR vault
+ *   - is_asynchronous: false (or undefined) = USD vault
+ * - Vaults are filtered by chain_id and is_active status
+ */
+function selectVault(useEurVault, chainId) {
+  const vault = vaultData.find(
+    (v) =>
+      v.is_active === true &&
+      v.chain_id === chainId &&
+      (useEurVault
+        ? v.is_asynchronous === true // EUR vault
+        : !v.is_asynchronous) // USD vault (is_asynchronous is false or undefined)
+  );
 
-  accounts: {
-    // dev mode: generated from test runs
-    // production mode: environment variables only
-    testUserId: isProduction()
-      ? process.env.TEST_USER_ID
-      : generatedTestData.accounts.testUserId,
-    testAccountId: isProduction()
-      ? process.env.TEST_ACCOUNT_ID
-      : generatedTestData.accounts.testAccountId,
-    testEntityId: isProduction()
-      ? process.env.TEST_ENTITY_ID
-      : generatedTestData.accounts.testEntityId,
-    testEntityAccountId: isProduction()
-      ? process.env.TEST_ENTITY_ACCOUNT_ID
-      : generatedTestData.accounts.testEntityAccountId,
-  },
+  if (!vault) {
+    return null;
+  }
 
-  transactions: {
-    // Test transaction IDs
-    testTransactionId: process.env.TEST_TRANSACTION_ID || null,
-  },
-};
+  return {
+    address: vault.vault_address,
+    chainId: vault.chain_id,
+  };
+}
 
 /**
  * Feature Flags - Enable/disable specific test suites
@@ -100,8 +90,8 @@ export const FEATURE_FLAGS = {
   enableWriteTests:
     !isProduction() && process.env.ENABLE_WRITE_TESTS === "true",
 
-  // Tests that require specific test data to exist
-  enableAccountTests: Boolean(TEST_DATA.accounts.testUserId),
+  // Vault currency selection
+  useEurVault: process.env.EUR_VAULT === "true",
 
   // WebAuthn/Passkey tests
   enablePasskeyTests: process.env.ENABLE_PASSKEY_TESTS === "true",
@@ -132,6 +122,56 @@ export const FEATURE_FLAGS = {
   enableOtpApproveTxTests: process.env.ENABLE_OTP_APPROVE_TX_TESTS === "true",
   enableOtpDepositTxTests: process.env.ENABLE_OTP_DEPOSIT_TX_TESTS === "true",
   enableOtpWithdrawTxTests: process.env.ENABLE_OTP_WITHDRAW_TX_TESTS === "true",
+};
+
+// Determine chain ID and currency preference
+const targetChainId = useEthereum ? 1 : 8453;
+const useEurVault = FEATURE_FLAGS.useEurVault;
+
+// Select vault with priority: env vars > currency-based selection > fallback
+const selectedVault =
+  (useEthereum && process.env.TEST_VAULT_ETH) ||
+  (!useEthereum && process.env.TEST_VAULT_BASE)
+    ? {
+        address:
+          process.env[useEthereum ? "TEST_VAULT_ETH" : "TEST_VAULT_BASE"],
+        chainId: targetChainId,
+      }
+    : selectVault(useEurVault, targetChainId) || { // Fallback: find any active vault for the chain
+        address: vaultData.find(
+          (v) => v.chain_id === targetChainId && v.is_active
+        )?.vault_address,
+        chainId: targetChainId,
+      };
+
+export const TEST_DATA = {
+  vaults: {
+    selected: selectedVault,
+    // Expose helper for tests that need to know currency type
+    currency: useEurVault ? "EUR" : "USD",
+  },
+
+  accounts: {
+    // dev mode: generated from test runs
+    // production mode: environment variables only
+    testUserId: isProduction()
+      ? process.env.TEST_USER_ID
+      : generatedTestData.accounts.testUserId,
+    testAccountId: isProduction()
+      ? process.env.TEST_ACCOUNT_ID
+      : generatedTestData.accounts.testAccountId,
+    testEntityId: isProduction()
+      ? process.env.TEST_ENTITY_ID
+      : generatedTestData.accounts.testEntityId,
+    testEntityAccountId: isProduction()
+      ? process.env.TEST_ENTITY_ACCOUNT_ID
+      : generatedTestData.accounts.testEntityAccountId,
+  },
+
+  transactions: {
+    // Test transaction IDs
+    testTransactionId: process.env.TEST_TRANSACTION_ID || null,
+  },
 };
 
 /**

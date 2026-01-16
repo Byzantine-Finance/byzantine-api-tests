@@ -274,7 +274,7 @@ export function saveOtpTransactionId(transactionType, transactionId) {
 
 /**
  * Save active vaults to generated-vaults.json
- * Filters vaults with is_active: true and saves them with vault_address, chain_id, and is_active
+ * Filters vaults with is_active: true and saves them with vault_address, chain_id, is_active, and is_asynchronous
  * @param {Array} vaults - Array of vault objects from the API response
  */
 export function saveActiveVaults(vaults) {
@@ -291,6 +291,7 @@ export function saveActiveVaults(vaults) {
         vault_address: vault.vault_address,
         chain_id: vault.chain_id,
         is_active: vault.is_active,
+        is_asynchronous: vault.is_asynchronous,
       }));
 
     // Write to file

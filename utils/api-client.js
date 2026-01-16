@@ -140,6 +140,7 @@ export function formatResponse(response) {
  * @param {object} options.headers - Additional headers
  * @param {boolean} options.authenticated - Whether to add auth headers
  * @param {string} options.privateKey - Optional private key override
+ * @param {number} options.timeout - Optional timeout override (in milliseconds)
  * @returns {Promise<object>} Formatted response
  */
 export async function makeRequest(method, path, options = {}) {
@@ -154,6 +155,8 @@ export async function makeRequest(method, path, options = {}) {
     headers: {
       ...options.headers,
     },
+    // Allow per-request timeout override
+    timeout: options.timeout || API_CONFIG.defaultTimeout,
   };
 
   // Add authentication headers if required
