@@ -12,9 +12,7 @@ import { describe, it, beforeAll } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
-import {
-  generateUniqueEmail,
-} from "../../utils/test-helpers.js";
+import { generateUniqueEmail } from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
   assertError,
@@ -35,15 +33,17 @@ const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
   ? describe
   : describe.skip;
 
+const describeCreateUser = FEATURE_FLAGS.createUser ? describe : describe.skip;
+
+const describeCreateEntity = FEATURE_FLAGS.createEntity
+  ? describe
+  : describe.skip;
+
 describeAccountCreation("Byzantine Account Creation API", () => {
   beforeAll(async () => {
     assertSchema(validUser, "CreateUserRequest");
     assertSchema(validEntity, "CreateEntityRequest");
   });
-
-  const describeCreateUser = FEATURE_FLAGS.createUser
-    ? describe
-    : describe.skip;
 
   describeCreateUser("POST /v1/submit/create-user", () => {
     it(
@@ -89,10 +89,6 @@ describeAccountCreation("Byzantine Account Creation API", () => {
       getTimeout("api")
     );
   });
-
-  const describeCreateEntity = FEATURE_FLAGS.createEntity
-    ? describe
-    : describe.skip;
 
   describeCreateEntity("POST /v1/submit/create-entity", () => {
     it(

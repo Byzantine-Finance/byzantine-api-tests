@@ -27,6 +27,8 @@ const DEFAULT_TEST_DATA = {
     testAccountId: null,
     testEntityId: null,
     testEntityAccountId: null,
+    testUsBankAccountId: null,
+    testEurBankAccountId: null,
   },
   // Metadata
   lastUpdated: null,
@@ -141,6 +143,38 @@ export function saveEntityIds(entityId, accountId) {
   console.log(
     `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}`
   );
+}
+
+/**
+ * Save US bank account ID after successful bank account addition
+ * @param {string} bankAccountId - Bank Account ID
+ */
+export function saveUsBankAccountId(bankAccountId) {
+  updateTestData(
+    {
+      accounts: {
+        testUsBankAccountId: bankAccountId,
+      },
+    },
+    "account-management.test.js"
+  );
+  console.log(`✅ Saved US bank account ID: ${bankAccountId}`);
+}
+
+/**
+ * Save EUR bank account ID after successful bank account addition
+ * @param {string} bankAccountId - Bank Account ID
+ */
+export function saveEurBankAccountId(bankAccountId) {
+  updateTestData(
+    {
+      accounts: {
+        testEurBankAccountId: bankAccountId,
+      },
+    },
+    "account-management.test.js"
+  );
+  console.log(`✅ Saved EUR bank account ID: ${bankAccountId}`);
 }
 
 /**

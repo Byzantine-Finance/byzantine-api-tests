@@ -44,11 +44,16 @@ describeInitPasskey(
   "Initiate Passkey transactions SDK - Using Integrator SDK",
   () => {
     const client = getSdkClient();
-    const testAccountId = passkeyData.accountId;
+    const testAccountId = TEST_DATA.accounts.testAccountId;
     const testVaultAddr = TEST_DATA.vaults.selected.address;
     const chainId = TEST_DATA.vaults.selected.chainId;
     const depositAmount = passkeyData.depositAmount;
     const sourceCurrency = passkeyData.sourceCurrency;
+    // Get bank account ID from generated-accounts based on destination currency
+    const destinationCurrency = passkeyData.destinationCurrency;
+    const bankAccountId = destinationCurrency === "eur" || destinationCurrency === "eurc"
+      ? TEST_DATA.accounts.testEurBankAccountId
+      : TEST_DATA.accounts.testUsBankAccountId;
 
     // Deposit using Passkey
     describeInitApprovePasskey("getApproveTransactionPasskey()", () => {
@@ -144,7 +149,8 @@ describeInitPasskey(
             accountId: testAccountId,
             vaultAddr: testVaultAddr,
             amount: passkeyData.withdrawAmount,
-            destinationCurrency: passkeyData.destinationCurrency,
+            destinationCurrency: destinationCurrency,
+            bankAccountId: bankAccountId,
           };
 
           assertSchema(requestBody, "WithdrawRequestBody");

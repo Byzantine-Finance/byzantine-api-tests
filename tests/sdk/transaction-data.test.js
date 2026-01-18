@@ -19,8 +19,8 @@ import {
 } from "../../utils/sdk-assertions.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
-// Skip if account tests are disabled (these tests need test data)
-const describeTransactionData = FEATURE_FLAGS.enableAccountTests
+// Skip if transaction data tests are disabled
+const describeTransactionData = FEATURE_FLAGS.enableTransactionDataTests
   ? describe
   : describe.skip;
 

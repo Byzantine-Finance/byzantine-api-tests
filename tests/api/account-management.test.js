@@ -12,6 +12,7 @@ import {
   getTimeout,
   FEATURE_FLAGS,
   TEST_DATA,
+  conditionalIt,
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
@@ -19,6 +20,10 @@ import {
   assertValidUuid,
   assertSchema,
 } from "../../utils/api-assertions.js";
+import {
+  saveUsBankAccountId,
+  saveEurBankAccountId,
+} from "../../utils/test-data-persistence.js";
 
 // Import test data from fixtures
 import usAchAccount from "../../fixtures/test-data/bank-accounts/us-ach-account.json" assert { type: "json" };
@@ -33,7 +38,9 @@ describeManagement("Account Management API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
 
   describe("POST /v1/submit/add-bank-account", () => {
-    it(
+    conditionalIt(
+      it,
+      "addUsBankAccount",
       "should add US ACH bank account",
       async () => {
         const requestBody = {
@@ -50,11 +57,16 @@ describeManagement("Account Management API", () => {
 
         assertSuccessWithSchema(response, "OffRampAddress");
         assertValidUuid(response.data.bankAccountId);
+
+        // Save bank account ID for use in other tests
+        saveUsBankAccountId(response.data.bankAccountId);
       },
       getTimeout("api")
     );
 
-    it(
+    conditionalIt(
+      it,
+      "addEurBankAccount",
       "should add EUR IBAN bank account",
       async () => {
         const requestBody = {
@@ -71,6 +83,10 @@ describeManagement("Account Management API", () => {
         );
 
         assertSuccessWithSchema(response, "OffRampAddress");
+        assertValidUuid(response.data.bankAccountId);
+
+        // Save bank account ID for use in other tests
+        saveEurBankAccountId(response.data.bankAccountId);
       },
       getTimeout("api")
     );

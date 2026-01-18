@@ -1,10 +1,12 @@
 {
   "accounts": {
-    "testUserId": "0f5ff06c-3708-4cdb-83de-33545c69fe0d",
-    "testAccountId": "40253f59-ce1a-4e8c-89c4-1273751bf172",
+    "testUserId": "3eb13bff-7ad9-4f94-8da4-d8b84295fec4",
+    "testAccountId": "31e01f3c-271a-4b32-bece-828e145fe3fd",
     "testEntityId": "91b09921-2c76-4ea8-a325-0f5ae0d58b56",
-    "testEntityAccountId": "4f837e1c-829e-42fd-917d-4c90ff10357f"
+    "testEntityAccountId": "4f837e1c-829e-42fd-917d-4c90ff10357f",
+    "testUsBankAccountId": null,
+    "testEurBankAccountId": null
   },
-  "lastUpdated": "2025-12-12T16:47:55.127Z",
+  "lastUpdated": "2026-01-16T10:24:30.468Z",
   "lastUpdatedBy": "account-creation.test.js"
 }

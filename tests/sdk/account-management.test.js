@@ -12,6 +12,7 @@ import {
   getTimeout,
   FEATURE_FLAGS,
   TEST_DATA,
+  conditionalIt,
 } from "../../config/test.config.js";
 import {
   assertSuccessWithSchema,
@@ -19,6 +20,10 @@ import {
   assertDataUuid,
   assertSchema,
 } from "../../utils/sdk-assertions.js";
+import {
+  saveUsBankAccountId,
+  saveEurBankAccountId,
+} from "../../utils/test-data-persistence.js";
 
 // Import test data from fixtures
 import usAchAccount from "../../fixtures/test-data/bank-accounts/us-ach-account.json" assert { type: "json" };
@@ -34,7 +39,9 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
 
   describe("addBankAccount()", () => {
-    it(
+    conditionalIt(
+      it,
+      "addUsBankAccount",
       "should add US ACH bank account and return typed response",
       async () => {
         const requestBody = {
@@ -48,11 +55,16 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "OffRampAddress");
         assertDataUuid(sdkResponse, "bankAccountId");
+
+        // Save bank account ID for use in other tests
+        saveUsBankAccountId(sdkResponse.data.bankAccountId);
       },
       getTimeout("api")
     );
 
-    it(
+    conditionalIt(
+      it,
+      "addEurBankAccount",
       "should add EUR IBAN bank account and return typed response",
       async () => {
         const requestBody = {
@@ -66,6 +78,10 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "OffRampAddress");
+        assertDataUuid(sdkResponse, "bankAccountId");
+
+        // Save bank account ID for use in other tests
+        saveEurBankAccountId(sdkResponse.data.bankAccountId);
       },
       getTimeout("api")
     );

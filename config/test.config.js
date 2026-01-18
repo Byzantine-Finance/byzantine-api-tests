@@ -115,6 +115,13 @@ export const FEATURE_FLAGS = {
   createUser: process.env.CREATE_USER !== "false", // Enabled by default
   createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
 
+  // Transaction data tests
+  enableTransactionDataTests: process.env.ENABLE_TRANSACTION_DATA_TESTS !== "false", // Enabled by default
+
+  // Bank account tests
+  addUsBankAccount: process.env.ADD_US_BANK_ACCOUNT !== "false", // Enabled by default
+  addEurBankAccount: process.env.ADD_EUR_BANK_ACCOUNT !== "false", // Enabled by default
+
   // OTP tests (require real OTP codes)
   enableOtpTests: process.env.ENABLE_OTP_TESTS === "true",
   enableOtpInitApproveTests:
@@ -226,17 +233,20 @@ export function conditionalDescribe(flagName, description, fn) {
 
 /**
  * Helper to conditionally run individual tests
- * Usage: conditionalIt('enableWriteTests', 'should create user', async () => { ... })
+ * Usage: conditionalIt('enableWriteTests', 'should create user', async () => { ... }, 15000)
+ * Note: Pass 'it' from vitest in test files
  *
+ * @param {Function} it - The 'it' function from vitest
  * @param {string} flagName - Feature flag name
  * @param {string} description - Test description
  * @param {Function} fn - Test function
+ * @param {number} timeout - Optional timeout
  */
-export function conditionalIt(flagName, description, fn) {
+export function conditionalIt(it, flagName, description, fn, timeout) {
   if (FEATURE_FLAGS[flagName]) {
-    return it(description, fn);
+    return it(description, fn, timeout);
   } else {
-    return it.skip(description, fn);
+    return it.skip(description, fn, timeout);
   }
 }
 
