@@ -221,6 +221,7 @@
               <option value="deposit">Deposit</option>
               <option value="withdraw">Withdraw</option>
               <option value="activateAccount">Activate Account</option>
+              <option value="inviteUsers">Invite Users</option>
             </select>
           </div>
         </div>
@@ -654,7 +655,7 @@
           resultDiv.innerHTML = `<div class="result error">❌ Error: ${errorMessage}${helpText}</div>`;
         } finally {
           testBtn.disabled = false;
-          testBtn.textContent = "Test WebAuthn Stamp";
+          testBtn.textContent = "Sign payload";
         }
       }
 

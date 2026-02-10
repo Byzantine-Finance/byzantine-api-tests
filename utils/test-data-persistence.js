@@ -190,7 +190,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   );
 
   // Validate transaction type
-  const validTypes = ["approve", "deposit", "withdraw", "activateAccount"];
+  const validTypes = ["approve", "deposit", "withdraw", "activateAccount", "inviteUsers"];
   if (!validTypes.includes(transactionType)) {
     throw new Error(
       `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
@@ -205,18 +205,26 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
       ? JSON.parse(readFileSync(TX_REQUEST_FILE, "utf-8"))
       : {};
 
-    // Extract data - all transaction types now use SignRawPayloadParams structure
-    const bodyToSignData = {
-      type: bodyToSign.type,
-      timestampMs: bodyToSign.timestampMs,
-      organizationId: bodyToSign.organizationId,
-      parameters: {
-        signWith: bodyToSign.parameters.signWith,
-        payload: bodyToSign.parameters.payload,
-        encoding: bodyToSign.parameters.encoding,
-        hashFunction: bodyToSign.parameters.hashFunction,
-      },
-    };
+    // inviteUsers uses CreateUsersRequest structure (with parameters.users)
+    // Other types use SignRawPayloadRequest structure (with parameters.signWith, payload, etc.)
+    const bodyToSignData = transactionType === "inviteUsers"
+      ? {
+          type: bodyToSign.type,
+          timestampMs: bodyToSign.timestampMs,
+          organizationId: bodyToSign.organizationId,
+          parameters: bodyToSign.parameters, // Keep entire parameters object with users array
+        }
+      : {
+          type: bodyToSign.type,
+          timestampMs: bodyToSign.timestampMs,
+          organizationId: bodyToSign.organizationId,
+          parameters: {
+            signWith: bodyToSign.parameters.signWith,
+            payload: bodyToSign.parameters.payload,
+            encoding: bodyToSign.parameters.encoding,
+            hashFunction: bodyToSign.parameters.hashFunction,
+          },
+        };
 
     // Update the appropriate section based on transaction type
     const updatedData = {

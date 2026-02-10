@@ -10,7 +10,6 @@ import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import {
   getTimeout,
-  FEATURE_FLAGS,
   TEST_DATA,
 } from "../../config/test.config.js";
 import {
@@ -20,12 +19,7 @@ import {
   assertArraySchema,
 } from "../../utils/api-assertions.js";
 
-// Skip if feature is disabled or no test data
-const describeAccounts = FEATURE_FLAGS.enableAccountTests
-  ? describe
-  : describe.skip;
-
-describeAccounts("Account Data API", () => {
+describe("Account Data API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testUserId = TEST_DATA.accounts.testUserId;
   const testEntityId = TEST_DATA.accounts.testEntityId;

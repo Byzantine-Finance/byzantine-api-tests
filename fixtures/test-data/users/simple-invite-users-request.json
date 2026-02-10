@@ -1,0 +1,13 @@
+{
+  "accountId": "PLACEHOLDER_ACCOUNT_ID",
+  "newUsers": [
+    {
+      "userName": "Simple User 1",
+      "userEmail": "simpleuser1@example.com"
+    },
+    {
+      "userName": "Simple User 2",
+      "userEmail": "simpleuser2@example.com"
+    }
+  ]
+}

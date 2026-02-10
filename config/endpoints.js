@@ -201,6 +201,18 @@ export const endpoints = {
      * Activate an account
      */
     activateAccount: "/v1/submit/activate-account",
+
+    /**
+     * Get payload to invite users to account (request body to sign)
+     * Returns bodyToSign (CreateUsersRequest) for passkey authentication
+     */
+    getInviteUsersPayload: "/v1/query/get-invite-users-payload-passkey",
+
+    /**
+     * Invite users to a Byzantine account (simple flow)
+     * Sends invite email to users
+     */
+    inviteUsers: "/v1/submit/invite-users",
   },
 };
 

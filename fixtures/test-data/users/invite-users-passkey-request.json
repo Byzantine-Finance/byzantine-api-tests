@@ -1,0 +1,9 @@
+{
+  "accountId": "PLACEHOLDER_ACCOUNT_ID",
+  "newUsers": [
+    {
+      "userName": "newuser3",
+      "userEmail": "lin+invited@byzantine.fi"
+    }
+  ]
+}

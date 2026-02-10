@@ -115,6 +115,10 @@ export const FEATURE_FLAGS = {
   createUser: process.env.CREATE_USER !== "false", // Enabled by default
   createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
 
+  // User invitation tests
+  invitePayload: process.env.INVITE_PAYLOAD !== "false", // Enabled by default
+  inviteUsers: process.env.INVITE_USERS !== "false", // Enabled by default
+
   // Transaction data tests
   enableTransactionDataTests: process.env.ENABLE_TRANSACTION_DATA_TESTS !== "false", // Enabled by default
 

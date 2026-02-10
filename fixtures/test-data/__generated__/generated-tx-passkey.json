@@ -58,5 +58,31 @@
     },
     "transactionId": "7a6b4136-7b85-40dd-a93b-e9d2fdda8fd9",
     "webAuthnStamp": "{\"credentialId\":\"FHUQEqvrnwNH9j0ykvDruA\",\"authenticatorData\":\"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAA\",\"clientDataJson\":\"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiTVRjd01qTXhOV0V5TWpJelpEQTRabVk1TTJReE16TmxOVEl4TnpFd01HVTBNR1JrTkRreE9EYzJaVGszTWpWbFlUTm1ZV1EzWTJRM1lUaGpZMkU0T0EiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2UsIm90aGVyX2tleXNfY2FuX2JlX2FkZGVkX2hlcmUiOiJkbyBub3QgY29tcGFyZSBjbGllbnREYXRhSlNPTiBhZ2FpbnN0IGEgdGVtcGxhdGUuIFNlZSBodHRwczovL2dvby5nbC95YWJQZXgifQ\",\"signature\":\"MEYCIQC1gsjLwZi8bnkqYcROkjnnp1OOCz7Vkn1hJY88p53KegIhAK7EdR5z6JvxRYD-jq5c9XtV8FUM0V-u_E7BE1NSroIz\"}"
+  },
+  "inviteUsers": {
+    "bodyToSign": {
+      "type": "ACTIVITY_TYPE_CREATE_USERS_V3",
+      "timestampMs": "1769605765189",
+      "organizationId": "b0d17121-68dc-45d2-84fb-bdc18a3e903b",
+      "parameters": {
+        "users": [
+          {
+            "userName": "newuser3",
+            "userEmail": "lin+invited3+apitests-1769605763@byzantine.fi",
+            "apiKeys": [
+              {
+                "apiKeyName": "Byzantine API Key",
+                "publicKey": "02585c51b1622c59715784828c57ce537c41879278d5360159cd214fc976f52231",
+                "curveType": "API_KEY_CURVE_P256"
+              }
+            ],
+            "authenticators": [],
+            "oauthProviders": [],
+            "userTags": []
+          }
+        ]
+      }
+    },
+    "webAuthnStamp": "{\"credentialId\":\"FHUQEqvrnwNH9j0ykvDruA\",\"authenticatorData\":\"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MZAAAAAA\",\"clientDataJson\":\"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiTUdGak1qQTJZVEEwTURJd05XSmxNak5qTlRJNVpqTXdNakEzTXpZNU9ETXhabU15WkRkbVpESXhOMlUxTUdSaU9HUmhNVGd5Wm1Vd09HRTVZakppTlEiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9\",\"signature\":\"MEQCIDX03Hzo93WG1WB6bJugGo2uCICYWVtHKO0onqbppdXOAiBQXpAa6TdyxM8kw5ddyetOHgnqtyOyFYk-kYqFzZkW3g\"}"
   }
 }

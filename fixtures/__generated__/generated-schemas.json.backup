@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-01-08T16:32:01.320Z\nSpec SHA-256: 7e2c3d0fb67a01bf27e7c31bf1e0921fd32bae5e1dcabd156181c6c6c1d4a5cb",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-01-26T10:31:24.445Z\nSpec SHA-256: 5d772384eddbe8a2d7eae655688f442a6760d6d06c9ed43d2a26b6ac3530f49b",
   "AchAccountPayload": {
     "type": "object",
     "required": [
@@ -189,6 +189,37 @@
       },
       "country": {
         "$ref": "#/components/schemas/CountryCode"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ApiKeyParam": {
+    "type": "object",
+    "description": "API key object. If set, temporary authentication method until the user adds a passkey.",
+    "required": [
+      "apiKeyName",
+      "publicKey",
+      "curveType"
+    ],
+    "properties": {
+      "apiKeyName": {
+        "type": "string",
+        "description": "Human-readable name for the API key."
+      },
+      "publicKey": {
+        "type": "string",
+        "description": "The public key of the API key."
+      },
+      "curveType": {
+        "type": "string",
+        "description": "The curve type of encryption algorithm."
+      },
+      "expirationSeconds": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional window (in seconds) indicating how long the API Key should last."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -925,6 +956,54 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "CreateUserParam": {
+    "type": "object",
+    "description": "The parameters object containing the specific informations about the new user to be added.",
+    "required": [
+      "userName",
+      "userEmail",
+      "apiKeys",
+      "authenticators",
+      "oauthProviders",
+      "userTags"
+    ],
+    "properties": {
+      "userName": {
+        "type": "string",
+        "description": "The name of the new user."
+      },
+      "userEmail": {
+        "type": "string",
+        "description": "The email of the new user."
+      },
+      "apiKeys": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiKeyParam"
+        }
+      },
+      "authenticators": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AuthenticatorParam"
+        }
+      },
+      "oauthProviders": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OAuthProviderParam"
+        }
+      },
+      "userTags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "A list of tag IDs to add to the user."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "CreateUserRequest": {
     "type": "object",
     "description": "User to be created. The vast majority of fields are required in order to complete the identity verification process.",
@@ -1051,6 +1130,50 @@
       "isOtpActivated": {
         "type": "boolean",
         "description": "An indicator showing whether OTP authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateUsersParams": {
+    "type": "object",
+    "description": "The list of new users to be added.",
+    "required": [
+      "users"
+    ],
+    "properties": {
+      "users": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CreateUserParam"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateUsersRequest": {
+    "type": "object",
+    "description": "The object that needs to be signed by the end user to invite a new user to a Byzantine account.",
+    "required": [
+      "type",
+      "timestampMs",
+      "organizationId",
+      "parameters"
+    ],
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "Defaults to `ACTIVITY_TYPE_CREATE_USERS_V3`"
+      },
+      "timestampMs": {
+        "type": "string",
+        "description": "UNIX timestamp of the creation of the request."
+      },
+      "organizationId": {
+        "type": "string",
+        "description": "The account ID adding the new user."
+      },
+      "parameters": {
+        "$ref": "#/components/schemas/CreateUsersParams"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1818,10 +1941,143 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "InviteUsersRequest": {
+    "type": "object",
+    "description": "Request body for inviting a user to a Byzantine account",
+    "required": [
+      "accountId",
+      "newUsers"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "newUsers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/NewUser"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "InviteUsersRequestBodyPasskey": {
+    "type": "object",
+    "required": [
+      "signedBody",
+      "webAuthnStamp"
+    ],
+    "properties": {
+      "signedBody": {
+        "$ref": "#/components/schemas/CreateUsersRequest"
+      },
+      "webAuthnStamp": {
+        "type": "string",
+        "description": "Cryptographically passkey signed (stamped). For more info, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "InviteUsersRequestResponse": {
+    "type": "object",
+    "required": [
+      "bodyToSign"
+    ],
+    "properties": {
+      "bodyToSign": {
+        "$ref": "#/components/schemas/CreateUsersRequest"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "InviteUsersResponse": {
+    "type": "object",
+    "description": "Response body when new users are successfully invited to a Byzantine account",
+    "required": [
+      "accountId",
+      "newUsers",
+      "invitedAt"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "newUsers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/InvitedUser"
+        }
+      },
+      "invitedAt": {
+        "type": "string",
+        "format": "date-time",
+        "description": "The timestamp when the users were invited."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "InvitedUser": {
+    "type": "object",
+    "description": "The details of the new users invited.",
+    "required": [
+      "userId",
+      "userName",
+      "userEmail"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "userName": {
+        "type": "string",
+        "description": "The name of the new user."
+      },
+      "userEmail": {
+        "type": "string",
+        "description": "The email of the new user."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "NaiveDateTime": {
     "type": "string",
     "format": "date-time",
     "description": "A naive datetime string without timezone",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "NewUser": {
+    "type": "object",
+    "description": "The details of the new user to invite.",
+    "required": [
+      "userName",
+      "userEmail"
+    ],
+    "properties": {
+      "userName": {
+        "type": "string",
+        "description": "The name of the user to invite."
+      },
+      "userEmail": {
+        "type": "string",
+        "description": "The email of the user to invite."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "OAuthProviderParam": {
+    "type": "object",
+    "required": [
+      "providerName",
+      "oidcToken"
+    ],
+    "properties": {
+      "providerName": {
+        "type": "string"
+      },
+      "oidcToken": {
+        "type": "string"
+      }
+    },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "OffRampAddress": {
@@ -1933,36 +2189,6 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "PasskeyTxRequestResponse": {
-    "type": "object",
-    "required": [
-      "bodyToSign",
-      "transactionId"
-    ],
-    "properties": {
-      "bodyToSign": {
-        "$ref": "#/components/schemas/SignTransactionRequest"
-      },
-      "transactionId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "destinationBankAccount": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/BankAccount"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
   "PaymentRailVirtualAccount": {
     "type": "string",
     "enum": [
@@ -1987,27 +2213,6 @@
       "otpCode": {
         "type": "string",
         "description": "The OTp code that the user received via email."
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "SendPasskeyTransactionRequestBody": {
-    "type": "object",
-    "required": [
-      "signedBody",
-      "transactionId",
-      "webAuthnStamp"
-    ],
-    "properties": {
-      "signedBody": {
-        "$ref": "#/components/schemas/SignTransactionRequest"
-      },
-      "transactionId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "webAuthnStamp": {
-        "type": "string",
-        "description": "Cryptographically passkey signed (stamped). For more info, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"

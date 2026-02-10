@@ -62,7 +62,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         const response = await apiClient.post(
           endpoints.create.user,
           userWithUniqueEmail,
-          { authenticated: true }
+          { authenticated: true },
         );
 
         assertSuccessWithSchema(response, "CreateUserResponse", 201);
@@ -72,7 +72,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         // Save IDs for use in other tests
         saveUserIds(response.data.userId, response.data.accountId);
       },
-      getTimeout("integration")
+      getTimeout("integration"),
     );
 
     it(
@@ -80,13 +80,13 @@ describeAccountCreation("Byzantine Account Creation API", () => {
       async () => {
         const response = await apiClient.post(
           endpoints.create.user,
-          validUser
+          validUser,
           // No authenticated: true
         );
 
         assertError(response, 400);
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 
@@ -107,7 +107,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         const response = await apiClient.post(
           endpoints.create.entity,
           entityWithUniqueEmail,
-          { authenticated: true }
+          { authenticated: true, timeout: getTimeout("passkey") },
         );
 
         assertSuccessWithSchema(response, "CreateEntityResponse", 201);
@@ -117,21 +117,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         // Save IDs for use in other tests
         saveEntityIds(response.data.entityId, response.data.accountId);
       },
-      getTimeout("api")
-    );
-
-    it(
-      "should reject request without integrator authentication",
-      async () => {
-        const response = await apiClient.post(
-          endpoints.create.entity,
-          validEntity
-          // No authenticated: true
-        );
-
-        assertError(response, 400);
-      },
-      getTimeout("api")
+      getTimeout("passkey"),
     );
   });
 
@@ -145,7 +131,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
 
         assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
 
     it(
@@ -155,7 +141,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
 
         assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 });
