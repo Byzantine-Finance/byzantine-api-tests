@@ -1,6 +1,6 @@
 /**
  * Passkey deposit Transactions API Tests, what are tested:
- * - query/get-approve-payload-passkey
+ * - query/get-activate-account-payload-passkey
  * - query/get-deposit-payload-passkey
  * - query/get-withdraw-payload-passkey
  *
@@ -28,7 +28,7 @@ import passkeyData from "../../fixtures/test-data/passkey-data.json";
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
   ? describe
   : describe.skip;
-const describeInitApprovePasskey = FEATURE_FLAGS.enablePasskeyInitApproveTests
+const describeInitActivatePasskey = FEATURE_FLAGS.enablePasskeyInitActivateTests
   ? describe
   : describe.skip;
 const describeInitDepositPasskey = FEATURE_FLAGS.enablePasskeyInitDepositTests
@@ -50,22 +50,21 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
     ? TEST_DATA.accounts.testEurBankAccountId
     : TEST_DATA.accounts.testUsBankAccountId;
 
-  // Deposit using Passkey
-  describeInitApprovePasskey(
-    "POST /v1/query/get-approve-payload-passkey",
+  // Activate account using Passkey
+  describeInitActivatePasskey(
+    "POST /v1/query/get-activate-account-payload-passkey",
     () => {
       it(
-        "should get approve payload to sign",
+        "should get activate account payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
-            vaultAddr: testVaultAddr,
           };
 
-          assertSchema(requestBody, "ApproveRequestBody");
+          assertSchema(requestBody, "ActivateAccountRequestBody");
 
           const response = await apiClient.post(
-            endpoints.passkey.getApprovePayloadPasskey(chainId),
+            endpoints.passkey.getActivateAccountPayloadPasskey(chainId),
             requestBody,
             { authenticated: true }
           );
@@ -73,9 +72,9 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
-          // Save approve bodyToSign and transactionId to generated-tx-passkey.json
+          // Save activateAccount bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
-            "approve",
+            "activateAccount",
             response.data.bodyToSign,
             response.data.transactionId
           );
@@ -88,13 +87,10 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
         async () => {
           const requestBody = {
             accountId: testAccountId,
-            vaultAddr: testVaultAddr,
           };
 
-          assertSchema(requestBody, "ApproveRequestBody");
-
           const response = await apiClient.post(
-            endpoints.passkey.getApprovePayloadPasskey(99999), // Invalid chain ID
+            endpoints.passkey.getActivateAccountPayloadPasskey(99999), // Invalid chain ID
             requestBody,
             { authenticated: true }
           );

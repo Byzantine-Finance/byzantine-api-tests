@@ -76,6 +76,20 @@ export const endpoints = {
       const path = `/v1/query/get-bank-accounts?account_id=${accountId}`;
       return currency ? `${path}&currency=${currency}` : path;
     },
+
+    /**
+     * Get account balances (positions and idle) for an account
+     * @param {string} accountId - UUID
+     * @param {object} params - Optional: chain_id (int32), include_test_vaults (boolean)
+     */
+    getAccountBalances: (accountId, params = {}) => {
+      const queryParams = new URLSearchParams({ account_id: accountId });
+      if (params.chain_id != null)
+        queryParams.append("chain_id", params.chain_id);
+      if (params.include_test_vaults != null)
+        queryParams.append("include_test_vaults", params.include_test_vaults);
+      return `/v1/query/get-account-balances?${queryParams.toString()}`;
+    },
   },
 
   // ============================================
@@ -213,6 +227,64 @@ export const endpoints = {
      * Sends invite email to users
      */
     inviteUsers: "/v1/submit/invite-users",
+  },
+
+  // ============================================
+  // OTP Authentication
+  // ============================================
+  auth: {
+    /**
+     * Initialize OTP (email) for a user
+     * Sends OTP code to user's email
+     */
+    initOtp: "/v1/submit/init-otp",
+
+    /**
+     * Authenticate with OTP code
+     * Returns session ID that can be used for authenticated actions
+     */
+    authenticateOtp: "/v1/submit/otp-auth",
+
+    /**
+     * Create authenticators (passkeys) using OTP session
+     */
+    createAuthenticatorsOtp: "/v1/submit/create-authenticators-otp",
+  },
+
+  // ============================================
+  // Invitations
+  // ============================================
+  invitations: {
+    /**
+     * Get invitations by account ID
+     * @param {string} accountId - UUID
+     */
+    getByAccountId: (accountId) =>
+      `/v1/query/get-invitations-by-account-id?account_id=${accountId}`,
+
+    /**
+     * Get invitations by email
+     * @param {string} email - Email address
+     */
+    getByEmail: (email) =>
+      `/v1/query/get-invitations-by-email?email=${encodeURIComponent(email)}`,
+  },
+
+  // ============================================
+  // User Role Management
+  // ============================================
+  roles: {
+    /**
+     * Get payload to update users' roles (request body to sign)
+     * Returns bodyToSign (UpdateRootQuorumRequest) for passkey authentication
+     */
+    getUpdateUsersRolePayload: "/v1/query/get-update-users-role-payload-passkey",
+
+    /**
+     * Update users' roles within a Byzantine account
+     * Requires passkey signature
+     */
+    updateUsersRole: "/v1/submit/update-users-role",
   },
 };
 

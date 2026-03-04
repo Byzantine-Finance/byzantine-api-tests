@@ -6,8 +6,8 @@
  * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
-import { describe, it, expect } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { describe, it } from "vitest";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -50,7 +50,7 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         };
         assertSchema(requestBody, "AddBankAccountRequest");
 
-        const sdkResponse = await client.api.addBankAccount(requestBody);
+        const sdkResponse = await client.api.addBankAccount(requestBody, DUMMY_AUTH);
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "OffRampAddress");
@@ -74,7 +74,7 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
 
         assertSchema(requestBody, "AddBankAccountRequest");
 
-        const sdkResponse = await client.api.addBankAccount(requestBody);
+        const sdkResponse = await client.api.addBankAccount(requestBody, DUMMY_AUTH);
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "OffRampAddress");
@@ -103,7 +103,8 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         });
 
         const sdkResponse = await unauthenticatedClient.api.addBankAccount(
-          requestBody
+          requestBody,
+          DUMMY_AUTH,
         );
 
         // Assert SDK error handling

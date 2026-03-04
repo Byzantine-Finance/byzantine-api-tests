@@ -10,6 +10,12 @@ import { getEnvironmentBaseURL, isProduction } from "../config/environments.js";
 dotenv.config();
 
 /**
+ * Dummy auth headers placeholder for SDK methods that require authHeaders.
+ * The middleware will overwrite these with real stamps before the request is sent.
+ */
+export const DUMMY_AUTH = { pubkey: "", timestamp: "", signature: "" };
+
+/**
  * Create a configured SDK client instance with automatic authentication
  * @param {object} options - Configuration options
  * @param {string} options.baseURL - Optional base URL override
@@ -60,13 +66,35 @@ function setupAutoAuth(client) {
 
       // List of paths that require authentication
       const authenticatedPaths = [
+        // Account creation & management
         "/v1/submit/create-user",
         "/v1/submit/create-entity",
         "/v1/submit/add-bank-account",
-        "/v1/submit/send-transaction-otp",
-        "/v1/submit/send-transaction-passkey",
+        // Passkey transactions
         "/v1/query/get-activate-account-payload-passkey",
+        "/v1/query/get-approve-payload-passkey",
+        "/v1/query/get-deposit-payload-passkey",
+        "/v1/query/get-withdraw-payload-passkey",
         "/v1/submit/sign-payload-passkey",
+        // OTP transactions
+        "/v1/query/init-approve-otp",
+        "/v1/query/init-deposit-otp",
+        "/v1/query/init-withdraw-otp",
+        "/v1/submit/send-transaction-otp",
+        // User invitations & roles
+        "/v1/query/get-invite-users-payload-passkey",
+        "/v1/submit/invite-users",
+        "/v1/query/get-update-users-role-payload-passkey",
+        "/v1/submit/update-users-role",
+        // Invitation queries
+        "/v1/query/get-invitations-by-account-id",
+        "/v1/query/get-invitations-by-email",
+        // OTP authentication
+        "/v1/submit/init-otp",
+        "/v1/submit/otp-auth",
+        "/v1/submit/create-authenticators-otp",
+        // Account data
+        "/v1/query/get-account-balances",
       ];
 
       // Check if this path requires authentication

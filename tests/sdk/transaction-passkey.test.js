@@ -1,12 +1,12 @@
 /**
  * Passkey transactions SDK Tests, what are tested:
- * - sendTransactionPasskey
+ * - signPayloadPasskey
  *
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
 
 import { describe, it, beforeAll } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -15,7 +15,7 @@ import {
 import { assertSuccessWithSchema, assertSchema } from "../../utils/sdk-assertions.js";
 import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
-// Skip if OTP and Passkey tests are disabled
+// Skip if Passkey tests are disabled
 const describeTransactionPasskey = FEATURE_FLAGS.enablePasskeyTests
   ? describe
   : describe.skip;
@@ -29,11 +29,11 @@ describeTransactionPasskey(
     // Organize test data by transaction type
     const allTransactionTests = [
       {
-        type: "Approve",
-        bodyToSign: txRequest.approve.bodyToSign,
-        transactionId: txRequest.approve.transactionId,
-        webAuthnStamp: txRequest.approve.webAuthnStamp,
-        flag: "enablePasskeyApproveTxTests",
+        type: "ActivateAccount",
+        bodyToSign: txRequest.activateAccount.bodyToSign,
+        transactionId: txRequest.activateAccount.transactionId,
+        webAuthnStamp: txRequest.activateAccount.webAuthnStamp,
+        flag: "enableSignActivateAccount",
       },
       {
         type: "Deposit",
@@ -53,7 +53,7 @@ describeTransactionPasskey(
 
     // Filter tests based on feature flags in test.config.js
     const transactionTests = allTransactionTests.filter(
-      (test) => FEATURE_FLAGS[test.flag]
+      (test) => FEATURE_FLAGS[test.flag],
     );
 
     // Validate schemas before all tests
@@ -64,13 +64,13 @@ describeTransactionPasskey(
           transactionId: test.transactionId,
           webAuthnStamp: test.webAuthnStamp,
         };
-        assertSchema(requestBody, "SendPasskeyTransactionRequestBody");
+        assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
       });
     });
 
-    describe("sendTransactionPasskey()", () => {
+    describe("signPayloadPasskey()", () => {
       it.each(transactionTests)(
-        "should submit $type transaction with Passkey",
+        "should sign $type payload with Passkey",
         async ({ bodyToSign, transactionId, webAuthnStamp }) => {
           const requestBody = {
             signedBody: bodyToSign,
@@ -78,16 +78,19 @@ describeTransactionPasskey(
             webAuthnStamp: webAuthnStamp,
           };
 
-          const sdkResponse = await client.api.sendTransactionPasskey(
+          assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
+
+          const sdkResponse = await client.api.signPayloadPasskey(
             chainId,
-            requestBody
+            requestBody,
+            DUMMY_AUTH,
           );
 
           // Assert SDK behavior: success with expected data shape
           assertSuccessWithSchema(sdkResponse, "SendTransactionResponseBody");
         },
-        getTimeout("integration")
+        getTimeout("integration"),
       );
     });
-  }
+  },
 );

@@ -53,7 +53,7 @@ describeInitOtp("Initiate OTP transactions API", () => {
           vaultAddr: testVaultAddr,
         };
 
-        assertSchema(requestBody, "ApproveRequestBody");
+        assertHasFields(requestBody, ["accountId", "vaultAddr"]);
 
         const response = await apiClient.post(
           endpoints.otp.initApprove(chainId),

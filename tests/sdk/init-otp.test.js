@@ -1,6 +1,6 @@
 /**
  * OTP deposit Transactions SDK Tests, what are tested:
- * - initApproveOtp
+ * - initApproveOtp (via raw client - not wrapped in SDK)
  * - initDepositOtp
  * - initWithdrawOtp
  *
@@ -10,7 +10,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -22,6 +22,7 @@ import {
   assertError,
   assertSchema,
 } from "../../utils/sdk-assertions.js";
+import { assertHasFields } from "../../utils/api-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
@@ -45,6 +46,7 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
   const depositAmount = passkeyData.depositAmount;
   const sourceCurrency = passkeyData.sourceCurrency;
 
+  // Approve using OTP (via raw client - endpoint not wrapped in SDK)
   describeInitApproveOtp("initApproveOtp()", () => {
     it(
       "should initiate approve and send OTP",
@@ -54,11 +56,15 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
           vaultAddr: testVaultAddr,
         };
 
-        assertSchema(requestBody, "ApproveRequestBody");
+        assertHasFields(requestBody, ["accountId", "vaultAddr"]);
 
-        const sdkResponse = await client.api.initApproveOtp(
-          chainId,
-          requestBody
+        // Use raw client since approve OTP is not in the OpenAPI types
+        const sdkResponse = await client.api.client.POST(
+          "/v1/query/init-approve-otp",
+          {
+            params: { query: { chain_id: chainId } },
+            body: requestBody,
+          },
         );
 
         // Assert SDK behavior: success with expected data shape
@@ -72,7 +78,7 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
         // Save approve OTP transactionId to generated-tx-otp.json
         saveOtpTransactionId("approve", sdkResponse.data.transaction_id);
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 
@@ -91,7 +97,8 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
 
         const sdkResponse = await client.api.initDepositOtp(
           chainId,
-          requestBody
+          requestBody,
+          DUMMY_AUTH,
         );
 
         // Assert SDK behavior: success with expected data shape
@@ -101,7 +108,7 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
         // Save deposit OTP transactionId to generated-tx-otp.json
         saveOtpTransactionId("deposit", sdkResponse.data.transaction_id);
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
 
     it(
@@ -116,13 +123,14 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
 
         const sdkResponse = await client.api.initDepositOtp(
           chainId,
-          requestBody
+          requestBody,
+          DUMMY_AUTH,
         );
 
         // Assert SDK error handling
         assertError(sdkResponse);
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 
@@ -142,7 +150,8 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
 
         const sdkResponse = await client.api.initWithdrawOtp(
           chainId,
-          requestBody
+          requestBody,
+          DUMMY_AUTH,
         );
 
         // Assert SDK behavior: success with expected data shape
@@ -152,7 +161,7 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
         // Save withdraw OTP transactionId to generated-tx-otp.json
         saveOtpTransactionId("withdraw", sdkResponse.data.transaction_id);
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 });

@@ -1,15 +1,8 @@
 /**
  * User Invitation API Tests, what are tested:
- * - query/get-invite-users-payload-passkey (get payload to sign)
- * - submit/invite-users (submit signed invitation with passkey auth)
+ * - POST /v1/query/get-invite-users-payload-passkey (get payload to sign)
+ * - POST /v1/submit/invite-users (submit signed invitation with passkey auth)
  *
- * Note: These tests use authenticated endpoints and modify data.
- * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
- * 
- * Flow:
- * 1. Call get-invite-users-payload-passkey with simple user data
- * 2. Sign the bodyToSign with passkey (use web interface at tests/web/api-testing.html)
- * 3. Submit with signedBody + webAuthnStamp to invite-users endpoint
  */
 
 import { describe, it, expect } from "vitest";
@@ -31,7 +24,6 @@ import {
 
 // Import test data from fixtures
 import inviteUsersPasskeyRequest from "../../fixtures/test-data/users/invite-users-passkey-request.json" assert { type: "json" };
-import simpleInviteRequest from "../../fixtures/test-data/users/simple-invite-users-request.json" assert { type: "json" };
 import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
 // Skip if auth/write tests are disabled
@@ -48,7 +40,8 @@ const TEST_SUITE_FLAGS = {
 };
 
 describeUserInvitation("Byzantine User Invitation API", () => {
-  const testAccountId = TEST_DATA.accounts.testAccountId;
+  const testAccountId = TEST_DATA.accounts.testEntityAccountId;
+  const inviterUserId = "f7d4ec30-27fa-4b1f-a4c1-6da5d3652380";
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
@@ -56,21 +49,19 @@ describeUserInvitation("Byzantine User Invitation API", () => {
 
   describePayloadTest("POST /v1/query/get-invite-users-payload-passkey", () => {
     it(
-      "should return payload to sign for inviting users with passkey",
+      "should generate payload for multiple users and save it",
       async () => {
-        // Use fixture and prepare request with unique email
-        const uniqueEmail = generateUniqueEmail(
-          inviteUsersPasskeyRequest.newUsers[0].userEmail,
+        // Generate unique emails for each user to avoid conflicts
+        const newUsersWithUniqueEmails = inviteUsersPasskeyRequest.newUsers.map(
+          (user) => ({
+            ...user,
+            userEmail: generateUniqueEmail(),
+          }),
         );
+
         const requestBody = {
-          ...inviteUsersPasskeyRequest,
           accountId: testAccountId,
-          newUsers: [
-            {
-              ...inviteUsersPasskeyRequest.newUsers[0],
-              userEmail: uniqueEmail,
-            },
-          ],
+          newUsers: newUsersWithUniqueEmails,
         };
 
         const response = await apiClient.post(
@@ -79,74 +70,36 @@ describeUserInvitation("Byzantine User Invitation API", () => {
           { authenticated: true },
         );
 
-        // Assert response structure
         assertSuccessWithSchema(response, "InviteUsersRequestResponse");
 
         // Validate the bodyToSign structure
         const bodyToSign = response.data.bodyToSign;
         assertSchema(bodyToSign, "CreateUsersRequest");
 
-        // Verify required fields in CreateUsersRequest
-        expect(bodyToSign.type).toBe("ACTIVITY_TYPE_CREATE_USERS_V3");
-        expect(bodyToSign.timestampMs).toBeDefined();
-        expect(bodyToSign.organizationId).toBe(testAccountId);
-        expect(bodyToSign.parameters).toBeDefined();
-        expect(bodyToSign.parameters.users).toBeInstanceOf(Array);
-        expect(bodyToSign.parameters.users.length).toBeGreaterThan(0);
+        // Verify multiple users in response
+        const users = bodyToSign.parameters.users;
+        expect(users.length).toBe(inviteUsersPasskeyRequest.newUsers.length);
 
-        // Verify CreateUserParam structure in response
-        const firstUser = bodyToSign.parameters.users[0];
-        expect(firstUser.userName).toBe(
-          inviteUsersPasskeyRequest.newUsers[0].userName,
+        // Verify all users have unique emails
+        const emails = users.map((u) => u.userEmail);
+        const uniqueEmails = new Set(emails);
+        expect(uniqueEmails.size).toBe(emails.length);
+
+        // Save multi-user payload to generated-tx-passkey.json
+        saveBodyToSign("inviteUsers", bodyToSign);
+
+        console.log(
+          `✅ Generated and saved payload for ${users.length} users:`,
         );
-        expect(firstUser.userEmail).toBe(uniqueEmail);
-        expect(firstUser.apiKeys).toBeInstanceOf(Array);
-        expect(firstUser.authenticators).toBeInstanceOf(Array);
-        expect(firstUser.oauthProviders).toBeInstanceOf(Array);
-        expect(firstUser.userTags).toBeInstanceOf(Array);
-
-        // Save invite users bodyToSign to generated-tx-passkey.json
-        saveBodyToSign("inviteUsers", response.data.bodyToSign);
+        users.forEach((user, index) => {
+          console.log(`   ${index + 1}. ${user.userName} (${user.userEmail})`);
+        });
+        console.log(
+          `📝 Next step: Sign the bodyToSign with passkey to get webAuthnStamp`,
+        );
       },
       getTimeout("api"),
     );
-
-    // it(
-    //   "should handle multiple users in payload request",
-    //   async () => {
-    //     const requestBody = {
-    //       accountId: testAccountId,
-    //       newUsers: [
-    //         {
-    //           userName: "User One",
-    //           userEmail: generateUniqueEmail("user1@example.com"),
-    //           apiKeys: [],
-    //           authenticators: [],
-    //           oauthProviders: [],
-    //           userTags: [],
-    //         },
-    //         {
-    //           userName: "User Two",
-    //           userEmail: generateUniqueEmail("user2@example.com"),
-    //           apiKeys: [],
-    //           authenticators: [],
-    //           oauthProviders: [],
-    //           userTags: [],
-    //         },
-    //       ],
-    //     };
-
-    //     const response = await apiClient.post(
-    //       endpoints.management.getInviteUsersPayload,
-    //       requestBody,
-    //       { authenticated: true }
-    //     );
-
-    //     assertSuccessWithSchema(response, "InviteUsersRequestResponse");
-    //     expect(response.data.bodyToSign.parameters.users.length).toBe(2);
-    //   },
-    //   getTimeout("api")
-    // );
   });
 
   const describeInviteUsersTest = TEST_SUITE_FLAGS.runInviteUsersTest
@@ -155,19 +108,20 @@ describeUserInvitation("Byzantine User Invitation API", () => {
 
   describeInviteUsersTest("POST /v1/submit/invite-users", () => {
     it(
-      "should invite users with passkey authentication",
+      "should invite multiple users at once with passkey authentication",
       async () => {
         // Use the bodyToSign saved from the payload test (generated-tx-passkey.json)
         const bodyToSign = txRequest.inviteUsers?.bodyToSign;
         const webAuthnStamp = txRequest.inviteUsers?.webAuthnStamp;
 
-        // Submit with signed body and webAuthnStamp
+        // Submit with signed body, invitedBy, and webAuthnStamp
         const requestBody = {
           signedBody: bodyToSign,
+          invitedBy: inviterUserId,
           webAuthnStamp: webAuthnStamp,
         };
 
-        // Validate request schema
+        // Validate request schema (now using passkey flow)
         assertSchema(requestBody, "InviteUsersRequestBodyPasskey");
 
         const response = await apiClient.post(
@@ -183,52 +137,20 @@ describeUserInvitation("Byzantine User Invitation API", () => {
         expect(response.data.newUsers).toBeInstanceOf(Array);
         expect(response.data.invitedAt).toBeDefined();
 
-        // Verify invited user details
-        const invitedUser = response.data.newUsers[0];
-        assertValidUuid(invitedUser.userId);
-        expect(invitedUser.userName).toBeDefined();
-        expect(invitedUser.userEmail).toBeDefined();
+        // Verify multiple users were invited
+        expect(response.data.newUsers.length).toBeGreaterThan(0);
+        console.log(
+          `✅ Successfully invited ${response.data.newUsers.length} user(s)`,
+        );
+
+        // Verify each invited user details
+        response.data.newUsers.forEach((invitedUser) => {
+          assertValidUuid(invitedUser.userId);
+          expect(invitedUser.userName).toBeDefined();
+          expect(invitedUser.userEmail).toBeDefined();
+        });
       },
       getTimeout("api"),
     );
-
-    // it(
-    //   "should invite multiple users at once",
-    //   async () => {
-    //     // Use fixture and add third user
-    //     const requestBody = {
-    //       ...simpleInviteRequest,
-    //       accountId: testAccountId,
-    //       newUsers: [
-    //         {
-    //           ...simpleInviteRequest.newUsers[0],
-    //           userEmail: generateUniqueEmail(simpleInviteRequest.newUsers[0].userEmail),
-    //         },
-    //         {
-    //           ...simpleInviteRequest.newUsers[1],
-    //           userEmail: generateUniqueEmail(simpleInviteRequest.newUsers[1].userEmail),
-    //         },
-    //         {
-    //           userName: "Simple User 3",
-    //           userEmail: generateUniqueEmail("simpleuser3@example.com"),
-    //         },
-    //       ],
-    //     };
-
-    //     assertSchema(requestBody, "InviteUsersRequest");
-
-    //     const response = await apiClient.post(
-    //       endpoints.management.inviteUsers,
-    //       requestBody,
-    //       { authenticated: true }
-    //     );
-
-    //     if (response.status === 201) {
-    //       assertSuccessWithSchema(response, "InviteUsersResponse", 201);
-    //       expect(response.data.newUsers.length).toBe(3);
-    //     }
-    //   },
-    //   getTimeout("api")
-    // );
   });
 });

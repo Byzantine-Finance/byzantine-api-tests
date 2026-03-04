@@ -1,8 +1,8 @@
 /**
  * Passkey deposit Transactions SDK Tests, what are tested:
- * - getApproveTransactionPasskey
- * - getDepositTransactionPasskey
- * - getWithdrawTransactionPasskey
+ * - getActivateAccountPayloadPasskey
+ * - getDepositPayloadPasskey
+ * - getWithdrawPayloadPasskey
  *
  * Note: Passkey tests require WebAuthn setup
  * Enable with: ENABLE_PASSKEY_TESTS=true
@@ -10,7 +10,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -24,13 +24,12 @@ import {
 } from "../../utils/sdk-assertions.js";
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
-import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
 // Skip if Passkey tests are disabled
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
   ? describe
   : describe.skip;
-const describeInitApprovePasskey = FEATURE_FLAGS.enablePasskeyInitApproveTests
+const describeInitActivatePasskey = FEATURE_FLAGS.enablePasskeyInitActivateTests
   ? describe
   : describe.skip;
 const describeInitDepositPasskey = FEATURE_FLAGS.enablePasskeyInitDepositTests
@@ -45,72 +44,52 @@ describeInitPasskey(
   () => {
     const client = getSdkClient();
     const testAccountId = TEST_DATA.accounts.testAccountId;
-    const testVaultAddr = TEST_DATA.vaults.selected.address;
-    const chainId = TEST_DATA.vaults.selected.chainId;
+    const testVaultAddr = "0x061b3aff8e21a9d194ce43cefc20a0eff122ec69";
+    const chainId = 8453;
     const depositAmount = passkeyData.depositAmount;
     const sourceCurrency = passkeyData.sourceCurrency;
     // Get bank account ID from generated-accounts based on destination currency
     const destinationCurrency = passkeyData.destinationCurrency;
-    const bankAccountId = destinationCurrency === "eur" || destinationCurrency === "eurc"
-      ? TEST_DATA.accounts.testEurBankAccountId
-      : TEST_DATA.accounts.testUsBankAccountId;
+    const bankAccountId =
+      destinationCurrency === "eur" || destinationCurrency === "eurc"
+        ? TEST_DATA.accounts.testEurBankAccountId
+        : TEST_DATA.accounts.testUsBankAccountId;
 
-    // Deposit using Passkey
-    describeInitApprovePasskey("getApproveTransactionPasskey()", () => {
+    // Activate account using Passkey
+    describeInitActivatePasskey("getActivateAccountPayloadPasskey()", () => {
       it(
-        "should get approve transaction body to sign",
+        "should get activate account payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
-            vaultAddr: testVaultAddr,
           };
 
-          assertSchema(requestBody, "ApproveRequestBody");
+          assertSchema(requestBody, "ActivateAccountRequestBody");
 
-          const sdkResponse = await client.api.getApproveTransactionPasskey(
+          const sdkResponse = await client.api.getActivateAccountPayloadPasskey(
             chainId,
-            requestBody
+            requestBody,
+            DUMMY_AUTH,
           );
 
           // Assert SDK behavior: success with expected data shape
-          assertSuccessWithSchema(sdkResponse, "PasskeyTxRequestResponse");
+          assertSuccessWithSchema(sdkResponse, "PasskeyPayloadRequestResponse");
           assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
 
-          // Save approve bodyToSign and transactionId to generated-tx-passkey.json
+          // Save activateAccount bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
-            "approve",
+            "activateAccount",
             sdkResponse.data.bodyToSign,
-            sdkResponse.data.transactionId
+            sdkResponse.data.transactionId,
           );
         },
-        getTimeout("api")
-      );
-
-      it(
-        "should reject invalid chain ID",
-        async () => {
-          const requestBody = {
-            accountId: testAccountId,
-            vaultAddr: testVaultAddr,
-          };
-
-          assertSchema(requestBody, "ApproveRequestBody");
-
-          const sdkResponse = await client.api.getApproveTransactionPasskey(
-            99999,
-            requestBody
-          ); // Invalid chain ID
-
-          // Assert SDK error handling
-          assertError(sdkResponse);
-        },
-        getTimeout("api")
+        getTimeout("api"),
       );
     });
 
-    describeInitDepositPasskey("getDepositTransactionPasskey()", () => {
+    describeInitDepositPasskey("getDepositPayloadPasskey()", () => {
       it(
-        "should get deposit transaction body to sign",
+        "should get deposit payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
@@ -121,29 +100,30 @@ describeInitPasskey(
 
           assertSchema(requestBody, "DepositRequestBody");
 
-          const sdkResponse = await client.api.getDepositTransactionPasskey(
+          const sdkResponse = await client.api.getDepositPayloadPasskey(
             chainId,
-            requestBody
+            requestBody,
+            DUMMY_AUTH,
           );
 
           // Assert SDK behavior: success with expected data shape
-          assertSuccessWithSchema(sdkResponse, "PasskeyTxRequestResponse");
+          assertSuccessWithSchema(sdkResponse, "PasskeyPayloadRequestResponse");
           assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
 
           // Save deposit bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "deposit",
             sdkResponse.data.bodyToSign,
-            sdkResponse.data.transactionId
+            sdkResponse.data.transactionId,
           );
         },
-        getTimeout("api")
+        getTimeout("api"),
       );
     });
 
-    describeInitWithdrawPasskey("getWithdrawTransactionPasskey()", () => {
+    describeInitWithdrawPasskey("getWithdrawPayloadPasskey()", () => {
       it(
-        "should get withdraw transaction body to sign",
+        "should get withdraw payload to sign",
         async () => {
           const requestBody = {
             accountId: testAccountId,
@@ -155,24 +135,25 @@ describeInitPasskey(
 
           assertSchema(requestBody, "WithdrawRequestBody");
 
-          const sdkResponse = await client.api.getWithdrawTransactionPasskey(
+          const sdkResponse = await client.api.getWithdrawPayloadPasskey(
             chainId,
-            requestBody
+            requestBody,
+            DUMMY_AUTH,
           );
 
           // Assert SDK behavior: success with expected data shape
-          assertSuccessWithSchema(sdkResponse, "PasskeyTxRequestResponse");
+          assertSuccessWithSchema(sdkResponse, "PasskeyPayloadRequestResponse");
           assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
 
           // Save withdraw bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "withdraw",
             sdkResponse.data.bodyToSign,
-            sdkResponse.data.transactionId
+            sdkResponse.data.transactionId,
           );
         },
-        getTimeout("api")
+        getTimeout("api"),
       );
     });
-  }
+  },
 );

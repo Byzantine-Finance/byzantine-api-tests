@@ -129,20 +129,32 @@ export function saveUserIds(userId, accountId) {
  * Save entity IDs after successful entity creation
  * @param {string} entityId - Entity ID
  * @param {string} accountId - Account ID
+ * @param {string} entityRootUserId - Root user ID from associated persons (optional)
  */
-export function saveEntityIds(entityId, accountId) {
-  updateTestData(
-    {
-      accounts: {
-        testEntityId: entityId,
-        testEntityAccountId: accountId,
-      },
+export function saveEntityIds(entityId, accountId, entityRootUserId = null) {
+  const dataToSave = {
+    accounts: {
+      testEntityId: entityId,
+      testEntityAccountId: accountId,
     },
-    "account-creation.test.js"
-  );
-  console.log(
-    `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}`
-  );
+  };
+
+  // Only save entityRootUserId if provided
+  if (entityRootUserId) {
+    dataToSave.accounts.entityRootUserId = entityRootUserId;
+  }
+
+  updateTestData(dataToSave, "account-creation.test.js");
+  
+  if (entityRootUserId) {
+    console.log(
+      `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}, entityRootUserId=${entityRootUserId}`
+    );
+  } else {
+    console.log(
+      `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}`
+    );
+  }
 }
 
 /**
@@ -178,10 +190,74 @@ export function saveEurBankAccountId(bankAccountId) {
 }
 
 /**
+ * Save OTP session data to generated-otp.json
+ * @param {string} otpId - The OTP ID from init-otp response
+ * @param {string} sessionId - The session ID from otp-auth response (optional)
+ */
+export function saveOtpData(otpId, sessionId = null) {
+  const OTP_DATA_FILE = join(
+    __dirname,
+    "../fixtures/test-data/__generated__/generated-otp.json"
+  );
+
+  try {
+    // Read current file
+    const currentData = existsSync(OTP_DATA_FILE)
+      ? JSON.parse(readFileSync(OTP_DATA_FILE, "utf-8"))
+      : {};
+
+    // Update OTP data
+    const updatedData = {
+      ...currentData,
+      otpId: otpId || currentData.otpId,
+      sessionId: sessionId || currentData.sessionId,
+      lastUpdated: new Date().toISOString(),
+      updatedBy: "otp-authentication.test.js",
+    };
+
+    // Write to file
+    writeFileSync(OTP_DATA_FILE, JSON.stringify(updatedData, null, 2));
+    
+    if (sessionId) {
+      console.log(`✅ Saved OTP data: otpId=${otpId}, sessionId=${sessionId}`);
+    } else {
+      console.log(`✅ Saved OTP data: otpId=${otpId}`);
+    }
+  } catch (error) {
+    console.error("❌ Error saving OTP data:", error);
+  }
+}
+
+/**
+ * Load OTP session data from generated-otp.json
+ * @returns {object} Object containing otpId and sessionId
+ */
+export function loadOtpData() {
+  const OTP_DATA_FILE = join(
+    __dirname,
+    "../fixtures/test-data/__generated__/generated-otp.json"
+  );
+
+  try {
+    if (existsSync(OTP_DATA_FILE)) {
+      const data = JSON.parse(readFileSync(OTP_DATA_FILE, "utf-8"));
+      return {
+        otpId: data.otpId || null,
+        sessionId: data.sessionId || null,
+      };
+    }
+  } catch (error) {
+    console.error("❌ Error loading OTP data:", error);
+  }
+  
+  return { otpId: null, sessionId: null };
+}
+
+/**
  * Save bodyToSign and transactionId to generated-tx-passkey.json
- * @param {string} transactionType - Type of transaction: "approve", "deposit", "withdraw", or "activateAccount"
+ * @param {string} transactionType - Type of transaction: "approve", "deposit", "withdraw", "activateAccount", "inviteUsers", or "promoteUser"
  * @param {object} bodyToSign - The bodyToSign object from the API response
- * @param {string} transactionId - The transaction ID from the API response
+ * @param {string} transactionId - The transaction ID from the API response (optional for some transaction types)
  */
 export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   const TX_REQUEST_FILE = join(
@@ -190,7 +266,14 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   );
 
   // Validate transaction type
-  const validTypes = ["approve", "deposit", "withdraw", "activateAccount", "inviteUsers"];
+  const validTypes = [
+    "approve", 
+    "deposit", 
+    "withdraw", 
+    "activateAccount", 
+    "inviteUsers",
+    "promoteUser",
+  ];
   if (!validTypes.includes(transactionType)) {
     throw new Error(
       `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
@@ -206,13 +289,18 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
       : {};
 
     // inviteUsers uses CreateUsersRequest structure (with parameters.users)
+    // promoteUser uses UpdateRootQuorumRequest structure (with parameters.threshold, userIds)
     // Other types use SignRawPayloadRequest structure (with parameters.signWith, payload, etc.)
-    const bodyToSignData = transactionType === "inviteUsers"
+    const isSpecialStructure = 
+      transactionType === "inviteUsers" || 
+      transactionType === "promoteUser";
+    
+    const bodyToSignData = isSpecialStructure
       ? {
           type: bodyToSign.type,
           timestampMs: bodyToSign.timestampMs,
           organizationId: bodyToSign.organizationId,
-          parameters: bodyToSign.parameters, // Keep entire parameters object with users array
+          parameters: bodyToSign.parameters, // Keep entire parameters object
         }
       : {
           type: bodyToSign.type,

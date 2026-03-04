@@ -6,7 +6,7 @@
  */
 
 import { describe, it, beforeAll } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -17,9 +17,9 @@ import {
   assertError,
   assertSchema,
 } from "../../utils/sdk-assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
+import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json" assert { type: "json" };
 
-// Skip if OTP and Passkey tests are disabled
+// Skip if OTP tests are disabled
 const describeTransactionOtp = FEATURE_FLAGS.enableOtpTests
   ? describe
   : describe.skip;
@@ -54,7 +54,7 @@ describeTransactionOtp(
 
     // Filter tests based on feature flags in test.config.js
     const transactionTests = allTransactionTests.filter(
-      (test) => FEATURE_FLAGS[test.flag]
+      (test) => FEATURE_FLAGS[test.flag],
     );
 
     // Validate schemas before all tests (only for enabled tests)
@@ -86,13 +86,14 @@ describeTransactionOtp(
 
           const sdkResponse = await client.api.sendTransactionOtp(
             chainId,
-            requestBody
+            requestBody,
+            DUMMY_AUTH,
           );
 
           // Assert SDK behavior: success with expected data shape
           assertSuccessWithSchema(sdkResponse, "SendTransactionResponseBody");
         },
-        getTimeout("api")
+        getTimeout("api"),
       );
 
       it(
@@ -105,14 +106,15 @@ describeTransactionOtp(
 
           const sdkResponse = await client.api.sendTransactionOtp(
             chainId,
-            requestBody
+            requestBody,
+            DUMMY_AUTH,
           );
 
           // Assert SDK error handling
           assertError(sdkResponse);
         },
-        getTimeout("api")
+        getTimeout("api"),
       );
     });
-  }
+  },
 );

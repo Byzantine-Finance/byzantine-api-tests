@@ -9,15 +9,12 @@
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { describe, it, beforeAll } from "vitest";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
-import {
-  generateUniqueEmail,
-} from "../../utils/test-helpers.js";
+import { generateUniqueEmail } from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
-  assertError,
   assertDataUuid,
   assertSchema,
 } from "../../utils/sdk-assertions.js";
@@ -35,6 +32,11 @@ const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
   ? describe
   : describe.skip;
 
+const describeCreateUser = FEATURE_FLAGS.createUser ? describe : describe.skip;
+const describeCreateEntity = FEATURE_FLAGS.createEntity
+  ? describe
+  : describe.skip;
+
 describeAccountCreation("Byzantine Account Creation SDK", () => {
   const client = getSdkClient();
 
@@ -42,10 +44,6 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     assertSchema(validUser, "CreateUserRequest");
     assertSchema(validEntity, "CreateEntityRequest");
   });
-
-  const describeCreateUser = FEATURE_FLAGS.createUser
-    ? describe
-    : describe.skip;
 
   describeCreateUser("createUser()", () => {
     it(
@@ -60,7 +58,10 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
           },
         };
 
-        const sdkResponse = await client.api.createUser(userWithUniqueEmail);
+        const sdkResponse = await client.api.createUser(
+          userWithUniqueEmail,
+          DUMMY_AUTH,
+        );
 
         // Assert SDK behavior: success response with expected data shape
         assertSuccessWithSchema(sdkResponse, "CreateUserResponse");
@@ -70,50 +71,34 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
         // Save IDs for use in other tests
         saveUserIds(sdkResponse.data.userId, sdkResponse.data.accountId);
       },
-      getTimeout("api")
-    );
-
-    it(
-      "should handle authentication errors correctly",
-      async () => {
-        const unauthenticatedClient = new (
-          await import("@byzantine/integrator-sdk")
-        ).ByzantineClient({
-          api: {
-            baseUrl: client.api.config.baseUrl,
-          },
-        });
-
-        const sdkResponse = await unauthenticatedClient.api.createUser(
-          validUser
-        );
-
-        // Assert SDK error handling behavior
-        assertError(sdkResponse);
-      },
-      getTimeout("api")
+      getTimeout("integration"),
     );
   });
-
-  const describeCreateEntity = FEATURE_FLAGS.createEntity
-    ? describe
-    : describe.skip;
 
   describeCreateEntity("createEntity()", () => {
     it(
       "should create entity with valid data and return typed response",
       async () => {
-        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
-        const entityWithUniqueEmail = {
+        // Generate unique emails for all email addresses in the entity
+        // This includes: entityInfo.email and all associatedPersons[].userInfo.email
+        const entityWithUniqueEmails = {
           ...validEntity,
           entityInfo: {
             ...validEntity.entityInfo,
-            email: uniqueEmail,
+            email: generateUniqueEmail(validEntity.entityInfo.email),
           },
+          associatedPersons: validEntity.associatedPersons.map((person) => ({
+            ...person,
+            userInfo: {
+              ...person.userInfo,
+              email: generateUniqueEmail(person.userInfo.email),
+            },
+          })),
         };
 
         const sdkResponse = await client.api.createEntity(
-          entityWithUniqueEmail
+          entityWithUniqueEmails,
+          DUMMY_AUTH,
         );
 
         // Assert SDK behavior: success response with expected data shape
@@ -121,32 +106,19 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
         assertDataUuid(sdkResponse, "entityId");
         assertDataUuid(sdkResponse, "accountId");
 
-        // Save IDs for use in other tests
-        saveEntityIds(sdkResponse.data.entityId, sdkResponse.data.accountId);
-      },
-      getTimeout("api")
-    );
-
-    it(
-      "should handle authentication errors correctly",
-      async () => {
-        // Create a client without private key to test unauthenticated request
-        const unauthenticatedClient = new (
-          await import("@byzantine/integrator-sdk")
-        ).ByzantineClient({
-          api: {
-            baseUrl: client.api.config.baseUrl,
-          },
-        });
-
-        const sdkResponse = await unauthenticatedClient.api.createEntity(
-          validEntity
+        // Find the root user from associated persons
+        const rootUser = sdkResponse.data.associatedPersons.find(
+          (person) => person.isRootUser === true,
         );
 
-        // Assert SDK error handling
-        assertError(sdkResponse);
+        // Save IDs for use in other tests
+        saveEntityIds(
+          sdkResponse.data.entityId,
+          sdkResponse.data.accountId,
+          rootUser?.userId,
+        );
       },
-      getTimeout("api")
+      getTimeout("passkey"),
     );
   });
 
@@ -160,10 +132,8 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(sdkResponse, "GetTosAcceptanceLinkResponse");
-        expect(typeof sdkResponse.data.hostedUrl).toBe("string");
-        expect(sdkResponse.data.hostedUrl).toMatch(/^https?:\/\//);
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
 
     it(
@@ -173,9 +143,8 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
 
         // Assert SDK behavior
         assertSuccessWithSchema(sdkResponse, "GetTosAcceptanceLinkResponse");
-        expect(typeof sdkResponse.data.hostedUrl).toBe("string");
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 });

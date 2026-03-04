@@ -16,6 +16,7 @@ import {
   assertDataArray,
   assertValidEthAddress,
 } from "../../utils/sdk-assertions.js";
+import { saveActiveVaults } from "../../utils/test-data-persistence.js";
 
 // Skip all vault tests if disabled or network tests are disabled
 const describeVaults = FEATURE_FLAGS.enableVaultTests
@@ -34,6 +35,9 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
         // Assert SDK behavior: array response
         assertSuccess(sdkResponse);
         assertDataArray(sdkResponse, 1);
+
+        // Save active vaults to generated-vaults.json
+        saveActiveVaults(sdkResponse.data);
       },
       getTimeout("api")
     );

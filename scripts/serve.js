@@ -110,7 +110,7 @@ function startServer(port) {
             throw new Error("webAuthnStamp is required");
           }
 
-          const validTypes = ["approve", "deposit", "withdraw", "activateAccount", "inviteUsers"];
+          const validTypes = ["approve", "deposit", "withdraw", "activateAccount", "inviteUsers", "promoteUser"];
           if (!validTypes.includes(transactionType)) {
             throw new Error(
               `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(

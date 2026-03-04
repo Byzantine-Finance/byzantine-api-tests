@@ -28,11 +28,11 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
   // Organize test data by transaction type
   const allTransactionTests = [
     {
-      type: "Approve",
-      bodyToSign: txRequest.approve.bodyToSign,
-      transactionId: txRequest.approve.transactionId,
-      webAuthnStamp: txRequest.approve.webAuthnStamp,
-      flag: "enablePasskeyApproveTxTests",
+      type: "ActivateAccount",
+      bodyToSign: txRequest.activateAccount.bodyToSign,
+      transactionId: txRequest.activateAccount.transactionId,
+      webAuthnStamp: txRequest.activateAccount.webAuthnStamp,
+      flag: "enableSignActivateAccount",
     },
     {
       type: "Deposit",

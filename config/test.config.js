@@ -95,14 +95,14 @@ export const FEATURE_FLAGS = {
 
   // WebAuthn/Passkey tests
   enablePasskeyTests: process.env.ENABLE_PASSKEY_TESTS === "true",
-  enablePasskeyInitApproveTests:
-    process.env.ENABLE_PASSKEY_INIT_APPROVE_TESTS === "true",
+  enablePasskeyInitActivateTests:
+    process.env.ENABLE_PASSKEY_INIT_ACTIVATE_TESTS === "true",
   enablePasskeyInitDepositTests:
     process.env.ENABLE_PASSKEY_INIT_DEPOSIT_TESTS === "true",
   enablePasskeyInitWithdrawTests:
     process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
-  enablePasskeyApproveTxTests:
-    process.env.ENABLE_PASSKEY_APPROVE_TX_TESTS === "true",
+  enablePasskeyActivateTxTests:
+    process.env.ENABLE_PASSKEY_ACTIVATE_TX_TESTS === "true",
   enablePasskeyDepositTxTests:
     process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true",
   enablePasskeyWithdrawTxTests:
@@ -114,10 +114,19 @@ export const FEATURE_FLAGS = {
   // Account creation tests
   createUser: process.env.CREATE_USER !== "false", // Enabled by default
   createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
+  createUserMinimal: process.env.CREATE_USER_MINIMAL === "true", // Test minimal required fields
+  createEntityMinimal: process.env.CREATE_ENTITY_MINIMAL === "true", // Test minimal required fields
 
   // User invitation tests
   invitePayload: process.env.INVITE_PAYLOAD !== "false", // Enabled by default
   inviteUsers: process.env.INVITE_USERS !== "false", // Enabled by default
+
+  // Role management tests
+  updateRolePayload: process.env.UPDATE_ROLE_PAYLOAD === "true", // Test getting role update payload
+  updateRole: process.env.UPDATE_ROLE === "true", // Test submitting role update with passkey
+
+  // Invitation queries tests
+  enableInvitationQueries: process.env.ENABLE_INVITATION_QUERIES !== "false", // Enabled by default
 
   // Transaction data tests
   enableTransactionDataTests: process.env.ENABLE_TRANSACTION_DATA_TESTS !== "false", // Enabled by default
@@ -137,6 +146,13 @@ export const FEATURE_FLAGS = {
   enableOtpApproveTxTests: process.env.ENABLE_OTP_APPROVE_TX_TESTS === "true",
   enableOtpDepositTxTests: process.env.ENABLE_OTP_DEPOSIT_TX_TESTS === "true",
   enableOtpWithdrawTxTests: process.env.ENABLE_OTP_WITHDRAW_TX_TESTS === "true",
+
+  // OTP Authentication tests (require real OTP codes via email)
+  enableOtpInitAuthTests: process.env.ENABLE_OTP_INIT_AUTH_TESTS === "true",
+  enableOtpAuthenticateTests:
+    process.env.ENABLE_OTP_AUTHENTICATE_TESTS === "true",
+  enableOtpCreateAuthenticatorsTests:
+    process.env.ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS === "true",
 };
 
 // Determine chain ID and currency preference
@@ -181,6 +197,17 @@ export const TEST_DATA = {
     testEntityAccountId: isProduction()
       ? process.env.TEST_ENTITY_ACCOUNT_ID
       : generatedTestData.accounts.testEntityAccountId,
+    entityRootUserId: isProduction()
+      ? process.env.TEST_ENTITY_ROOT_USER_ID
+      : generatedTestData.accounts.entityRootUserId,
+  },
+
+  users: {
+    // User IDs for role management tests
+    testUserId: isProduction()
+      ? process.env.TEST_USER_ID
+      : generatedTestData.accounts.testUserId,
+    testAdditionalUserId: process.env.TEST_ADDITIONAL_USER_ID || null,
   },
 
   transactions: {
