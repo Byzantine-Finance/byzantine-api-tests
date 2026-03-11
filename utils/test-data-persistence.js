@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 // Path to the test data file
 const TEST_DATA_FILE = join(
   __dirname,
-  "../fixtures/test-data/__generated__/generated-accounts.json"
+  "../fixtures/test-data/__generated__/generated-accounts.json",
 );
 
 /**
@@ -25,8 +25,10 @@ const DEFAULT_TEST_DATA = {
   accounts: {
     testUserId: null,
     testAccountId: null,
+    testUserEmail: null,
     testEntityId: null,
     testEntityAccountId: null,
+    testEntityAPersonCEmail: null,
     testUsBankAccountId: null,
     testEurBankAccountId: null,
   },
@@ -49,7 +51,7 @@ function saveTestData(data) {
   } catch (error) {
     console.error(
       `Failed to save test data to ${TEST_DATA_FILE}:`,
-      error.message
+      error.message,
     );
     throw error;
   }
@@ -101,7 +103,7 @@ export function loadTestData() {
   } catch (error) {
     console.warn(
       `Failed to load test data from ${TEST_DATA_FILE}:`,
-      error.message
+      error.message,
     );
     return DEFAULT_TEST_DATA;
   }
@@ -112,17 +114,20 @@ export function loadTestData() {
  * @param {string} userId - User ID
  * @param {string} accountId - Account ID
  */
-export function saveUserIds(userId, accountId) {
-  updateTestData(
-    {
-      accounts: {
-        testUserId: userId,
-        testAccountId: accountId,
-      },
-    },
-    "account-creation.test.js"
+export function saveUserIds(userId, accountId, email = null) {
+  const accounts = {
+    testUserId: userId,
+    testAccountId: accountId,
+  };
+  if (email) {
+    accounts.testUserEmail = email;
+  }
+  updateTestData({ accounts }, "account-creation.test.js");
+  console.log(
+    `✅ Saved user IDs: userId=${userId}, accountId=${accountId}${
+      email ? `, email=${email}` : ""
+    }`,
   );
-  console.log(`✅ Saved user IDs: userId=${userId}, accountId=${accountId}`);
 }
 
 /**
@@ -131,30 +136,30 @@ export function saveUserIds(userId, accountId) {
  * @param {string} accountId - Account ID
  * @param {string} entityRootUserId - Root user ID from associated persons (optional)
  */
-export function saveEntityIds(entityId, accountId, entityRootUserId = null) {
-  const dataToSave = {
-    accounts: {
-      testEntityId: entityId,
-      testEntityAccountId: accountId,
-    },
+export function saveEntityIds(
+  entityId,
+  accountId,
+  entityRootUserId = null,
+  personCEmail = null,
+) {
+  const accounts = {
+    testEntityId: entityId,
+    testEntityAccountId: accountId,
   };
 
-  // Only save entityRootUserId if provided
   if (entityRootUserId) {
-    dataToSave.accounts.entityRootUserId = entityRootUserId;
+    accounts.entityRootUserId = entityRootUserId;
+  }
+  if (personCEmail) {
+    accounts.testEntityAPersonCEmail = personCEmail;
   }
 
-  updateTestData(dataToSave, "account-creation.test.js");
-  
-  if (entityRootUserId) {
-    console.log(
-      `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}, entityRootUserId=${entityRootUserId}`
-    );
-  } else {
-    console.log(
-      `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}`
-    );
-  }
+  updateTestData({ accounts }, "account-creation.test.js");
+  console.log(
+    `✅ Saved entity IDs: entityId=${entityId}, accountId=${accountId}${
+      entityRootUserId ? `, entityRootUserId=${entityRootUserId}` : ""
+    }${personCEmail ? `, personCEmail=${personCEmail}` : ""}`,
+  );
 }
 
 /**
@@ -168,7 +173,7 @@ export function saveUsBankAccountId(bankAccountId) {
         testUsBankAccountId: bankAccountId,
       },
     },
-    "account-management.test.js"
+    "account-management.test.js",
   );
   console.log(`✅ Saved US bank account ID: ${bankAccountId}`);
 }
@@ -184,7 +189,7 @@ export function saveEurBankAccountId(bankAccountId) {
         testEurBankAccountId: bankAccountId,
       },
     },
-    "account-management.test.js"
+    "account-management.test.js",
   );
   console.log(`✅ Saved EUR bank account ID: ${bankAccountId}`);
 }
@@ -197,7 +202,7 @@ export function saveEurBankAccountId(bankAccountId) {
 export function saveOtpData(otpId, sessionId = null) {
   const OTP_DATA_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/generated-otp.json"
+    "../fixtures/test-data/__generated__/generated-otp.json",
   );
 
   try {
@@ -217,7 +222,7 @@ export function saveOtpData(otpId, sessionId = null) {
 
     // Write to file
     writeFileSync(OTP_DATA_FILE, JSON.stringify(updatedData, null, 2));
-    
+
     if (sessionId) {
       console.log(`✅ Saved OTP data: otpId=${otpId}, sessionId=${sessionId}`);
     } else {
@@ -235,7 +240,7 @@ export function saveOtpData(otpId, sessionId = null) {
 export function loadOtpData() {
   const OTP_DATA_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/generated-otp.json"
+    "../fixtures/test-data/__generated__/generated-otp.json",
   );
 
   try {
@@ -249,7 +254,7 @@ export function loadOtpData() {
   } catch (error) {
     console.error("❌ Error loading OTP data:", error);
   }
-  
+
   return { otpId: null, sessionId: null };
 }
 
@@ -262,23 +267,23 @@ export function loadOtpData() {
 export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   const TX_REQUEST_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/generated-tx-passkey.json"
+    "../fixtures/test-data/__generated__/generated-tx-passkey.json",
   );
 
   // Validate transaction type
   const validTypes = [
-    "approve", 
-    "deposit", 
-    "withdraw", 
-    "activateAccount", 
+    "approve",
+    "deposit",
+    "withdraw",
+    "activateAccount",
     "inviteUsers",
     "promoteUser",
   ];
   if (!validTypes.includes(transactionType)) {
     throw new Error(
       `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
-        ", "
-      )}`
+        ", ",
+      )}`,
     );
   }
 
@@ -291,10 +296,9 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
     // inviteUsers uses CreateUsersRequest structure (with parameters.users)
     // promoteUser uses UpdateRootQuorumRequest structure (with parameters.threshold, userIds)
     // Other types use SignRawPayloadRequest structure (with parameters.signWith, payload, etc.)
-    const isSpecialStructure = 
-      transactionType === "inviteUsers" || 
-      transactionType === "promoteUser";
-    
+    const isSpecialStructure =
+      transactionType === "inviteUsers" || transactionType === "promoteUser";
+
     const bodyToSignData = isSpecialStructure
       ? {
           type: bodyToSign.type,
@@ -327,15 +331,15 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
     writeFileSync(
       TX_REQUEST_FILE,
       JSON.stringify(updatedData, null, 2),
-      "utf-8"
+      "utf-8",
     );
     console.log(
-      `✅ Saved ${transactionType} bodyToSign and transactionId to generated-tx-passkey.json`
+      `✅ Saved ${transactionType} bodyToSign and transactionId to generated-tx-passkey.json`,
     );
   } catch (error) {
     console.error(
       `Failed to save ${transactionType} bodyToSign to ${TX_REQUEST_FILE}:`,
-      error.message
+      error.message,
     );
     throw error;
   }
@@ -349,7 +353,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
 export function saveOtpTransactionId(transactionType, transactionId) {
   const TX_OTP_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/generated-tx-otp.json"
+    "../fixtures/test-data/__generated__/generated-tx-otp.json",
   );
 
   // Validate transaction type
@@ -357,8 +361,8 @@ export function saveOtpTransactionId(transactionType, transactionId) {
   if (!validTypes.includes(transactionType)) {
     throw new Error(
       `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
-        ", "
-      )}`
+        ", ",
+      )}`,
     );
   }
 
@@ -378,11 +382,13 @@ export function saveOtpTransactionId(transactionType, transactionId) {
 
     // Write back to file
     writeFileSync(TX_OTP_FILE, JSON.stringify(updatedData, null, 4), "utf-8");
-    console.log(`✅ Saved ${transactionType} OTP transactionId to generated-tx-otp.json`);
+    console.log(
+      `✅ Saved ${transactionType} OTP transactionId to generated-tx-otp.json`,
+    );
   } catch (error) {
     console.error(
       `Failed to save ${transactionType} OTP transactionId to ${TX_OTP_FILE}:`,
-      error.message
+      error.message,
     );
     throw error;
   }
@@ -396,7 +402,7 @@ export function saveOtpTransactionId(transactionType, transactionId) {
 export function saveActiveVaults(vaults) {
   const VAULTS_FILE = join(
     __dirname,
-    "../fixtures/test-data/__generated__/generated-vaults.json"
+    "../fixtures/test-data/__generated__/generated-vaults.json",
   );
 
   try {
@@ -411,18 +417,14 @@ export function saveActiveVaults(vaults) {
       }));
 
     // Write to file
-    writeFileSync(
-      VAULTS_FILE,
-      JSON.stringify(activeVaults, null, 2),
-      "utf-8"
-    );
+    writeFileSync(VAULTS_FILE, JSON.stringify(activeVaults, null, 2), "utf-8");
     console.log(
-      `✅ Saved ${activeVaults.length} active vault(s) to generated-vaults.json`
+      `✅ Saved ${activeVaults.length} active vault(s) to generated-vaults.json`,
     );
   } catch (error) {
     console.error(
       `Failed to save active vaults to ${VAULTS_FILE}:`,
-      error.message
+      error.message,
     );
     throw error;
   }

@@ -1,12 +1,13 @@
 {
   "accounts": {
-    "testUserId": "3eb13bff-7ad9-4f94-8da4-d8b84295fec4",
-    "testAccountId": "31e01f3c-271a-4b32-bece-828e145fe3fd",
-    "testEntityId": "91b09921-2c76-4ea8-a325-0f5ae0d58b56",
-    "testEntityAccountId": "4f837e1c-829e-42fd-917d-4c90ff10357f",
+    "testUserId": "e60aee39-e3ce-4bcb-9629-2e716992ee02",
+    "testAccountId": "8e0c6d73-7d43-48cb-bc93-dd173b2c290f",
+    "testEntityId": "8e4c63c7-0039-4a2a-9216-00bb1a87be26",
+    "testEntityAccountId": "ee3fecd6-d8b2-48d6-9636-384ed640412c",
     "testUsBankAccountId": null,
-    "testEurBankAccountId": null
+    "testEurBankAccountId": null,
+    "entityRootUserId": "d783b247-8f8f-4b93-b9f7-a37048f80f79"
   },
-  "lastUpdated": "2026-01-16T10:24:30.468Z",
+  "lastUpdated": "2026-03-05T14:05:27.311Z",
   "lastUpdatedBy": "account-creation.test.js"
 }

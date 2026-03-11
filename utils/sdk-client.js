@@ -95,6 +95,8 @@ function setupAutoAuth(client) {
         "/v1/submit/create-authenticators-otp",
         // Account data
         "/v1/query/get-account-balances",
+        "/v1/query/get-account-details",
+        "/v1/query/get-customers",
       ];
 
       // Check if this path requires authentication

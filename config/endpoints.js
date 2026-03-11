@@ -78,6 +78,22 @@ export const endpoints = {
     },
 
     /**
+     * Get account details by account ID
+     * @param {string} accountId - UUID
+     */
+    getAccountDetails: (accountId) =>
+      `/v1/query/get-account-details?accountId=${accountId}`,
+
+    /**
+     * Get customers (business and/or individual)
+     * @param {string} customerType - Optional: business, individual, all
+     */
+    getCustomers: (customerType = null) => {
+      const path = "/v1/query/get-customers";
+      return customerType ? `${path}?customerType=${customerType}` : path;
+    },
+
+    /**
      * Get account balances (positions and idle) for an account
      * @param {string} accountId - UUID
      * @param {object} params - Optional: chain_id (int32), include_test_vaults (boolean)

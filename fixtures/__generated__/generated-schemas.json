@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-02-27T15:41:53.810Z\nSpec SHA-256: 57fc6a551270b55054731977fe4a19fef0da924f3e189f1b8ab56b96e33dd5b4",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-04T10:54:30.924Z\nSpec SHA-256: fd3367532441588cea4c7089a88ac3792b271a3f961d8bc60ccc174f6317b52b",
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -234,6 +234,15 @@
         "description": "Optional window (in seconds) indicating how long the API Key should last."
       }
     },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ApplicantType": {
+    "type": "string",
+    "description": "Type of applicant for Sumsub verification",
+    "enum": [
+      "individual",
+      "company"
+    ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "ApyQueryParams": {
@@ -684,6 +693,30 @@
           "null"
         ],
         "description": "Required if conducts_money_services is true. A short description to explain the business' money services. Should include a detailed description of the business's compliance and anti-money laundering controls and practices."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "BusinessCustomer": {
+    "type": "object",
+    "description": "A business customer (entity) with its team members",
+    "required": [
+      "entityId",
+      "entityName",
+      "teamMembers"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "entityName": {
+        "type": "string"
+      },
+      "teamMembers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CustomerMember"
+        }
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1229,6 +1262,33 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "CustomerMember": {
+    "type": "object",
+    "description": "A customer member (user or team member)",
+    "required": [
+      "userId",
+      "userName"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "userName": {
+        "type": "string"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CustomerQueryType": {
+    "type": "string",
+    "description": "Filter type for the get-customers endpoint",
+    "enum": [
+      "business",
+      "individual",
+      "all"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "Decimal": {
     "type": "string",
     "description": "A high-precision decimal number represented as a string",
@@ -1283,6 +1343,44 @@
       "student",
       "unemployed"
     ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityAccountInfo": {
+    "type": "object",
+    "description": "Response body for entity account information",
+    "required": [
+      "accountId",
+      "accountName",
+      "accountType",
+      "walletAddress",
+      "isSelfCustodial",
+      "bridgeAccountId",
+      "createdAt"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountName": {
+        "type": "string"
+      },
+      "accountType": {
+        "$ref": "#/components/schemas/ApplicantType"
+      },
+      "walletAddress": {
+        "type": "string"
+      },
+      "isSelfCustodial": {
+        "type": "boolean"
+      },
+      "bridgeAccountId": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "EntityDetailsQuery": {
@@ -1542,23 +1640,44 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "GetAssociatedPersonResponse": {
+  "GetAccountDetailsQuery": {
     "type": "object",
-    "description": "Response body for an associated person",
     "required": [
-      "beneficiaryType",
-      "firstName",
-      "lastName",
-      "email",
-      "isRootUser"
+      "accountId"
     ],
     "properties": {
-      "userId": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetAccountDetailsResponse": {
+    "type": "object",
+    "required": [
+      "accountId",
+      "accountName",
+      "accountType",
+      "walletAddress",
+      "isSelfCustodial",
+      "createdAt"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountName": {
+        "type": "string"
+      },
+      "accountType": {
+        "$ref": "#/components/schemas/ApplicantType"
+      },
+      "entityInfo": {
         "anyOf": [
           {
             "allOf": [
               {
-                "$ref": "#/components/schemas/Uuid"
+                "$ref": "#/components/schemas/GetEntityMinimalInfo"
               }
             ]
           },
@@ -1567,12 +1686,85 @@
           }
         ]
       },
-      "beneficiaryType": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/BeneficiaryType"
-        }
+      "walletAddress": {
+        "type": "string"
       },
+      "isSelfCustodial": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetAccountResponse": {
+    "type": "object",
+    "description": "Response body for account information",
+    "required": [
+      "accountId",
+      "accountName",
+      "accountType",
+      "userRole",
+      "walletAddress",
+      "isSelfCustodial",
+      "bridgeAccountId",
+      "createdAt"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountName": {
+        "type": "string"
+      },
+      "accountType": {
+        "$ref": "#/components/schemas/ApplicantType"
+      },
+      "entityInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GetEntityMinimalInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "userRole": {
+        "$ref": "#/components/schemas/AccountUserRole"
+      },
+      "walletAddress": {
+        "type": "string"
+      },
+      "isSelfCustodial": {
+        "type": "boolean"
+      },
+      "bridgeAccountId": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetAssociatedPersonResponse": {
+    "type": "object",
+    "description": "Response body for an associated person",
+    "required": [
+      "firstName",
+      "lastName",
+      "email",
+      "beneficiaryType"
+    ],
+    "properties": {
       "firstName": {
         "type": "string"
       },
@@ -1582,20 +1774,20 @@
       "email": {
         "type": "string"
       },
-      "isRootUser": {
-        "type": "boolean"
+      "beneficiaryType": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BeneficiaryType"
+        }
       },
-      "isPasskeyActivated": {
+      "shareSize": {
         "type": [
-          "boolean",
+          "number",
           "null"
-        ]
-      },
-      "isOtpActivated": {
-        "type": [
-          "boolean",
-          "null"
-        ]
+        ],
+        "format": "double",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1660,6 +1852,41 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "GetCustomersQuery": {
+    "type": "object",
+    "description": "Query parameters for getting customers",
+    "properties": {
+      "customerType": {
+        "$ref": "#/components/schemas/CustomerQueryType"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetCustomersResponse": {
+    "type": "object",
+    "description": "Response body for the get-customers endpoint",
+    "properties": {
+      "businessCustomers": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/BusinessCustomer"
+        }
+      },
+      "individualCustomers": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/CustomerMember"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "GetEntityInfo": {
     "type": "object",
     "description": "Response body for entity information",
@@ -1719,14 +1946,31 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "GetEntityMinimalInfo": {
+    "type": "object",
+    "description": "Response body for entity information",
+    "required": [
+      "entityId",
+      "entityName"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "entityName": {
+        "type": "string"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "GetEntityResponse": {
     "type": "object",
     "description": "Response body for entity details",
     "required": [
       "entityId",
       "verificationStatus",
-      "accountId",
       "entityInfo",
+      "account",
       "teamMembers",
       "associatedPersons",
       "createdAt"
@@ -1738,11 +1982,11 @@
       "verificationStatus": {
         "$ref": "#/components/schemas/VerificationStatus"
       },
-      "accountId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
       "entityInfo": {
         "$ref": "#/components/schemas/GetEntityInfo"
+      },
+      "account": {
+        "$ref": "#/components/schemas/EntityAccountInfo"
       },
       "teamMembers": {
         "type": "array",
@@ -2004,6 +2248,7 @@
       "userId",
       "verificationStatus",
       "userInfo",
+      "accounts",
       "createdAt"
     ],
     "properties": {
@@ -2013,17 +2258,14 @@
       "verificationStatus": {
         "$ref": "#/components/schemas/VerificationStatus"
       },
-      "accountIds": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/Uuid"
-        }
-      },
       "userInfo": {
         "$ref": "#/components/schemas/GetUserInfo"
+      },
+      "accounts": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/GetAccountResponse"
+        }
       },
       "createdAt": {
         "type": "string",
@@ -3419,12 +3661,26 @@
   "UserDetailsQuery": {
     "type": "object",
     "description": "Query parameters for getting user details",
-    "required": [
-      "userId"
-    ],
     "properties": {
       "userId": {
-        "$ref": "#/components/schemas/Uuid"
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "email": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"

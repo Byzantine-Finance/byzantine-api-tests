@@ -17,7 +17,6 @@ import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import { generateUniqueEmail } from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
-  assertError,
   assertValidUuid,
   assertSchema,
 } from "../../utils/api-assertions.js";
@@ -36,14 +35,7 @@ const describeAccountCreation = FEATURE_FLAGS.enableWriteTests
   : describe.skip;
 
 const describeCreateUser = FEATURE_FLAGS.createUser ? describe : describe.skip;
-const describeCreateUserMinimal = FEATURE_FLAGS.createUserMinimal
-  ? describe
-  : describe.skip;
-
 const describeCreateEntity = FEATURE_FLAGS.createEntity
-  ? describe
-  : describe.skip;
-const describeCreateEntityMinimal = FEATURE_FLAGS.createEntityMinimal
   ? describe
   : describe.skip;
 
@@ -77,68 +69,20 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         assertValidUuid(response.data.userId);
         assertValidUuid(response.data.accountId);
 
-        // Save IDs for use in other tests
-        saveUserIds(response.data.userId, response.data.accountId);
+        // Save IDs and email for use in other tests (email reused in entity B)
+        saveUserIds(response.data.userId, response.data.accountId, uniqueEmail);
       },
       getTimeout("integration"),
     );
   });
 
-  // describeCreateUserMinimal(
-  //   "POST /v1/submit/create-user - Minimal Fields",
-  //   () => {
-  //     it(
-  //       "should create user with minimal required fields",
-  //       async () => {
-  //         const minimalUser = {
-  //           userInfo: {
-  //             ...validUser.userInfo,
-  //             email: generateUniqueEmail(validUser.userInfo.email),
-  //           },
-  //           bridgeSignedAgreementId: validUser.bridgeSignedAgreementId,
-  //           byzantineTermsSignedAt: validUser.byzantineTermsSignedAt,
-  //           authenticators: validUser.authenticators,
-  //         };
-
-  //         const response = await apiClient.post(
-  //           endpoints.create.user,
-  //           minimalUser,
-  //           { authenticated: true },
-  //         );
-
-  //         // Should succeed with minimal data
-  //         assertSuccessWithSchema(response, "CreateUserResponse", 201);
-  //         assertValidUuid(response.data.userId);
-  //         assertValidUuid(response.data.accountId);
-
-  //         console.log(
-  //           `✅ Created user with minimal fields: ${response.data.userId}`,
-  //         );
-  //       },
-  //       getTimeout("integration"),
-  //     );
-  //   },
-  // );
-
   describeCreateEntity("POST /v1/submit/create-entity", () => {
     it(
       "should create entity with valid data",
       async () => {
-        // Generate unique emails for all email addresses in the entity
-        // This includes: entityInfo.email and all associatedPersons[].userInfo.email
+        // Use emails directly from the fixture (both persons share the same email)
         const entityWithUniqueEmails = {
           ...validEntity,
-          entityInfo: {
-            ...validEntity.entityInfo,
-            email: generateUniqueEmail(validEntity.entityInfo.email),
-          },
-          associatedPersons: validEntity.associatedPersons.map((person) => ({
-            ...person,
-            userInfo: {
-              ...person.userInfo,
-              email: generateUniqueEmail(person.userInfo.email),
-            },
-          })),
         };
 
         const response = await apiClient.post(
@@ -156,73 +100,22 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           (person) => person.isRootUser === true,
         );
 
-        // Save IDs for use in other tests
+        // Find person C's email (non-root user) from the request data
+        const personC = entityWithUniqueEmails.associatedPersons.find(
+          (person) => person.isRootUser === false,
+        );
+
+        // Save IDs and person C's email for reuse in entity B
         saveEntityIds(
           response.data.entityId,
           response.data.accountId,
           rootUser?.userId,
+          personC?.userInfo?.email,
         );
       },
       getTimeout("passkey"),
     );
   });
-
-  // describeCreateEntityMinimal(
-  //   "POST /v1/submit/create-entity - Minimal Fields",
-  //   () => {
-  //     it(
-  //       "should create entity with minimal required fields only",
-  //       async () => {
-  //         const associatedPersonsWithUniqueEmails =
-  //           validEntity.associatedPersons.map((person) => ({
-  //             ...person,
-  //             userInfo: {
-  //               ...person.userInfo,
-  //               email: generateUniqueEmail(person.userInfo.email),
-  //             },
-  //           }));
-
-  //         const minimalEntity = {
-  //           bridgeSignedAgreementId: validEntity.bridgeSignedAgreementId,
-  //           byzantineTermsSignedAt: validEntity.byzantineTermsSignedAt,
-  //           entityInfo: {
-  //             ...validEntity.entityInfo,
-  //             email: generateUniqueEmail(validEntity.entityInfo.email),
-  //           },
-  //           associatedPersons: associatedPersonsWithUniqueEmails,
-  //         };
-
-  //         const response = await apiClient.post(
-  //           endpoints.create.entity,
-  //           minimalEntity,
-  //           { authenticated: true, timeout: getTimeout("passkey") },
-  //         );
-
-  //         // Should succeed with all required fields
-  //         assertSuccessWithSchema(response, "CreateEntityResponse", 201);
-  //         assertValidUuid(response.data.entityId);
-  //         assertValidUuid(response.data.accountId);
-
-  //         // Find the root user from associated persons
-  //         const rootUser = response.data.associatedPersons.find(
-  //           (person) => person.isRootUser === true,
-  //         );
-
-  //         // Save IDs for use in other tests
-  //         saveEntityIds(
-  //           response.data.entityId,
-  //           response.data.accountId,
-  //           rootUser?.userId,
-  //         );
-
-  //         console.log(
-  //           `✅ Created entity with required fields: ${response.data.entityId}`,
-  //         );
-  //       },
-  //       getTimeout("passkey"),
-  //     );
-  //   },
-  // );
 
   describe("POST /v1/query/get-tos-acceptance-link", () => {
     it(

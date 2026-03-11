@@ -2,9 +2,10 @@
  * Account Data SDK Tests, what are tested:
  * - getUserDetails
  * - getEntityDetails
+ * - getAccountDetails
+ * - getCustomers
  * - getBankAccounts
  * - getAccountBalances
- * - New fields: teamMembers, pendingInvitations in GetEntityResponse
  *
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
@@ -33,6 +34,20 @@ describe("Account Data SDK", () => {
       async () => {
         const sdkResponse = await client.api.getUserDetails(testUserId);
         assertSuccessWithSchema(sdkResponse, "GetUserResponse");
+
+        // Verify accounts is now an array of GetAccountResponse objects
+        assertSuccess(sdkResponse);
+        expect(sdkResponse.data.accounts).toBeInstanceOf(Array);
+
+        if (sdkResponse.data.accounts.length > 0) {
+          const account = sdkResponse.data.accounts[0];
+          assertValidUuid(account.accountId);
+          expect(account.accountName).toBeDefined();
+          expect(account.accountType).toMatch(/^(individual|company)$/);
+          expect(account.walletAddress).toBeDefined();
+          expect(typeof account.isSelfCustodial).toBe("boolean");
+          console.log(`✅ Found ${sdkResponse.data.accounts.length} account(s)`);
+        }
       },
       getTimeout("api"),
     );
@@ -45,17 +60,28 @@ describe("Account Data SDK", () => {
         const sdkResponse = await client.api.getEntityDetails(testEntityId);
         assertSuccessWithSchema(sdkResponse, "GetEntityResponse");
 
-        // Verify teamMembers structure
+        // Verify account structure (changed from accountId to account object)
         assertSuccess(sdkResponse);
-        const { teamMembers, pendingInvitations } = sdkResponse.data;
+        const { account, teamMembers, pendingInvitations } = sdkResponse.data;
 
+        expect(account).toBeDefined();
+        assertValidUuid(account.accountId);
+        expect(account.accountName).toBeDefined();
+        expect(account.accountType).toMatch(/^(individual|company)$/);
+        expect(account.walletAddress).toBeDefined();
+        expect(typeof account.isSelfCustodial).toBe("boolean");
+        console.log(`✅ Account: ${account.accountName} (${account.accountType})`);
+
+        // Verify teamMembers structure
         expect(teamMembers).toBeInstanceOf(Array);
 
         if (teamMembers.length > 0) {
           const member = teamMembers[0];
 
-          // Verify TeamMember schema fields
-          assertValidUuid(member.userId);
+          // Verify TeamMember schema fields (userId is now nullable)
+          if (member.userId != null) {
+            assertValidUuid(member.userId);
+          }
           expect(member.userName).toBeDefined();
           expect(member.userEmail).toBeDefined();
           expect(member.role).toMatch(
@@ -88,7 +114,7 @@ describe("Account Data SDK", () => {
             console.log("ℹ️  No pending invitations for entity");
           }
         } else {
-          console.log("ℹ️  pendingInvitations is null");
+          console.log("ℹ️  pendingInvitations is null or undefined");
         }
 
         if (sdkResponse.data.teamMembers.length > 0) {
@@ -108,6 +134,49 @@ describe("Account Data SDK", () => {
             `✅ Verified roles for ${sdkResponse.data.teamMembers.length} team member(s)`,
           );
         }
+      },
+      getTimeout("api"),
+    );
+  });
+
+  describe("getAccountDetails()", () => {
+    it(
+      "should get account details by account ID",
+      async () => {
+        const sdkResponse = await client.api.getAccountDetails(
+          testAccountId,
+          DUMMY_AUTH,
+        );
+        assertSuccessWithSchema(sdkResponse, "GetAccountDetailsResponse");
+        assertSuccess(sdkResponse);
+        assertValidUuid(sdkResponse.data.accountId);
+        expect(sdkResponse.data.accountName).toBeDefined();
+        expect(sdkResponse.data.accountType).toMatch(/^(individual|company)$/);
+        expect(sdkResponse.data.walletAddress).toBeDefined();
+        expect(typeof sdkResponse.data.isSelfCustodial).toBe("boolean");
+      },
+      getTimeout("api"),
+    );
+  });
+
+  describe("getCustomers()", () => {
+    it(
+      "should get all customers",
+      async () => {
+        const sdkResponse = await client.api.getCustomers(DUMMY_AUTH);
+        assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should filter customers by type",
+      async () => {
+        const sdkResponse = await client.api.getCustomers(
+          DUMMY_AUTH,
+          "individual",
+        );
+        assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
       },
       getTimeout("api"),
     );
