@@ -1,8 +1,7 @@
 /**
  * Account Creation SDK Tests, what are tested:
- * - createUser
+ * - createUser (CreateIndividualAccountRequest/Response)
  * - createEntity
- * - requestTosAcceptanceLink
  *
  * Note: These tests use authenticated endpoints and modify data.
  * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
@@ -41,7 +40,7 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
   const client = getSdkClient();
 
   beforeAll(async () => {
-    assertSchema(validUser, "CreateUserRequest");
+    assertSchema(validUser, "CreateIndividualAccountRequest");
     assertSchema(validEntity, "CreateEntityRequest");
   });
 
@@ -49,6 +48,7 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     it(
       "should create user with valid data and return typed response",
       async () => {
+        // Create a unique email for this test
         const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
         const userWithUniqueEmail = {
           ...validUser,
@@ -64,12 +64,12 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
         );
 
         // Assert SDK behavior: success response with expected data shape
-        assertSuccessWithSchema(sdkResponse, "CreateUserResponse");
+        assertSuccessWithSchema(sdkResponse, "CreateIndividualAccountResponse");
         assertDataUuid(sdkResponse, "userId");
         assertDataUuid(sdkResponse, "accountId");
 
-        // Save IDs for use in other tests
-        saveUserIds(sdkResponse.data.userId, sdkResponse.data.accountId);
+        // Save IDs and email for use in other tests (email reused in entity B)
+        saveUserIds(sdkResponse.data.userId, sdkResponse.data.accountId, uniqueEmail);
       },
       getTimeout("integration"),
     );
@@ -79,13 +79,13 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     it(
       "should create entity with valid data and return typed response",
       async () => {
-        // Generate unique emails for all email addresses in the entity
-        // This includes: entityInfo.email and all associatedPersons[].userInfo.email
+        // Use emails directly from the fixture (both persons share the same email)
+        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
         const entityWithUniqueEmails = {
           ...validEntity,
           entityInfo: {
             ...validEntity.entityInfo,
-            email: generateUniqueEmail(validEntity.entityInfo.email),
+            email: uniqueEmail,
           },
           associatedPersons: validEntity.associatedPersons.map((person) => ({
             ...person,
@@ -111,40 +111,16 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
           (person) => person.isRootUser === true,
         );
 
-        // Save IDs for use in other tests
+        // Save IDs and person C's email for reuse in entity B
         saveEntityIds(
           sdkResponse.data.entityId,
           sdkResponse.data.accountId,
           rootUser?.userId,
+          uniqueEmail,
         );
       },
       getTimeout("passkey"),
     );
   });
 
-  describe("requestTosAcceptanceLink()", () => {
-    it(
-      "should return ToS acceptance link with expected structure",
-      async () => {
-        const sdkResponse = await client.api.requestTosAcceptanceLink({
-          redirectUri: "https://example.com/callback",
-        });
-
-        // Assert SDK behavior: success with expected data shape
-        assertSuccessWithSchema(sdkResponse, "GetTosAcceptanceLinkResponse");
-      },
-      getTimeout("api"),
-    );
-
-    it(
-      "should return ToS link without redirect URI",
-      async () => {
-        const sdkResponse = await client.api.requestTosAcceptanceLink({});
-
-        // Assert SDK behavior
-        assertSuccessWithSchema(sdkResponse, "GetTosAcceptanceLinkResponse");
-      },
-      getTimeout("api"),
-    );
-  });
 });

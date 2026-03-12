@@ -1,10 +1,9 @@
 /**
  * Account Creation API Tests, what are tested:
- * - submit/create-user
+ * - submit/create-individual-account (CreateIndividualAccountRequest/Response)
  * - submit/create-entity
- * - query/get-tos-acceptance-link
  * - Optional fields in CreateEntityRequest (email, website, etc.)
- * - Optional fields in GetIndividualUserRequest (nationality, residentialAddress)
+ * - Optional fields in UserInfo (nationality, residentialAddress, birthDate - now optional)
  *
  * Note: These tests use authenticated endpoints and modify data.
  * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
@@ -41,15 +40,15 @@ const describeCreateEntity = FEATURE_FLAGS.createEntity
 
 describeAccountCreation("Byzantine Account Creation API", () => {
   beforeAll(async () => {
-    assertSchema(validUser, "CreateUserRequest");
+    assertSchema(validUser, "CreateIndividualAccountRequest");
     assertSchema(validEntity, "CreateEntityRequest");
   });
 
-  describeCreateUser("POST /v1/submit/create-user", () => {
+  describeCreateUser("POST /v1/submit/create-individual-account", () => {
     it(
       "should create user with valid data",
       async () => {
-        // Create a unique email and bridgeSignedAgreementId for this test
+        // Create a unique email for this test
         const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
         const userWithUniqueEmail = {
           ...validUser,
@@ -65,7 +64,7 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           { authenticated: true },
         );
 
-        assertSuccessWithSchema(response, "CreateUserResponse", 201);
+        assertSuccessWithSchema(response, "CreateIndividualAccountResponse", 201);
         assertValidUuid(response.data.userId);
         assertValidUuid(response.data.accountId);
 
@@ -81,8 +80,20 @@ describeAccountCreation("Byzantine Account Creation API", () => {
       "should create entity with valid data",
       async () => {
         // Use emails directly from the fixture (both persons share the same email)
+        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
         const entityWithUniqueEmails = {
           ...validEntity,
+          entityInfo: {
+            ...validEntity.entityInfo,
+            email: uniqueEmail,
+          },
+          associatedPersons: validEntity.associatedPersons.map((person) => ({
+            ...person,
+            userInfo: {
+              ...person.userInfo,
+              email: generateUniqueEmail(person.userInfo.email),
+            },
+          })),
         };
 
         const response = await apiClient.post(
@@ -100,44 +111,16 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           (person) => person.isRootUser === true,
         );
 
-        // Find person C's email (non-root user) from the request data
-        const personC = entityWithUniqueEmails.associatedPersons.find(
-          (person) => person.isRootUser === false,
-        );
-
         // Save IDs and person C's email for reuse in entity B
         saveEntityIds(
           response.data.entityId,
           response.data.accountId,
           rootUser?.userId,
-          personC?.userInfo?.email,
+          uniqueEmail
         );
       },
       getTimeout("passkey"),
     );
   });
 
-  describe("POST /v1/query/get-tos-acceptance-link", () => {
-    it(
-      "should get ToS acceptance link",
-      async () => {
-        const response = await apiClient.post(endpoints.create.getTosLink, {
-          redirectUri: "https://example.com/callback",
-        });
-
-        assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
-      },
-      getTimeout("api"),
-    );
-
-    it(
-      "should get ToS link without redirect URI",
-      async () => {
-        const response = await apiClient.post(endpoints.create.getTosLink, {});
-
-        assertSuccessWithSchema(response, "GetTosAcceptanceLinkResponse");
-      },
-      getTimeout("api"),
-    );
-  });
 });

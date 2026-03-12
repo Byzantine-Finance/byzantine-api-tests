@@ -33,12 +33,6 @@ describeTransactionOtp(
     // Define all possible tests with their feature flags
     const allTransactionTests = [
       {
-        type: "Approve",
-        transactionId: txRequest.approve.transactionId,
-        otpEnvVar: "OTP_APPROVE",
-        flag: "enableOtpApproveTxTests",
-      },
-      {
         type: "Deposit",
         transactionId: txRequest.deposit.transactionId,
         otpEnvVar: "OTP_DEPOSIT",
@@ -100,7 +94,7 @@ describeTransactionOtp(
         "should reject invalid OTP code",
         async () => {
           const requestBody = {
-            transactionId: txRequest.approve.transactionId,
+            transactionId: txRequest.deposit.transactionId,
             otpCode: "000000", // Invalid OTP
           };
 

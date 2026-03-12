@@ -1,6 +1,5 @@
 /**
  * OTP deposit Transactions SDK Tests, what are tested:
- * - initApproveOtp (via raw client - not wrapped in SDK)
  * - initDepositOtp
  * - initWithdrawOtp
  *
@@ -22,15 +21,11 @@ import {
   assertError,
   assertSchema,
 } from "../../utils/sdk-assertions.js";
-import { assertHasFields } from "../../utils/api-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
-const describeInitApproveOtp = FEATURE_FLAGS.enableOtpInitApproveTests
-  ? describe
-  : describe.skip;
 const describeInitDepositOtp = FEATURE_FLAGS.enableOtpInitDepositTests
   ? describe
   : describe.skip;
@@ -45,42 +40,6 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
   const chainId = TEST_DATA.vaults.selected.chainId;
   const depositAmount = passkeyData.depositAmount;
   const sourceCurrency = passkeyData.sourceCurrency;
-
-  // Approve using OTP (via raw client - endpoint not wrapped in SDK)
-  describeInitApproveOtp("initApproveOtp()", () => {
-    it(
-      "should initiate approve and send OTP",
-      async () => {
-        const requestBody = {
-          accountId: testAccountId,
-          vaultAddr: testVaultAddr,
-        };
-
-        assertHasFields(requestBody, ["accountId", "vaultAddr"]);
-
-        // Use raw client since approve OTP is not in the OpenAPI types
-        const sdkResponse = await client.api.client.POST(
-          "/v1/query/init-approve-otp",
-          {
-            params: { query: { chain_id: chainId } },
-            body: requestBody,
-          },
-        );
-
-        // Assert SDK behavior: success with expected data shape
-        assertSuccessWithSchema(sdkResponse, "OtpRequestResponse");
-        assertDataHasFields(sdkResponse, [
-          "transaction_id",
-          "accountId",
-          "vaultAddr",
-        ]);
-
-        // Save approve OTP transactionId to generated-tx-otp.json
-        saveOtpTransactionId("approve", sdkResponse.data.transaction_id);
-      },
-      getTimeout("api"),
-    );
-  });
 
   describeInitDepositOtp("initDepositOtp()", () => {
     it(

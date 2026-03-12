@@ -8,14 +8,14 @@
     "website": "byzfinance.com",
     "businessIndustry": 541511,
     "companyNumber": "byzfinance.com",
-    "hasMaterialIntermediaryEntityOwner": true,
+    "hasMaterialIntermediaryEntityOwner": false,
     "registeredAddress": {
       "streetLine1": "33 Rue La Fayette",
       "city": "Paris",
       "postalCode": "75009",
       "country": "FRA",
       "streetLine2": "WeWork",
-      "state": "IDF"
+      "state": null
     },
     "physicalAddress": {
       "streetLine1": "1 Rue La Fayette",
@@ -23,18 +23,18 @@
       "postalCode": "75009",
       "country": "FRA",
       "streetLine2": "WeWork",
-      "state": "IDF"
+      "state": null
     },
     "businessActivityInfo": {
-      "preferredPrimaryCurrency": "eurc",
+      "preferredPrimaryCurrency": "eur",
       "sourceOfFunds": "treasury_reserves",
-      "estimatedAnnualRevenueUsd": "1000000_9999999",
-      "expectedMonthlyPaymentsUsd": -64508282,
-      "operatesInProhibitedCountries": true,
+      "estimatedAnnualRevenueUsd": 100000,
+      "expectedMonthlyPaymentsUsd": 10000,
+      "operatesInProhibitedCountries": false,
       "highRiskActivities": "none_of_the_above",
-      "highRiskActivitiesExplanation": "As a jewelry shop, we deal with precious stones.",
+      "highRiskActivitiesExplanation": null,
       "conductsMoneyServices": false,
-      "conductsMoneyServicesDescription": "We operate several ATMs."
+      "conductsMoneyServicesDescription": null
     }
   },
   "associatedPersons": [
@@ -78,8 +78,7 @@
       "authenticators": null
     }
   ],
-  "bridgeSignedAgreementId": "3f0ed815-28a1-479b-8b17-6cbf0930bfa1",
-  "byzantineTermsSignedAt": 1764604807,
+  "byzantineTermsSignedAt": "1764604807",
   "entityDocuments": [
     {
       "documentType": "business_formation",

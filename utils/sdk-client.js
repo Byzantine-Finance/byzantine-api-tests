@@ -67,17 +67,16 @@ function setupAutoAuth(client) {
       // List of paths that require authentication
       const authenticatedPaths = [
         // Account creation & management
-        "/v1/submit/create-user",
+        "/v1/submit/create-individual-account",
+        "/v1/submit/update-individual-account",
         "/v1/submit/create-entity",
         "/v1/submit/add-bank-account",
         // Passkey transactions
         "/v1/query/get-activate-account-payload-passkey",
-        "/v1/query/get-approve-payload-passkey",
         "/v1/query/get-deposit-payload-passkey",
         "/v1/query/get-withdraw-payload-passkey",
         "/v1/submit/sign-payload-passkey",
         // OTP transactions
-        "/v1/query/init-approve-otp",
         "/v1/query/init-deposit-otp",
         "/v1/query/init-withdraw-otp",
         "/v1/submit/send-transaction-otp",

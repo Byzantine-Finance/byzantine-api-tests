@@ -17,13 +17,12 @@
     "phone": "0600000000",
     "socialSecurityNumber": "555-50-1234"
   },
-  "bridgeSignedAgreementId": "cfca6678-0230-41d6-b0b8-9d51307ba042",
-  "byzantineTermsSignedAt": 1764604807,
+  "byzantineTermsSignedAt": "1764604807",
   "additionalUserInfo": {
     "employmentStatus": "employed",
     "expectedMonthlyPaymentsUsd": "5000_9999",
     "sourceOfFunds": "salary",
-    "mostRecentOccupation": "151211"
+    "mostRecentOccupation": "151252"
   },
   "verificationDocuments": [
     {

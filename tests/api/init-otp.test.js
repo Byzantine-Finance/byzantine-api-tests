@@ -1,7 +1,7 @@
 /**
  * OTP deposit Transactions API Tests, what are tested:
- * - query/init-approve-otp
  * - query/init-deposit-otp
+ * - query/init-withdraw-otp
  *
  * Note: OTP tests require receiving real OTP codes via email
  * Enable with: ENABLE_OTP_TESTS=true ENABLE_AUTH_TESTS=true
@@ -27,9 +27,6 @@ import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
-const describeInitApproveOtp = FEATURE_FLAGS.enableOtpInitApproveTests
-  ? describe
-  : describe.skip;
 const describeInitDepositOtp = FEATURE_FLAGS.enableOtpInitDepositTests
   ? describe
   : describe.skip;
@@ -43,36 +40,6 @@ describeInitOtp("Initiate OTP transactions API", () => {
   const chainId = TEST_DATA.vaults.selected.chainId;
   const depositAmount = passkeyData.depositAmount;
   const sourceCurrency = passkeyData.sourceCurrency;
-
-  describeInitApproveOtp("POST /v1/query/init-approve-otp", () => {
-    it(
-      "should initiate approve and send OTP",
-      async () => {
-        const requestBody = {
-          accountId: testAccountId,
-          vaultAddr: testVaultAddr,
-        };
-
-        assertHasFields(requestBody, ["accountId", "vaultAddr"]);
-
-        const response = await apiClient.post(
-          endpoints.otp.initApprove(chainId),
-          requestBody
-        );
-
-        assertSuccessWithSchema(response, "OtpRequestResponse");
-        assertHasFields(response.data, [
-          "transaction_id",
-          "accountId",
-          "vaultAddr",
-        ]);
-
-        // Save approve OTP transactionId to generated-tx-otp.json
-        saveOtpTransactionId("approve", response.data.transaction_id);
-      },
-      getTimeout("api")
-    );
-  });
 
   describeInitDepositOtp("POST /v1/query/init-deposit-otp", () => {
     it(

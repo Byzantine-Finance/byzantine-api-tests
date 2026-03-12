@@ -137,13 +137,10 @@ export const FEATURE_FLAGS = {
 
   // OTP tests (require real OTP codes)
   enableOtpTests: process.env.ENABLE_OTP_TESTS === "true",
-  enableOtpInitApproveTests:
-    process.env.ENABLE_OTP_INIT_APPROVE_TESTS === "true",
   enableOtpInitDepositTests:
     process.env.ENABLE_OTP_INIT_DEPOSIT_TESTS === "true",
   enableOtpInitWithdrawTests:
     process.env.ENABLE_OTP_INIT_WITHDRAW_TESTS === "true",
-  enableOtpApproveTxTests: process.env.ENABLE_OTP_APPROVE_TX_TESTS === "true",
   enableOtpDepositTxTests: process.env.ENABLE_OTP_DEPOSIT_TX_TESTS === "true",
   enableOtpWithdrawTxTests: process.env.ENABLE_OTP_WITHDRAW_TX_TESTS === "true",
 

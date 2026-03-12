@@ -139,13 +139,6 @@ export const endpoints = {
       `/v1/query/get-activate-account-payload-passkey?chain_id=${chainId}`,
 
     /**
-     * Get approve payload to sign (passkey auth)
-     * @param {number} chainId - 1 for Ethereum, 8453 for Base
-     */
-    getApprovePayloadPasskey: (chainId) =>
-      `/v1/query/get-approve-payload-passkey?chain_id=${chainId}`,
-
-    /**
      * Get deposit payload to sign (passkey auth)
      * @param {number} chainId - 1 for Ethereum, 8453 for Base
      */
@@ -172,12 +165,6 @@ export const endpoints = {
   // ============================================
   otp: {
     /**
-     * Initiate approval and send OTP
-     * @param {number} chainId - 1 for Ethereum, 8453 for Base
-     */
-    initApprove: (chainId) => `/v1/query/init-approve-otp?chain_id=${chainId}`,
-
-    /**
      * Initiate deposit and send OTP
      * @param {number} chainId - 1 for Ethereum, 8453 for Base
      */
@@ -203,14 +190,9 @@ export const endpoints = {
   // ============================================
   create: {
     /**
-     * Get Bridge ToS acceptance link
+     * Create a Byzantine individual account (user)
      */
-    getTosLink: "/v1/query/get-tos-acceptance-link",
-
-    /**
-     * Create a Byzantine user
-     */
-    user: "/v1/submit/create-user",
+    user: "/v1/submit/create-individual-account",
 
     /**
      * Create a Byzantine entity (business)
@@ -223,14 +205,15 @@ export const endpoints = {
   // ============================================
   management: {
     /**
+     * Update an individual account's user details
+     * Only provided fields will be updated
+     */
+    updateIndividualAccount: "/v1/submit/update-individual-account",
+
+    /**
      * Add bank account for withdrawals
      */
     addBankAccount: "/v1/submit/add-bank-account",
-
-    /**
-     * Activate an account
-     */
-    activateAccount: "/v1/submit/activate-account",
 
     /**
      * Get payload to invite users to account (request body to sign)
