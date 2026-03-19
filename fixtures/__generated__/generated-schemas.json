@@ -354,15 +354,10 @@
     "type": "object",
     "description": "Associated person (beneficiary or representative). Must be at least one.",
     "required": [
-      "isRootUser",
       "userInfo",
       "beneficiaryDetails"
     ],
     "properties": {
-      "isRootUser": {
-        "type": "boolean",
-        "description": "Set to `true` if this person should be an active controller of the account. At least one org_admin is required."
-      },
       "userInfo": {
         "$ref": "#/components/schemas/UserInfo"
       },
@@ -377,15 +372,6 @@
         "items": {
           "$ref": "#/components/schemas/UserVerificationDocument"
         }
-      },
-      "authenticators": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/AuthenticatorParam"
-        }
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -394,22 +380,14 @@
     "type": "object",
     "description": "Response body for an associated person",
     "required": [
-      "userId",
+      "beneficiaryId",
       "verificationStatus",
-      "isRootUser",
       "userInfo",
       "beneficiaryDetails"
     ],
     "properties": {
-      "userId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
       "verificationStatus": {
         "$ref": "#/components/schemas/VerificationStatus"
-      },
-      "isRootUser": {
-        "type": "boolean",
-        "description": "Set to `true` if this person should be an active controller of the account. At least one org_admin is required."
       },
       "userInfo": {
         "$ref": "#/components/schemas/UserInfo"
@@ -426,19 +404,18 @@
           "$ref": "#/components/schemas/VerificationDocumentResponse"
         }
       },
-      "isPasskeyActivated": {
-        "type": [
-          "boolean",
-          "null"
-        ],
-        "description": "An indicator showing whether passkey authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      "beneficiaryId": {
+        "$ref": "#/components/schemas/Uuid"
       },
-      "isOtpActivated": {
+      "missingDocuments": {
         "type": [
-          "boolean",
+          "array",
           "null"
         ],
-        "description": "An indicator showing whether OTP authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required verification documents. Present only if not all required documents have been submitted."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -930,86 +907,6 @@
           "type": "string"
         },
         "description": "List of created authenticator IDs"
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "CreateEntityRequest": {
-    "type": "object",
-    "description": "Request body for creating a Byzantine entity",
-    "required": [
-      "entityInfo",
-      "associatedPersons",
-      "byzantineTermsSignedAt"
-    ],
-    "properties": {
-      "entityInfo": {
-        "$ref": "#/components/schemas/EntityInfo"
-      },
-      "entityDocuments": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/EntityVerificationDocument"
-        }
-      },
-      "associatedPersons": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/AssociatedPerson"
-        }
-      },
-      "byzantineTermsSignedAt": {
-        "type": "string",
-        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "CreateEntityResponse": {
-    "type": "object",
-    "description": "Response body for creating a Byzantine entity",
-    "required": [
-      "entityId",
-      "accountId",
-      "verificationStatus",
-      "entityInfo",
-      "associatedPersons",
-      "byzantineTermsSignedAt"
-    ],
-    "properties": {
-      "entityId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "accountId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "verificationStatus": {
-        "$ref": "#/components/schemas/VerificationStatus"
-      },
-      "entityInfo": {
-        "$ref": "#/components/schemas/EntityInfo"
-      },
-      "entityDocuments": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/VerificationDocumentResponse"
-        }
-      },
-      "associatedPersons": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/AssociatedPersonResponse"
-        }
-      },
-      "byzantineTermsSignedAt": {
-        "type": "string",
-        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -3671,7 +3568,7 @@
   },
   "UpdateUserInfo": {
     "type": "object",
-    "description": "Personal information about the user for update. All fields are optional — only provided fields are updated.\nSame as `UserInfo` but without `email` (email cannot be changed).",
+    "description": "Personal information about the user for update. All fields are optional \u2014 only provided fields are updated.\nSame as `UserInfo` but without `email` (email cannot be changed).",
     "properties": {
       "firstName": {
         "type": [
@@ -4297,6 +4194,195 @@
     "type": "array",
     "items": {
       "$ref": "#/components/schemas/GetTransactionResponse"
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateEntityAccountRequest": {
+    "type": "object",
+    "description": "Request body for creating a Byzantine entity",
+    "required": [
+      "entityInfo",
+      "rootUsers",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "entityInfo": {
+        "$ref": "#/components/schemas/EntityInfo"
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/EntityVerificationDocument"
+        }
+      },
+      "rootUsers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EntityRootUserRequest"
+        }
+      },
+      "associatedPersons": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPerson"
+        }
+      },
+      "byzantineTermsSignedAt": {
+        "type": "string",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateEntityAccountResponse": {
+    "type": "object",
+    "description": "Response body for creating a Byzantine entity",
+    "required": [
+      "entityId",
+      "accountId",
+      "verificationStatus",
+      "entityInfo",
+      "rootUsers",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "entityInfo": {
+        "$ref": "#/components/schemas/EntityInfo"
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
+      },
+      "rootUsers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EntityRootUserResponse"
+        }
+      },
+      "associatedPersons": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPersonResponse"
+        }
+      },
+      "byzantineTermsSignedAt": {
+        "type": "string",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      },
+      "missingCompanyData": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required company data. Present only if not all required company information has been provided."
+      },
+      "missingDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required entity verification documents. Present only if not all required documents have been submitted."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityRootUserRequest": {
+    "type": "object",
+    "description": "Root user request for entity account",
+    "required": [
+      "firstName",
+      "lastName",
+      "email"
+    ],
+    "properties": {
+      "firstName": {
+        "type": "string",
+        "example": "John"
+      },
+      "lastName": {
+        "type": "string",
+        "example": "Smith"
+      },
+      "email": {
+        "type": "string",
+        "example": "john.smith@example.com"
+      },
+      "authenticators": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AuthenticatorParam"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityRootUserResponse": {
+    "type": "object",
+    "description": "Root user with wallet access",
+    "required": [
+      "userId",
+      "firstName",
+      "lastName",
+      "email",
+      "isPasskeyActivated",
+      "isOtpActivated"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "firstName": {
+        "type": "string",
+        "example": "John"
+      },
+      "lastName": {
+        "type": "string",
+        "example": "Smith"
+      },
+      "email": {
+        "type": "string",
+        "example": "john.smith@example.com"
+      },
+      "isPasskeyActivated": {
+        "type": "boolean",
+        "description": "An indicator showing whether passkey authentication is active for this user."
+      },
+      "isOtpActivated": {
+        "type": "boolean",
+        "description": "An indicator showing whether OTP authentication is active for this user."
+      }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   }

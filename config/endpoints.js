@@ -195,9 +195,9 @@ export const endpoints = {
     user: "/v1/submit/create-individual-account",
 
     /**
-     * Create a Byzantine entity (business)
+     * Create a Byzantine entity account (business)
      */
-    entity: "/v1/submit/create-entity",
+    entity: "/v1/submit/create-entity-account",
   },
 
   // ============================================

@@ -1,7 +1,7 @@
 /**
  * Account Creation SDK Tests, what are tested:
  * - createUser (CreateIndividualAccountRequest/Response)
- * - createEntity
+ * - createEntityAccount (CreateEntityAccountRequest/Response)
  *
  * Note: These tests use authenticated endpoints and modify data.
  * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
@@ -41,7 +41,7 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
 
   beforeAll(async () => {
     assertSchema(validUser, "CreateIndividualAccountRequest");
-    assertSchema(validEntity, "CreateEntityRequest");
+    assertSchema(validEntity, "CreateEntityAccountRequest");
   });
 
   describeCreateUser("createUser()", () => {
@@ -75,11 +75,11 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
     );
   });
 
-  describeCreateEntity("createEntity()", () => {
+  describeCreateEntity("createEntityAccount()", () => {
     it(
-      "should create entity with valid data and return typed response",
+      "should create entity account with valid data and return typed response",
       async () => {
-        // Use emails directly from the fixture (both persons share the same email)
+        // Use emails directly from the fixture
         const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
         const entityWithUniqueEmails = {
           ...validEntity,
@@ -87,7 +87,11 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
             ...validEntity.entityInfo,
             email: uniqueEmail,
           },
-          associatedPersons: validEntity.associatedPersons.map((person) => ({
+          rootUsers: validEntity.rootUsers.map((rootUser) => ({
+            ...rootUser,
+            email: generateUniqueEmail(rootUser.email),
+          })),
+          associatedPersons: validEntity.associatedPersons?.map((person) => ({
             ...person,
             userInfo: {
               ...person.userInfo,
@@ -96,20 +100,18 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
           })),
         };
 
-        const sdkResponse = await client.api.createEntity(
+        const sdkResponse = await client.api.createEntityAccount(
           entityWithUniqueEmails,
           DUMMY_AUTH,
         );
 
         // Assert SDK behavior: success response with expected data shape
-        assertSuccessWithSchema(sdkResponse, "CreateEntityResponse");
+        assertSuccessWithSchema(sdkResponse, "CreateEntityAccountResponse");
         assertDataUuid(sdkResponse, "entityId");
         assertDataUuid(sdkResponse, "accountId");
 
-        // Find the root user from associated persons
-        const rootUser = sdkResponse.data.associatedPersons.find(
-          (person) => person.isRootUser === true,
-        );
+        // Get the first root user from the response
+        const rootUser = sdkResponse.data.rootUsers?.[0];
 
         // Save IDs and person C's email for reuse in entity B
         saveEntityIds(

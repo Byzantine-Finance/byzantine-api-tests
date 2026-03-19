@@ -69,7 +69,7 @@ function setupAutoAuth(client) {
         // Account creation & management
         "/v1/submit/create-individual-account",
         "/v1/submit/update-individual-account",
-        "/v1/submit/create-entity",
+        "/v1/submit/create-entity-account",
         "/v1/submit/add-bank-account",
         // Passkey transactions
         "/v1/query/get-activate-account-payload-passkey",
