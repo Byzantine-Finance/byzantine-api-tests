@@ -40,11 +40,10 @@ const TEST_SUITE_FLAGS = {
 };
 
 describeRoleManagement("Byzantine Role Management API", () => {
-  const testAccountId = "21b8ca6e-7d90-418b-b16a-3fdfd6712bee";
-  const testUserId = "56ffbb9a-5b0d-4ff9-9114-ac07a62986b6";
+  const testAccountId = TEST_DATA.accounts.testEntityAccountId;
   const role = "root";
 
-  const userToPromote = testUserId;
+  const userToPromote = TEST_DATA.users.roleTargetUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe

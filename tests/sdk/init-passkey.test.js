@@ -44,8 +44,8 @@ describeInitPasskey(
   () => {
     const client = getSdkClient();
     const testAccountId = TEST_DATA.accounts.testAccountId;
-    const testVaultAddr = "0x061b3aff8e21a9d194ce43cefc20a0eff122ec69";
-    const chainId = 8453;
+    const testVaultAddr = TEST_DATA.vaults.selected.address;
+    const chainId = TEST_DATA.vaults.selected.chainId;
     const depositAmount = passkeyData.depositAmount;
     const sourceCurrency = passkeyData.sourceCurrency;
     // Get bank account ID from generated-accounts based on destination currency

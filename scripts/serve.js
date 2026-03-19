@@ -2,10 +2,7 @@ import { createServer } from "http";
 import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { URL } from "url";
 import dotenv from "dotenv";
-import { apiClient } from "../utils/api-client.js";
-import { endpoints } from "../config/endpoints.js";
 
 dotenv.config();
 
@@ -146,131 +143,6 @@ function startServer(port) {
           res.end(JSON.stringify({ error: error.message }));
         }
       });
-      return;
-    }
-
-    // Handle POST request to get ToS link
-    if (req.method === "POST" && urlPath === "/get-tos-link") {
-      let body = "";
-      req.on("data", (chunk) => {
-        body += chunk.toString();
-      });
-      req.on("end", async () => {
-        try {
-          const { redirectUri } = JSON.parse(body);
-
-          // Use the existing API client to call the endpoint
-          const response = await apiClient.post(endpoints.create.getTosLink, {
-            redirectUri: redirectUri || undefined,
-          });
-
-          if (response.ok && response.data) {
-            console.log("✅ Got ToS link from API");
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify(response.data));
-          } else {
-            console.error(
-              `❌ API error: ${response.status} - ${JSON.stringify(
-                response.error
-              )}`
-            );
-            res.writeHead(response.status || 500, {
-              "Content-Type": "application/json",
-            });
-            res.end(
-              JSON.stringify({
-                error: response.error || `API error: ${response.status}`,
-              })
-            );
-          }
-        } catch (error) {
-          console.error("❌ Error getting ToS link:", error);
-          res.writeHead(500, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: error.message }));
-        }
-      });
-      return;
-    }
-
-    // Handle GET request from Bridge ToS redirect callback
-    if (req.method === "GET" && urlPath === "/bridge-callback") {
-      console.log("🔗 Received Bridge ToS callback");
-      try {
-        const url = new URL(req.url, `http://${req.headers.host}`);
-        const type = url.searchParams.get("type") || "user"; // user or entity
-
-        // Extract agreementId from query params (try multiple possible parameter names)
-        // Bridge sends signed_agreement_id
-        const signedAgreementId = url.searchParams.get("signed_agreement_id");
-        const agreementIdParam = url.searchParams.get("agreementId");
-        const agreementIdAlt = url.searchParams.get("agreement_id");
-
-        // Log all query params for debugging
-        const allParams = {};
-        url.searchParams.forEach((value, key) => {
-          allParams[key] = value;
-        });
-
-        const agreementId =
-          signedAgreementId ||
-          agreementIdParam ||
-          agreementIdAlt ||
-          url.searchParams.get("id") ||
-          url.searchParams.get("agreement");
-
-        if (agreementId && agreementId !== "bridge-callback") {
-          const targetFile =
-            type === "entity"
-              ? "fixtures/test-data/entities/valid-entity.json"
-              : "fixtures/test-data/users/valid-user.json";
-          const filePath = join(__dirname, targetFile);
-
-          // Read existing file
-          const existingData = JSON.parse(readFileSync(filePath, "utf8"));
-
-          // Update bridgeSignedAgreementId
-          existingData.bridgeSignedAgreementId = agreementId;
-
-          // Write back to file
-          writeFileSync(filePath, JSON.stringify(existingData, null, 2));
-
-          console.log(
-            `✅ Saved bridgeSignedAgreementId to ${targetFile}:`,
-            agreementId
-          );
-
-          // Redirect back to api-testing.html with success message
-          res.writeHead(302, {
-            Location: `/tests/web/api-testing.html?tosAccepted=true&type=${type}&agreementId=${agreementId}`,
-          });
-          res.end();
-        } else {
-          console.error("❌ No agreementId found in callback URL");
-          res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
-          res.end(`
-            <html>
-              <body>
-                <h1>❌ Error</h1>
-                <p>No agreementId found in callback URL.</p>
-                <p>URL: ${req.url}</p>
-                <p><a href="/tests/web/api-testing.html">Go back</a></p>
-              </body>
-            </html>
-          `);
-        }
-      } catch (error) {
-        console.error("❌ Error processing Bridge callback:", error);
-        res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(`
-          <html>
-            <body>
-              <h1>❌ Server Error</h1>
-              <p>${error.message}</p>
-              <p><a href="/tests/web/api-testing.html">Go back</a></p>
-            </body>
-          </html>
-        `);
-      }
       return;
     }
 
