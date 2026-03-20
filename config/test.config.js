@@ -125,6 +125,7 @@ export const FEATURE_FLAGS = {
   createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
   createUserMinimal: process.env.CREATE_USER_MINIMAL === "true", // Test minimal required fields
   createEntityMinimal: process.env.CREATE_ENTITY_MINIMAL === "true", // Test minimal required fields
+  entityValidation: process.env.ENABLE_ENTITY_VALIDATION_TESTS === "true", // Entity validation edge cases
 
   // User invitation tests
   invitePayload: process.env.INVITE_PAYLOAD !== "false", // Enabled by default
