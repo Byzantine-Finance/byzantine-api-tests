@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-11T11:30:46.815Z\nSpec SHA-256: f707fc030d26a0410ebf3c4d686b0aa0933420de8c6f702bc434df892f015c75",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-20T11:40:15.307Z\nSpec SHA-256: f756cffd249828990571fb076e01540111665debec345fe182ad7566c2449d15",
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -44,6 +44,28 @@
     "properties": {
       "accountId": {
         "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ActivityInfo": {
+    "type": "object",
+    "description": "Business activity details. Short business description and [industry code](https://docs.byzantine.fi/api-reference/lists/industry-codes#company-industry-codes)",
+    "required": [
+      "businessDescription",
+      "businessIndustry"
+    ],
+    "properties": {
+      "businessDescription": {
+        "type": "string",
+        "maxLength": 1024,
+        "minLength": 1
+      },
+      "businessIndustry": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": 0,
+        "maximum": 9223372036854776000
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -352,7 +374,7 @@
   },
   "AssociatedPerson": {
     "type": "object",
-    "description": "Associated person (beneficiary or representative). Must be at least one.",
+    "description": "Associated person (beneficiary or representative).",
     "required": [
       "userInfo",
       "beneficiaryDetails"
@@ -386,6 +408,9 @@
       "beneficiaryDetails"
     ],
     "properties": {
+      "beneficiaryId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
       "verificationStatus": {
         "$ref": "#/components/schemas/VerificationStatus"
       },
@@ -403,9 +428,6 @@
         "items": {
           "$ref": "#/components/schemas/VerificationDocumentResponse"
         }
-      },
-      "beneficiaryId": {
-        "$ref": "#/components/schemas/Uuid"
       },
       "missingDocuments": {
         "type": [
@@ -591,95 +613,15 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "BusinessActivityInfo": {
-    "type": "object",
-    "description": "Information about business activities. This is required for high-risk businesses. Filling it wholly can accelerate the KYB process.",
-    "required": [
-      "preferredPrimaryCurrency",
-      "sourceOfFunds"
-    ],
-    "properties": {
-      "preferredPrimaryCurrency": {
-        "$ref": "#/components/schemas/Currency"
-      },
-      "sourceOfFunds": {
-        "$ref": "#/components/schemas/EntitySourceOfFunds"
-      },
-      "estimatedAnnualRevenueUsd": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/EstimatedAnnualRevenue"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
-      },
-      "expectedMonthlyPaymentsUsd": {
-        "type": [
-          "integer",
-          "null"
-        ],
-        "format": "int64",
-        "description": "Expected monthly inflows in USD.",
-        "minimum": -9223372036854776000,
-        "maximum": 9223372036854776000
-      },
-      "operatesInProhibitedCountries": {
-        "type": [
-          "boolean",
-          "null"
-        ],
-        "description": "Must be set to `true` if the business has any activity in or relation to Cuba, Iran, Myanmar, North Korea, or Syria."
-      },
-      "highRiskActivities": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HighRiskActivity"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
-      },
-      "highRiskActivitiesExplanation": {
-        "type": [
-          "string",
-          "null"
-        ],
-        "description": "Required if high_risk_activities is anything other than none_of_the_above or empty. A short description to explain the business' involvement with the declared high-risk activities."
-      },
-      "conductsMoneyServices": {
-        "type": [
-          "boolean",
-          "null"
-        ],
-        "description": "Must be set to `true` if the business offers money services, investment products, and/or other financial services."
-      },
-      "conductsMoneyServicesDescription": {
-        "type": [
-          "string",
-          "null"
-        ],
-        "description": "Required if conducts_money_services is true. A short description to explain the business' money services. Should include a detailed description of the business's compliance and anti-money laundering controls and practices."
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
   "BusinessCustomer": {
     "type": "object",
     "description": "A business customer (entity) with its team members",
     "required": [
       "entityId",
       "entityName",
+      "verificationStatus",
+      "createdAt",
+      "updatedAt",
       "teamMembers"
     ],
     "properties": {
@@ -689,10 +631,27 @@
       "entityName": {
         "type": "string"
       },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "logoUrl": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
       "teamMembers": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/CustomerMember"
+          "$ref": "#/components/schemas/EntityMember"
         }
       }
     },
@@ -907,6 +866,124 @@
           "type": "string"
         },
         "description": "List of created authenticator IDs"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateEntityAccountRequest": {
+    "type": "object",
+    "description": "Request body for creating a Byzantine entity",
+    "required": [
+      "entityInfo",
+      "rootUsers",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "entityInfo": {
+        "$ref": "#/components/schemas/EntityInfo"
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/EntityVerificationDocument"
+        }
+      },
+      "rootUsers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EntityRootUserRequest"
+        }
+      },
+      "associatedPersons": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPerson"
+        }
+      },
+      "byzantineTermsSignedAt": {
+        "type": "string",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateEntityAccountResponse": {
+    "type": "object",
+    "description": "Response body for creating a Byzantine entity",
+    "required": [
+      "entityId",
+      "accountId",
+      "verificationStatus",
+      "entityInfo",
+      "rootUsers",
+      "byzantineTermsSignedAt"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "entityInfo": {
+        "$ref": "#/components/schemas/EntityInfo"
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
+      },
+      "rootUsers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EntityRootUserResponse"
+        }
+      },
+      "associatedPersons": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AssociatedPersonResponse"
+        }
+      },
+      "byzantineTermsSignedAt": {
+        "type": "string",
+        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
+      },
+      "missingCompanyData": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required company data. Present only if not all required company information has been provided."
+      },
+      "missingDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required entity verification documents. Present only if not all required documents have been submitted."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1137,23 +1214,6 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "CustomerMember": {
-    "type": "object",
-    "description": "A customer member (user or team member)",
-    "required": [
-      "userId",
-      "userName"
-    ],
-    "properties": {
-      "userId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "userName": {
-        "type": "string"
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
   "CustomerQueryType": {
     "type": "string",
     "description": "Filter type for the get-customers endpoint",
@@ -1283,24 +1343,18 @@
     "type": "string",
     "description": "Entity document type. For a full list of accepted document types, see [accepted documents](https://docs.byzantine.fi/api-reference/documents).",
     "enum": [
-      "aml_comfort_letter",
-      "business_formation",
       "directors_registry",
-      "e_signature_certificate",
-      "evidence_of_good_standing",
-      "flow_of_funds",
-      "marketing_materials",
-      "ownership_chart",
-      "ownership_information",
-      "proof_of_account_purpose",
+      "good_standing_cert",
+      "incorporation_articles",
+      "incorporation_cert",
+      "incumbency_cert",
+      "information_statement",
+      "partnership_agreement",
+      "power_of_attorney",
       "proof_of_address",
-      "proof_of_entity_name_change",
-      "proof_of_nature_of_business",
-      "proof_of_signatory_authority",
-      "proof_of_source_of_funds",
-      "proof_of_source_of_wealth",
-      "proof_of_tax_identification",
-      "shareholder_register",
+      "shareholder_registry",
+      "state_registry",
+      "trust_agreement",
       "other"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1309,18 +1363,7 @@
     "type": "object",
     "description": "Entity information for KYB",
     "required": [
-      "businessLegalName",
-      "businessTradeName",
-      "businessDescription",
-      "businessType",
-      "email",
-      "website",
-      "businessIndustry",
-      "companyNumber",
-      "hasMaterialIntermediaryEntityOwner",
-      "registeredAddress",
-      "physicalAddress",
-      "businessActivityInfo"
+      "businessLegalName"
     ],
     "properties": {
       "businessLegalName": {
@@ -1328,24 +1371,45 @@
         "description": "The legal name of the business."
       },
       "businessTradeName": {
-        "type": "string",
-        "description": "The trade name of the business. Can be the same as the entity name, but must be submitted."
-      },
-      "businessDescription": {
-        "type": "string",
-        "description": "Short description of business activities.",
-        "maxLength": 1024,
-        "minLength": 1
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The trade name of the business. Can be the same as the entity name."
       },
       "businessType": {
-        "$ref": "#/components/schemas/BusinessType"
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BusinessType"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "companyNumber": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The registered business number. Depending on the country of registration, we accept these [entity number types](https://docs.byzantine.fi/api-reference/lists/company-number-types)."
       },
       "email": {
-        "type": "string",
+        "type": [
+          "string",
+          "null"
+        ],
         "description": "Business contact email."
       },
       "website": {
-        "type": "string",
+        "type": [
+          "string",
+          "null"
+        ],
         "description": "Business website."
       },
       "logoUrl": {
@@ -1355,29 +1419,165 @@
         ],
         "description": "URL of the entity's logo."
       },
-      "businessIndustry": {
-        "type": "integer",
-        "format": "int64",
-        "description": "A valid 6-digit NAICS industry code. See the full list of [industry codes](https://docs.byzantine.fi/api-reference/lists/industry-codes).",
-        "minimum": 0,
-        "maximum": 9223372036854776000
-      },
-      "companyNumber": {
-        "type": "string",
-        "description": "The registered business number. Depending on the country of registration, we accept these [entity number types](https://docs.byzantine.fi/api-reference/lists/company-number-types)."
-      },
-      "hasMaterialIntermediaryEntityOwner": {
-        "type": "boolean",
-        "description": "true if there is another legal entity that owns 25% or more of the business"
-      },
       "registeredAddress": {
-        "$ref": "#/components/schemas/Address"
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
       "physicalAddress": {
-        "$ref": "#/components/schemas/Address"
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
-      "businessActivityInfo": {
-        "$ref": "#/components/schemas/BusinessActivityInfo"
+      "activityInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "financialInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FinancialInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "highRiskInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighRiskInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityMember": {
+    "type": "object",
+    "description": "A customer member (user or team member)",
+    "required": [
+      "userId",
+      "firstName",
+      "lastName",
+      "email"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityRootUserRequest": {
+    "type": "object",
+    "description": "Root user for acount management. At least one is required at creation.",
+    "required": [
+      "firstName",
+      "lastName",
+      "email"
+    ],
+    "properties": {
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "authenticators": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/AuthenticatorParam"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "EntityRootUserResponse": {
+    "type": "object",
+    "description": "Root user with wallet access",
+    "required": [
+      "userId",
+      "firstName",
+      "lastName",
+      "email",
+      "isPasskeyActivated",
+      "isOtpActivated"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "isPasskeyActivated": {
+        "type": "boolean",
+        "description": "An indicator showing whether passkey authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
+      },
+      "isOtpActivated": {
+        "type": "boolean",
+        "description": "An indicator showing whether OTP authentication is active for this user. For more information, see [wallet authentication](https://docs.byzantine.fi/api-reference/wallet-authentication)."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1482,6 +1682,38 @@
       "usd",
       "eur"
     ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "FinancialInfo": {
+    "type": "object",
+    "description": "Financial informations, required for compliance purposes.",
+    "required": [
+      "preferredPrimaryCurrency",
+      "sourceOfFunds",
+      "estimatedAnnualRevenueUsd",
+      "expectedMonthlyPaymentsUsd",
+      "hasMaterialIntermediaryEntityOwner"
+    ],
+    "properties": {
+      "preferredPrimaryCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "sourceOfFunds": {
+        "$ref": "#/components/schemas/EntitySourceOfFunds"
+      },
+      "estimatedAnnualRevenueUsd": {
+        "$ref": "#/components/schemas/EstimatedAnnualRevenue"
+      },
+      "expectedMonthlyPaymentsUsd": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "hasMaterialIntermediaryEntityOwner": {
+        "type": "boolean"
+      }
+    },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "GetAccountBalanceQuery": {
@@ -1779,7 +2011,7 @@
           "null"
         ],
         "items": {
-          "$ref": "#/components/schemas/CustomerMember"
+          "$ref": "#/components/schemas/IndividualCustomer"
         }
       }
     },
@@ -2182,6 +2414,51 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "HighRiskInfo": {
+    "type": "object",
+    "description": "High risk business activities, required for compliance purposes.",
+    "properties": {
+      "operatesInProhibitedCountries": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "highRiskActivities": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighRiskActivity"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "highRiskActivitiesExplanation": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "conductsMoneyServices": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "conductsMoneyServicesDescription": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "HistoryDataPoint": {
     "type": "object",
     "required": [
@@ -2332,6 +2609,51 @@
       },
       "currency": {
         "$ref": "#/components/schemas/FiatCurrency"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "IndividualCustomer": {
+    "type": "object",
+    "description": "An individual customer",
+    "required": [
+      "userId",
+      "firstName",
+      "lastName",
+      "email",
+      "verificationStatus",
+      "createdAt",
+      "updatedAt"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "logoUrl": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updatedAt": {
+        "type": "string",
+        "format": "date-time"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -3568,7 +3890,7 @@
   },
   "UpdateUserInfo": {
     "type": "object",
-    "description": "Personal information about the user for update. All fields are optional \u2014 only provided fields are updated.\nSame as `UserInfo` but without `email` (email cannot be changed).",
+    "description": "Personal information about the user for update. All fields are optional — only provided fields are updated.\nSame as `UserInfo` but without `email` (email cannot be changed).",
     "properties": {
       "firstName": {
         "type": [
@@ -4137,7 +4459,9 @@
       "not_started",
       "init",
       "under_review",
-      "waiting_for_information",
+      "waiting_for_associated_person_informations",
+      "waiting_for_informations",
+      "resubmission_requested",
       "active",
       "rejected",
       "inactive"
@@ -4194,195 +4518,6 @@
     "type": "array",
     "items": {
       "$ref": "#/components/schemas/GetTransactionResponse"
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "CreateEntityAccountRequest": {
-    "type": "object",
-    "description": "Request body for creating a Byzantine entity",
-    "required": [
-      "entityInfo",
-      "rootUsers",
-      "byzantineTermsSignedAt"
-    ],
-    "properties": {
-      "entityInfo": {
-        "$ref": "#/components/schemas/EntityInfo"
-      },
-      "entityDocuments": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/EntityVerificationDocument"
-        }
-      },
-      "rootUsers": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/EntityRootUserRequest"
-        }
-      },
-      "associatedPersons": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/AssociatedPerson"
-        }
-      },
-      "byzantineTermsSignedAt": {
-        "type": "string",
-        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "CreateEntityAccountResponse": {
-    "type": "object",
-    "description": "Response body for creating a Byzantine entity",
-    "required": [
-      "entityId",
-      "accountId",
-      "verificationStatus",
-      "entityInfo",
-      "rootUsers",
-      "byzantineTermsSignedAt"
-    ],
-    "properties": {
-      "entityId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "accountId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "verificationStatus": {
-        "$ref": "#/components/schemas/VerificationStatus"
-      },
-      "entityInfo": {
-        "$ref": "#/components/schemas/EntityInfo"
-      },
-      "entityDocuments": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/VerificationDocumentResponse"
-        }
-      },
-      "rootUsers": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/EntityRootUserResponse"
-        }
-      },
-      "associatedPersons": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/AssociatedPersonResponse"
-        }
-      },
-      "byzantineTermsSignedAt": {
-        "type": "string",
-        "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
-      },
-      "missingCompanyData": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "type": "string"
-        },
-        "description": "List of missing required company data. Present only if not all required company information has been provided."
-      },
-      "missingDocuments": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "type": "string"
-        },
-        "description": "List of missing required entity verification documents. Present only if not all required documents have been submitted."
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "EntityRootUserRequest": {
-    "type": "object",
-    "description": "Root user request for entity account",
-    "required": [
-      "firstName",
-      "lastName",
-      "email"
-    ],
-    "properties": {
-      "firstName": {
-        "type": "string",
-        "example": "John"
-      },
-      "lastName": {
-        "type": "string",
-        "example": "Smith"
-      },
-      "email": {
-        "type": "string",
-        "example": "john.smith@example.com"
-      },
-      "authenticators": {
-        "type": [
-          "array",
-          "null"
-        ],
-        "items": {
-          "$ref": "#/components/schemas/AuthenticatorParam"
-        }
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "EntityRootUserResponse": {
-    "type": "object",
-    "description": "Root user with wallet access",
-    "required": [
-      "userId",
-      "firstName",
-      "lastName",
-      "email",
-      "isPasskeyActivated",
-      "isOtpActivated"
-    ],
-    "properties": {
-      "userId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "firstName": {
-        "type": "string",
-        "example": "John"
-      },
-      "lastName": {
-        "type": "string",
-        "example": "Smith"
-      },
-      "email": {
-        "type": "string",
-        "example": "john.smith@example.com"
-      },
-      "isPasskeyActivated": {
-        "type": "boolean",
-        "description": "An indicator showing whether passkey authentication is active for this user."
-      },
-      "isOtpActivated": {
-        "type": "boolean",
-        "description": "An indicator showing whether OTP authentication is active for this user."
-      }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   }
