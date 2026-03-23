@@ -27,6 +27,7 @@ describe("Account Data SDK", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testUserId = TEST_DATA.accounts.testUserId;
   const testEntityId = TEST_DATA.accounts.testEntityId;
+  const testEntityAccountId = TEST_DATA.accounts.testEntityAccountId;
 
   describe("getUserDetails()", () => {
     it(
@@ -141,10 +142,28 @@ describe("Account Data SDK", () => {
 
   describe("getAccountDetails()", () => {
     it(
-      "should get account details by account ID",
+      "should get user account details by account ID",
       async () => {
         const sdkResponse = await client.api.getAccountDetails(
           testAccountId,
+          DUMMY_AUTH,
+        );
+        assertSuccessWithSchema(sdkResponse, "GetAccountDetailsResponse");
+        assertSuccess(sdkResponse);
+        assertValidUuid(sdkResponse.data.accountId);
+        expect(sdkResponse.data.accountName).toBeDefined();
+        expect(sdkResponse.data.accountType).toMatch(/^(individual|company)$/);
+        expect(sdkResponse.data.walletAddress).toBeDefined();
+        expect(typeof sdkResponse.data.isSelfCustodial).toBe("boolean");
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should get entity account details by account ID",
+      async () => {
+        const sdkResponse = await client.api.getAccountDetails(
+          testEntityAccountId,
           DUMMY_AUTH,
         );
         assertSuccessWithSchema(sdkResponse, "GetAccountDetailsResponse");
@@ -170,11 +189,23 @@ describe("Account Data SDK", () => {
     );
 
     it(
-      "should filter customers by type",
+      "should filter customers by type: individual",
       async () => {
         const sdkResponse = await client.api.getCustomers(
           DUMMY_AUTH,
           "individual",
+        );
+        assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should filter customers by type: business",
+      async () => {
+        const sdkResponse = await client.api.getCustomers(
+          DUMMY_AUTH,
+          "business",
         );
         assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
       },

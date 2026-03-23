@@ -39,7 +39,7 @@ const TEST_SUITE_FLAGS = {
 describeRoleManagement("Byzantine Role Management SDK", () => {
   const client = getSdkClient();
   const testAccountId = TEST_DATA.accounts.testEntityAccountId;
-  const userToPromote = "235708ce-c4d4-4f87-8ac3-e6df8821bef1"; // TODO: fetch it once stored 
+  const userToPromote = TEST_DATA.users.roleTargetUserId;
   const role = "root";
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest

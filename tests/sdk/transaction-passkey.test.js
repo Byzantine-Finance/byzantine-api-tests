@@ -33,7 +33,7 @@ describeTransactionPasskey(
         bodyToSign: txRequest.activateAccount.bodyToSign,
         transactionId: txRequest.activateAccount.transactionId,
         webAuthnStamp: txRequest.activateAccount.webAuthnStamp,
-        flag: "enableSignActivateAccount",
+        flag: "enablePasskeyActivateTxTests",
       },
       {
         type: "Deposit",

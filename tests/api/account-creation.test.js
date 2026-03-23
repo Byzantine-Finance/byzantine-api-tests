@@ -1,8 +1,8 @@
 /**
  * Account Creation API Tests, what are tested:
  * - submit/create-individual-account (CreateIndividualAccountRequest/Response)
- * - submit/create-entity
- * - Optional fields in CreateEntityRequest (email, website, etc.)
+ * - submit/create-entity-account (CreateEntityAccountRequest/Response)
+ * - Optional fields in CreateEntityAccountRequest (email, website, etc.)
  * - Optional fields in UserInfo (nationality, residentialAddress, birthDate - now optional)
  *
  * Note: These tests use authenticated endpoints and modify data.
@@ -41,7 +41,7 @@ const describeCreateEntity = FEATURE_FLAGS.createEntity
 describeAccountCreation("Byzantine Account Creation API", () => {
   beforeAll(async () => {
     assertSchema(validUser, "CreateIndividualAccountRequest");
-    assertSchema(validEntity, "CreateEntityRequest");
+    assertSchema(validEntity, "CreateEntityAccountRequest");
   });
 
   describeCreateUser("POST /v1/submit/create-individual-account", () => {
@@ -75,11 +75,11 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     );
   });
 
-  describeCreateEntity("POST /v1/submit/create-entity", () => {
+  describeCreateEntity("POST /v1/submit/create-entity-account", () => {
     it(
-      "should create entity with valid data",
+      "should create entity account with valid data",
       async () => {
-        // Use emails directly from the fixture (both persons share the same email)
+        // Use emails directly from the fixture
         const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
         const entityWithUniqueEmails = {
           ...validEntity,
@@ -87,7 +87,11 @@ describeAccountCreation("Byzantine Account Creation API", () => {
             ...validEntity.entityInfo,
             email: uniqueEmail,
           },
-          associatedPersons: validEntity.associatedPersons.map((person) => ({
+          rootUsers: validEntity.rootUsers.map((rootUser) => ({
+            ...rootUser,
+            email: generateUniqueEmail(rootUser.email),
+          })),
+          associatedPersons: validEntity.associatedPersons?.map((person) => ({
             ...person,
             userInfo: {
               ...person.userInfo,
@@ -102,14 +106,12 @@ describeAccountCreation("Byzantine Account Creation API", () => {
           { authenticated: true, timeout: getTimeout("passkey") },
         );
 
-        assertSuccessWithSchema(response, "CreateEntityResponse", 201);
+        assertSuccessWithSchema(response, "CreateEntityAccountResponse", 201);
         assertValidUuid(response.data.entityId);
         assertValidUuid(response.data.accountId);
 
-        // Find the root user from associated persons
-        const rootUser = response.data.associatedPersons.find(
-          (person) => person.isRootUser === true,
-        );
+        // Get the first root user from the response
+        const rootUser = response.data.rootUsers?.[0];
 
         // Save IDs and person C's email for reuse in entity B
         saveEntityIds(

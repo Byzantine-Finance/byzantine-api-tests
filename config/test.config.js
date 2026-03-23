@@ -36,12 +36,24 @@ export function getTimeout(type = "default") {
 }
 
 /**
+ * Resolve a test ID with priority: env var override > generated data > null
+ * This allows running tests with specific IDs without editing test files.
+ * Set env vars (e.g., TEST_ACCOUNT_ID=xxx) to override generated fixture data.
+ * @param {string} envVarName - Environment variable name
+ * @param {string|null} generatedValue - Value from generated test data
+ * @returns {string|null}
+ */
+function resolveId(envVarName, generatedValue) {
+  return process.env[envVarName] || generatedValue || null;
+}
+
+/**
  * Test Data - IDs and addresses for testing
  *
  * Priority order:
- * 1. Generated IDs from test runs (fixtures/test-data/__generated__/generated-accounts.json)
- * 2. Environment variables
- * 3. Default values (for vaults)
+ * 1. Environment variable overrides (e.g., TEST_ACCOUNT_ID=xxx)
+ * 2. Generated IDs from test runs (fixtures/test-data/__generated__/generated-accounts.json)
+ * 3. null (test skips gracefully)
  *
  */
 const generatedTestData = loadTestData();
@@ -108,14 +120,12 @@ export const FEATURE_FLAGS = {
   enablePasskeyWithdrawTxTests:
     process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
 
-  enableSignActivateAccount:
-    process.env.ENABLE_SIGN_ACTIVATE_ACCOUNT === "true",
-
   // Account creation tests
   createUser: process.env.CREATE_USER !== "false", // Enabled by default
   createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
   createUserMinimal: process.env.CREATE_USER_MINIMAL === "true", // Test minimal required fields
   createEntityMinimal: process.env.CREATE_ENTITY_MINIMAL === "true", // Test minimal required fields
+  entityValidation: process.env.ENABLE_ENTITY_VALIDATION_TESTS === "true", // Entity validation edge cases
 
   // User invitation tests
   invitePayload: process.env.INVITE_PAYLOAD !== "false", // Enabled by default
@@ -180,35 +190,23 @@ export const TEST_DATA = {
   },
 
   accounts: {
-    // dev mode: generated from test runs
-    // production mode: environment variables only
-    testUserId: isProduction()
-      ? process.env.TEST_USER_ID
-      : generatedTestData.accounts.testUserId,
-    testAccountId: isProduction()
-      ? process.env.TEST_ACCOUNT_ID
-      : generatedTestData.accounts.testAccountId,
-    testEntityId: isProduction()
-      ? process.env.TEST_ENTITY_ID
-      : generatedTestData.accounts.testEntityId,
-    testEntityAccountId: isProduction()
-      ? process.env.TEST_ENTITY_ACCOUNT_ID
-      : generatedTestData.accounts.testEntityAccountId,
-    entityRootUserId: isProduction()
-      ? process.env.TEST_ENTITY_ROOT_USER_ID
-      : generatedTestData.accounts.entityRootUserId,
+    testUserId: resolveId("TEST_USER_ID", generatedTestData.accounts.testUserId),
+    testAccountId: resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
+    testEntityId: resolveId("TEST_ENTITY_ID", generatedTestData.accounts.testEntityId),
+    testEntityAccountId: resolveId("TEST_ENTITY_ACCOUNT_ID", generatedTestData.accounts.testEntityAccountId),
+    entityRootUserId: resolveId("TEST_ENTITY_ROOT_USER_ID", generatedTestData.accounts.entityRootUserId),
+    testUsBankAccountId: resolveId("TEST_US_BANK_ACCOUNT_ID", generatedTestData.accounts.testUsBankAccountId),
+    testEurBankAccountId: resolveId("TEST_EUR_BANK_ACCOUNT_ID", generatedTestData.accounts.testEurBankAccountId),
   },
 
   users: {
-    // User IDs for role management tests
-    testUserId: isProduction()
-      ? process.env.TEST_USER_ID
-      : generatedTestData.accounts.testUserId,
+    testUserId: resolveId("TEST_USER_ID", generatedTestData.accounts.testUserId),
     testAdditionalUserId: process.env.TEST_ADDITIONAL_USER_ID || null,
+    // Target user ID for role management tests (promote/demote)
+    roleTargetUserId: resolveId("TEST_ROLE_TARGET_USER_ID", generatedTestData.accounts.entityRootUserId),
   },
 
   transactions: {
-    // Test transaction IDs
     testTransactionId: process.env.TEST_TRANSACTION_ID || null,
   },
 };

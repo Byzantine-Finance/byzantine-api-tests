@@ -58,7 +58,7 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
         const newUsersWithUniqueEmails = inviteUsersPasskeyRequest.newUsers.map(
           (user) => ({
             ...user,
-            userEmail: "lin+invited-by-f7d4ec30@byzantine.fi",
+            userEmail: generateUniqueEmail(user.userEmail),
           }),
         );
 

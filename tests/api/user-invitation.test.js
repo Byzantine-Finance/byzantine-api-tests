@@ -41,7 +41,7 @@ const TEST_SUITE_FLAGS = {
 
 describeUserInvitation("Byzantine User Invitation API", () => {
   const testAccountId = TEST_DATA.accounts.testEntityAccountId;
-  const inviterUserId = "f7d4ec30-27fa-4b1f-a4c1-6da5d3652380";
+  const inviterUserId = TEST_DATA.accounts.entityRootUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
