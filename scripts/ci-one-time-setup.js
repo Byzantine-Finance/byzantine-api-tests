@@ -3,19 +3,16 @@
 /**
  * One-Time CI Setup
  *
- * Run this ONCE to create a test account with a virtual passkey credential,
- * then extract the private key via CDP. After running this script:
+ * Creates test accounts (individual + entity) with virtual passkey credentials,
+ * then extracts the private keys via CDP. After running this script:
  *
- *   1. Approve KYC for the created account in the Byzantine dashboard
+ *   1. Approve KYC/KYB for the created accounts in the Byzantine dashboard
  *   2. Store the output values as CI secrets / .env variables
  *
- * After that, CI runs use pure Node.js crypto (no Playwright needed).
- *
  * Usage:
- *   node scripts/ci-one-time-setup.js
- *
- * Output:
- *   CI_PASSKEY_CREDENTIAL_ID, CI_PASSKEY_PRIVATE_KEY, CI_PASSKEY_ACCOUNT_ID, etc.
+ *   node scripts/ci-one-time-setup.js              # Both individual + entity
+ *   node scripts/ci-one-time-setup.js --individual  # Individual only
+ *   node scripts/ci-one-time-setup.js --entity      # Entity only
  */
 
 import { createServer } from "http";
@@ -32,16 +29,17 @@ const rootDir = dirname(__dirname);
 const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "3000", 10);
 const RP_ID = process.env.VIRTUAL_AUTH_RPID || "localhost";
 const VALID_USER_FILE = join(rootDir, "fixtures/test-data/users/valid-user.json");
+const VALID_ENTITY_FILE = join(rootDir, "fixtures/test-data/entities/valid-entity.json");
 
-// ──────────────────────────────────────────────────────────
-// Minimal HTTP server
-// ──────────────────────────────────────────────────────────
+// Parse CLI args
+const args = process.argv.slice(2);
+const createIndividual = args.includes("--individual") || args.includes("--all") || args.length === 0;
+const createEntity = args.includes("--entity") || args.includes("--all") || args.length === 0;
+
+// ── Shared helpers ──────────────────────────────────────
+
 function startServer(port) {
-  const mimeTypes = {
-    ".html": "text/html",
-    ".js": "application/javascript",
-    ".json": "application/json",
-  };
+  const mimeTypes = { ".html": "text/html", ".js": "application/javascript", ".json": "application/json" };
   const server = createServer((req, res) => {
     try {
       const urlPath = req.url === "/" ? "tests/web/api-testing.html" : req.url.substring(1);
@@ -50,10 +48,7 @@ function startServer(port) {
       const content = readFileSync(filePath);
       res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
       res.end(content);
-    } catch {
-      res.writeHead(404);
-      res.end("Not found");
-    }
+    } catch { res.writeHead(404); res.end("Not found"); }
   });
   return new Promise((resolve, reject) => {
     server.listen(port, () => resolve(server));
@@ -61,181 +56,257 @@ function startServer(port) {
   });
 }
 
-// ──────────────────────────────────────────────────────────
-// API helper
-// ──────────────────────────────────────────────────────────
 async function apiCall(method, path, body = null) {
   const { generateAuthHeaders } = await import("../utils/auth.js");
   const { getEnvironmentBaseURL, isProduction } = await import("../config/environments.js");
-
   const baseURL = getEnvironmentBaseURL();
-  const key = isProduction()
-    ? process.env.PROD_INTEGRATOR_PRIVATE_KEY
-    : process.env.DEV_INTEGRATOR_PRIVATE_KEY;
+  const key = isProduction() ? process.env.PROD_INTEGRATOR_PRIVATE_KEY : process.env.DEV_INTEGRATOR_PRIVATE_KEY;
   if (!key) throw new Error("INTEGRATOR_PRIVATE_KEY is required");
-
   const authHeaders = generateAuthHeaders(key, method, path, body || "");
   const response = await fetch(`${baseURL}${path}`, {
     method,
     headers: { "Content-Type": "application/json", ...authHeaders },
     body: body ? JSON.stringify(body) : undefined,
   });
-
   const data = await response.json().catch(() => null);
   return { status: response.status, ok: response.ok, data };
 }
 
-// ──────────────────────────────────────────────────────────
-// Main
-// ──────────────────────────────────────────────────────────
-async function main() {
-  console.log("🔧 One-Time CI Setup — Create Account + Extract Passkey Credentials\n");
+function uniqueEmail(base) {
+  const ts = Math.floor(Date.now() / 1000);
+  const [local, domain] = base.split("@");
+  return `${local}+ci-passkey-${ts}@${domain}`;
+}
 
-  // Step 1: Start server + virtual authenticator
-  console.log("Step 1: Starting server and virtual authenticator...");
+/**
+ * Create a passkey credential and extract its private key via CDP
+ */
+async function createCredentialAndExtractKey(auth, actualPort, label) {
+  console.log(`  Creating passkey credential for ${label}...`);
+  await auth.page.goto(`http://localhost:${actualPort}/tests/web/api-testing.html`);
+
+  const credential = await auth.page.evaluate(
+    async ({ rpId, rpName, label }) => {
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const cred = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { id: rpId, name: rpName },
+          user: {
+            id: new TextEncoder().encode(`ci-${label}`),
+            name: `ci-${label}@byzantine.fi`,
+            displayName: `CI ${label}`,
+          },
+          pubKeyCredParams: [
+            { alg: -7, type: "public-key" },
+            { alg: -257, type: "public-key" },
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            residentKey: "preferred",
+            userVerification: "preferred",
+          },
+          timeout: 60000,
+        },
+      });
+      function bufferToBase64url(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+      }
+      const clientDataStr = new TextDecoder().decode(cred.response.clientDataJSON);
+      const clientData = JSON.parse(clientDataStr);
+      return {
+        credentialId: bufferToBase64url(cred.rawId),
+        clientDataJson: bufferToBase64url(cred.response.clientDataJSON),
+        attestationObject: bufferToBase64url(cred.response.attestationObject),
+        challengeFromClientData: clientData.challenge,
+      };
+    },
+    { rpId: RP_ID, rpName: "Byzantine Test", label }
+  );
+
+  auth.credentialId = credential.credentialId;
+
+  // Extract private key via CDP
+  const { credentials } = await auth.cdpSession.send("WebAuthn.getCredentials", {
+    authenticatorId: auth.authenticatorId,
+  });
+  const lastCred = credentials[credentials.length - 1];
+
+  console.log(`  Credential ID: ${credential.credentialId}`);
+  console.log(`  Private key extracted (${lastCred.privateKey.length} chars)\n`);
+
+  // Verify PasskeySigner works
+  const { PasskeySigner } = await import("../utils/passkey-signer.js");
+  new PasskeySigner({
+    credentialId: credential.credentialId,
+    privateKey: lastCred.privateKey,
+    rpId: RP_ID,
+    origin: `http://localhost:${actualPort}`,
+  }).signPayload({ test: true });
+  console.log("  ✅ PasskeySigner verification passed\n");
+
+  return { ...credential, privateKeyBase64: lastCred.privateKey };
+}
+
+/**
+ * Build the authenticator attestation object for API requests
+ */
+function buildAuthenticator(credential) {
+  return {
+    authenticatorName: "CI Passkey",
+    challenge: credential.challengeFromClientData,
+    attestation: {
+      credentialId: credential.credentialId,
+      clientDataJson: credential.clientDataJson,
+      attestationObject: credential.attestationObject,
+      transports: ["AUTHENTICATOR_TRANSPORT_INTERNAL"],
+    },
+  };
+}
+
+// ── Main ────────────────────────────────────────────────
+
+async function main() {
+  console.log("🔧 One-Time CI Setup — Create Accounts + Extract Passkey Credentials\n");
+  console.log(`  Create individual: ${createIndividual}`);
+  console.log(`  Create entity:     ${createEntity}\n`);
+
   const server = await startServer(PORT);
   const actualPort = server.address().port;
-
   const { VirtualAuthenticator } = await import("../utils/virtual-authenticator.js");
   const auth = new VirtualAuthenticator({ rpId: RP_ID, port: actualPort });
   await auth.setup();
   console.log(`  Server on port ${actualPort}, authenticator ready\n`);
 
+  const secrets = {};
+
   try {
-    // Step 2: Create passkey credential
-    console.log("Step 2: Creating passkey credential...");
-    await auth.page.goto(`http://localhost:${actualPort}/tests/web/api-testing.html`);
+    // ── Individual account ────────────────────────────────
+    if (createIndividual) {
+      console.log("━".repeat(50));
+      console.log("  INDIVIDUAL ACCOUNT");
+      console.log("━".repeat(50));
 
-    const credential = await auth.page.evaluate(
-      async ({ rpId, rpName }) => {
-        const challenge = crypto.getRandomValues(new Uint8Array(32));
-        const cred = await navigator.credentials.create({
-          publicKey: {
-            challenge,
-            rp: { id: rpId, name: rpName },
-            user: {
-              id: new TextEncoder().encode("ci-passkey-user"),
-              name: "ci-passkey@byzantine.fi",
-              displayName: "CI Passkey User",
-            },
-            pubKeyCredParams: [
-              { alg: -7, type: "public-key" },
-              { alg: -257, type: "public-key" },
-            ],
-            authenticatorSelection: {
-              authenticatorAttachment: "platform",
-              residentKey: "preferred",
-              userVerification: "preferred",
-            },
-            timeout: 60000,
-          },
-        });
+      const cred = await createCredentialAndExtractKey(auth, actualPort, "individual");
+      const validUser = JSON.parse(readFileSync(VALID_USER_FILE, "utf-8"));
+      const email = uniqueEmail(validUser.userInfo.email || "ci@byzantine.fi");
 
-        function bufferToBase64url(buffer) {
-          const bytes = new Uint8Array(buffer);
-          let binary = "";
-          for (const byte of bytes) binary += String.fromCharCode(byte);
-          return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-        }
+      const resp = await apiCall("POST", "/v1/submit/create-individual-account", {
+        ...validUser,
+        userInfo: { ...validUser.userInfo, email },
+        authenticators: [buildAuthenticator(cred)],
+      });
 
-        const clientDataStr = new TextDecoder().decode(cred.response.clientDataJSON);
-        const clientData = JSON.parse(clientDataStr);
+      if (!resp.ok) {
+        console.error("  ❌ Individual account creation failed:", JSON.stringify(resp.data));
+        process.exit(1);
+      }
 
-        return {
-          credentialId: bufferToBase64url(cred.rawId),
-          clientDataJson: bufferToBase64url(cred.response.clientDataJSON),
-          attestationObject: bufferToBase64url(cred.response.attestationObject),
-          challengeFromClientData: clientData.challenge,
-        };
-      },
-      { rpId: RP_ID, rpName: "Byzantine Test" }
-    );
+      secrets.individual = {
+        credentialId: cred.credentialId,
+        privateKey: cred.privateKeyBase64,
+        accountId: resp.data.accountId,
+        userId: resp.data.userId,
+        email,
+      };
 
-    auth.credentialId = credential.credentialId;
-    console.log(`  Credential ID: ${credential.credentialId}\n`);
-
-    // Step 3: Extract private key via CDP
-    console.log("Step 3: Extracting private key via CDP...");
-    const { credentials } = await auth.cdpSession.send("WebAuthn.getCredentials", {
-      authenticatorId: auth.authenticatorId,
-    });
-
-    if (!credentials || credentials.length === 0) {
-      throw new Error("No credentials found in virtual authenticator");
+      console.log(`  ✅ Individual account created`);
+      console.log(`     User ID:    ${secrets.individual.userId}`);
+      console.log(`     Account ID: ${secrets.individual.accountId}`);
+      console.log(`     Email:      ${email}\n`);
     }
 
-    const privateKeyBase64 = credentials[0].privateKey;
-    console.log(`  Private key extracted (PKCS#8, ${privateKeyBase64.length} chars)\n`);
+    // ── Entity account ────────────────────────────────────
+    if (createEntity) {
+      console.log("━".repeat(50));
+      console.log("  ENTITY ACCOUNT");
+      console.log("━".repeat(50));
 
-    // Step 4: Verify signing works with PasskeySigner
-    console.log("Step 4: Verifying pure Node.js signing...");
-    const { PasskeySigner } = await import("../utils/passkey-signer.js");
-    const signer = new PasskeySigner({
-      credentialId: credential.credentialId,
-      privateKey: privateKeyBase64,
-      rpId: RP_ID,
-      origin: `http://localhost:${actualPort}`,
-    });
-    const testStamp = signer.signPayload({ test: "payload" });
-    console.log(`  ✅ PasskeySigner produces valid stamps (${JSON.parse(testStamp).signature.length} char sig)\n`);
+      const cred = await createCredentialAndExtractKey(auth, actualPort, "entity");
+      const validEntity = JSON.parse(readFileSync(VALID_ENTITY_FILE, "utf-8"));
+      const entityEmail = uniqueEmail(validEntity.entityInfo.email || "ci-entity@byzantine.fi");
+      const rootUserEmail = uniqueEmail(validEntity.rootUsers[0]?.email || "ci-root@byzantine.fi");
 
-    // Step 5: Create account via API
-    console.log("Step 5: Creating individual account with passkey credential...");
-    const validUser = JSON.parse(readFileSync(VALID_USER_FILE, "utf-8"));
-    const timestamp = Math.floor(Date.now() / 1000);
-    const [emailLocal, emailDomain] = (validUser.userInfo.email || "ci@byzantine.fi").split("@");
-    const uniqueEmail = `${emailLocal}+ci-passkey-${timestamp}@${emailDomain}`;
+      const resp = await apiCall("POST", "/v1/submit/create-entity-account", {
+        ...validEntity,
+        entityInfo: { ...validEntity.entityInfo, email: entityEmail },
+        rootUsers: validEntity.rootUsers.map((user, index) => ({
+          ...user,
+          email: index === 0 ? rootUserEmail : uniqueEmail(user.email),
+          // Attach authenticator to the first root user
+          ...(index === 0 && { authenticators: [buildAuthenticator(cred)] }),
+        })),
+        associatedPersons: validEntity.associatedPersons?.map((person) => ({
+          ...person,
+          userInfo: { ...person.userInfo, email: uniqueEmail(person.userInfo.email) },
+        })),
+      });
 
-    const createUserRequest = {
-      ...validUser,
-      userInfo: { ...validUser.userInfo, email: uniqueEmail },
-      authenticators: [
-        {
-          authenticatorName: "CI Passkey",
-          challenge: credential.challengeFromClientData,
-          attestation: {
-            credentialId: credential.credentialId,
-            clientDataJson: credential.clientDataJson,
-            attestationObject: credential.attestationObject,
-            transports: ["AUTHENTICATOR_TRANSPORT_INTERNAL"],
-          },
-        },
-      ],
-    };
+      if (!resp.ok) {
+        console.error("  ❌ Entity account creation failed:", JSON.stringify(resp.data));
+        process.exit(1);
+      }
 
-    const createResponse = await apiCall("POST", "/v1/submit/create-individual-account", createUserRequest);
-    if (!createResponse.ok) {
-      console.error("  ❌ Account creation failed:", JSON.stringify(createResponse.data));
-      process.exit(1);
+      const rootUser = resp.data.rootUsers?.[0];
+      secrets.entity = {
+        credentialId: cred.credentialId,
+        privateKey: cred.privateKeyBase64,
+        entityId: resp.data.entityId,
+        accountId: resp.data.accountId,
+        rootUserId: rootUser?.userId,
+        entityEmail,
+        rootUserEmail,
+      };
+
+      console.log(`  ✅ Entity account created`);
+      console.log(`     Entity ID:     ${secrets.entity.entityId}`);
+      console.log(`     Account ID:    ${secrets.entity.accountId}`);
+      console.log(`     Root User ID:  ${secrets.entity.rootUserId}`);
+      console.log(`     Entity Email:  ${entityEmail}`);
+      console.log(`     Root Email:    ${rootUserEmail}\n`);
     }
 
-    const { userId, accountId } = createResponse.data;
-    console.log(`  ✅ Account created!`);
-    console.log(`  User ID:    ${userId}`);
-    console.log(`  Account ID: ${accountId}`);
-    console.log(`  Email:      ${uniqueEmail}\n`);
-
-    // Step 6: Output secrets
+    // ── Output secrets ──────────────────────────────────
     const divider = "═".repeat(60);
     console.log(divider);
     console.log("  📋 CI SECRETS — Add these to .env and/or GitHub Secrets");
     console.log(divider);
     console.log();
-    console.log(`CI_PASSKEY_CREDENTIAL_ID=${credential.credentialId}`);
-    console.log(`CI_PASSKEY_PRIVATE_KEY=${privateKeyBase64}`);
-    console.log(`CI_PASSKEY_ACCOUNT_ID=${accountId}`);
-    console.log(`CI_PASSKEY_USER_ID=${userId}`);
-    console.log(`CI_PASSKEY_EMAIL=${uniqueEmail}`);
-    console.log();
+
+    if (secrets.individual) {
+      console.log("# ── Individual Account ──");
+      console.log(`CI_PASSKEY_CREDENTIAL_ID=${secrets.individual.credentialId}`);
+      console.log(`CI_PASSKEY_PRIVATE_KEY=${secrets.individual.privateKey}`);
+      console.log(`CI_PASSKEY_ACCOUNT_ID=${secrets.individual.accountId}`);
+      console.log(`CI_PASSKEY_USER_ID=${secrets.individual.userId}`);
+      console.log(`CI_PASSKEY_EMAIL=${secrets.individual.email}`);
+      console.log();
+    }
+
+    if (secrets.entity) {
+      console.log("# ── Entity Account ──");
+      console.log(`CI_ENTITY_PASSKEY_CREDENTIAL_ID=${secrets.entity.credentialId}`);
+      console.log(`CI_ENTITY_PASSKEY_PRIVATE_KEY=${secrets.entity.privateKey}`);
+      console.log(`CI_ENTITY_PASSKEY_ACCOUNT_ID=${secrets.entity.accountId}`);
+      console.log(`CI_ENTITY_PASSKEY_ENTITY_ID=${secrets.entity.entityId}`);
+      console.log(`CI_ENTITY_PASSKEY_ROOT_USER_ID=${secrets.entity.rootUserId}`);
+      console.log(`CI_ENTITY_PASSKEY_EMAIL=${secrets.entity.entityEmail}`);
+      console.log();
+    }
+
     console.log(divider);
     console.log("  ⚠️  NEXT STEPS:");
-    console.log("  1. Approve KYC for this account in the Byzantine dashboard");
-    console.log("  2. Add the above values to your .env file");
-    console.log("  3. Add CI_PASSKEY_CREDENTIAL_ID and CI_PASSKEY_PRIVATE_KEY");
-    console.log("     as secrets in GitHub Actions");
-    console.log("  4. Set TEST_PASSKEY_TARGET_ACCOUNT_ID and");
-    console.log("     TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID and");
-    console.log("     TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID to the account ID above");
+    let step = 1;
+    if (secrets.individual) {
+      console.log(`  ${step++}. Approve KYC for individual account ${secrets.individual.accountId}`);
+    }
+    if (secrets.entity) {
+      console.log(`  ${step++}. Approve KYB for entity account ${secrets.entity.accountId}`);
+    }
+    console.log(`  ${step}. Add the above values to .env and GitHub Secrets`);
     console.log(divider);
   } finally {
     await auth.teardown();

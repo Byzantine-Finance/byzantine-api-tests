@@ -430,3 +430,46 @@ export function saveActiveVaults(vaults) {
     throw error;
   }
 }
+
+/**
+ * Save invited user data to generated-invited-user.json
+ * Used by the OTP authentication flow after invitation
+ * @param {string} accountId - The account the user was invited to
+ * @param {string} userId - The invited user's ID
+ * @param {string} email - The invited user's email
+ */
+export function saveInvitedUserData(accountId, userId, email) {
+  const INVITED_USER_FILE = join(
+    __dirname,
+    "../fixtures/test-data/__generated__/generated-invited-user.json",
+  );
+
+  try {
+    const data = { accountId, userId, email, lastUpdated: new Date().toISOString() };
+    writeFileSync(INVITED_USER_FILE, JSON.stringify(data, null, 2), "utf-8");
+    console.log(`✅ Saved invited user: userId=${userId}, email=${email}`);
+  } catch (error) {
+    console.error("❌ Error saving invited user data:", error);
+  }
+}
+
+/**
+ * Load invited user data from generated-invited-user.json
+ * @returns {object} Object containing accountId, userId, email
+ */
+export function loadInvitedUserData() {
+  const INVITED_USER_FILE = join(
+    __dirname,
+    "../fixtures/test-data/__generated__/generated-invited-user.json",
+  );
+
+  try {
+    if (existsSync(INVITED_USER_FILE)) {
+      return JSON.parse(readFileSync(INVITED_USER_FILE, "utf-8"));
+    }
+  } catch (error) {
+    console.error("❌ Error loading invited user data:", error);
+  }
+
+  return { accountId: null, userId: null, email: null };
+}

@@ -40,10 +40,11 @@ const TEST_SUITE_FLAGS = {
 };
 
 describeRoleManagement("Byzantine Role Management API", () => {
-  const testAccountId = TEST_DATA.accounts.testEntityAccountId;
+  // Use CI entity passkey account for role management (requires passkey signing)
+  const testAccountId = process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID || TEST_DATA.accounts.testEntityAccountId;
   const role = "root";
 
-  const userToPromote = TEST_DATA.users.roleTargetUserId;
+  const userToPromote = process.env.TEST_ROLE_TARGET_USER_ID || TEST_DATA.users.roleTargetUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe

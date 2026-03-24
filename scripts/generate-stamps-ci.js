@@ -51,26 +51,31 @@ const SIGNABLE_TYPES = [
   "promoteUser",
 ];
 
+// Payload types that require the entity credential
+const ENTITY_TYPES = ["inviteUsers", "promoteUser"];
+
 // ──────────────────────────────────────────────────────────
-// Signer factory — returns { signer, cleanup }
+// Signer factory — returns { individual, entity, cleanup }
 // ──────────────────────────────────────────────────────────
-async function createSigner() {
+async function createSigners() {
   const credId = process.env.CI_PASSKEY_CREDENTIAL_ID;
   const privKey = process.env.CI_PASSKEY_PRIVATE_KEY;
+  const entityCredId = process.env.CI_ENTITY_PASSKEY_CREDENTIAL_ID;
+  const entityPrivKey = process.env.CI_ENTITY_PASSKEY_PRIVATE_KEY;
 
-  // Preferred: pure Node.js signing (no browser)
   if (credId && privKey) {
-    console.log("Mode: Pure Node.js (PasskeySigner)\n");
     const { PasskeySigner } = await import("../utils/passkey-signer.js");
-    return {
-      signer: new PasskeySigner({
-        credentialId: credId,
-        privateKey: privKey,
-        rpId: RP_ID,
-        origin: `http://localhost:${PORT}`,
-      }),
-      cleanup: async () => {},
-    };
+    const origin = `http://localhost:${PORT}`;
+    const individual = new PasskeySigner({ credentialId: credId, privateKey: privKey, rpId: RP_ID, origin });
+    const entity = (entityCredId && entityPrivKey)
+      ? new PasskeySigner({ credentialId: entityCredId, privateKey: entityPrivKey, rpId: RP_ID, origin })
+      : null;
+
+    console.log("Mode: Pure Node.js (PasskeySigner)");
+    console.log(`  Individual: ${credId.substring(0, 20)}...`);
+    console.log(`  Entity:     ${entity ? entityCredId.substring(0, 20) + "..." : "not configured"}\n`);
+
+    return { individual, entity, cleanup: async () => {} };
   }
 
   // Fallback: Playwright virtual authenticator
@@ -79,28 +84,16 @@ async function createSigner() {
 
   const server = await startFallbackServer(PORT);
   const actualPort = server.address().port;
-  console.log(`Dev server started on port ${actualPort}`);
 
-  let VirtualAuthenticator;
-  try {
-    const mod = await import("../utils/virtual-authenticator.js");
-    VirtualAuthenticator = mod.VirtualAuthenticator;
-  } catch (err) {
-    server.close();
-    throw new Error(
-      `Playwright not available and CI_PASSKEY secrets not set.\n` +
-        `Either run ci-one-time-setup.js first, or install playwright.\n` +
-        `Error: ${err.message}`
-    );
-  }
-
+  const { VirtualAuthenticator } = await import("../utils/virtual-authenticator.js");
   const auth = new VirtualAuthenticator({ rpId: RP_ID, port: actualPort });
   await auth.setup();
   await auth.createPasskey("ci-test-user", "ci@byzantine.fi", "CI Test User");
   console.log(`Credential ID: ${auth.credentialId}\n`);
 
   return {
-    signer: auth,
+    individual: auth,
+    entity: null,
     cleanup: async () => {
       await auth.teardown();
       await new Promise((r) => server.close(r));
@@ -172,12 +165,15 @@ async function main() {
   console.log(`Found ${toSign.length} payload(s) to sign: ${toSign.join(", ")}`);
   console.log(`RP ID: ${RP_ID}\n`);
 
-  // Create signer (pure Node.js or Playwright fallback)
-  const { signer, cleanup } = await createSigner();
+  // Create signers (individual + entity)
+  const { individual, entity, cleanup } = await createSigners();
 
   try {
     for (const type of toSign) {
-      console.log(`Signing ${type}...`);
+      const isEntityType = ENTITY_TYPES.includes(type);
+      const signer = isEntityType ? (entity || individual) : individual;
+      const label = isEntityType && entity ? " (entity)" : "";
+      console.log(`Signing ${type}${label}...`);
       const stamp = await signer.signPayload(txData[type].bodyToSign);
       txData[type].webAuthnStamp = stamp;
       console.log(`  ✅ ${type} signed`);

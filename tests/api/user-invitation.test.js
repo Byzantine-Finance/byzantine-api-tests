@@ -14,7 +14,7 @@ import {
   TEST_DATA,
 } from "../../config/test.config.js";
 import { generateUniqueEmail } from "../../utils/test-helpers.js";
-import { saveBodyToSign } from "../../utils/test-data-persistence.js";
+import { saveBodyToSign, saveInvitedUserData } from "../../utils/test-data-persistence.js";
 import {
   assertSuccessWithSchema,
   assertError,
@@ -40,8 +40,9 @@ const TEST_SUITE_FLAGS = {
 };
 
 describeUserInvitation("Byzantine User Invitation API", () => {
-  const testAccountId = TEST_DATA.accounts.testEntityAccountId;
-  const inviterUserId = TEST_DATA.accounts.entityRootUserId;
+  // Use CI entity passkey account when available (has registered passkey for signing)
+  const testAccountId = process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID || TEST_DATA.accounts.testEntityAccountId;
+  const inviterUserId = process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID || TEST_DATA.accounts.entityRootUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
@@ -55,7 +56,7 @@ describeUserInvitation("Byzantine User Invitation API", () => {
         const newUsersWithUniqueEmails = inviteUsersPasskeyRequest.newUsers.map(
           (user) => ({
             ...user,
-            userEmail: generateUniqueEmail(),
+            userEmail: generateUniqueEmail(user.userEmail),
           }),
         );
 
@@ -149,6 +150,14 @@ describeUserInvitation("Byzantine User Invitation API", () => {
           expect(invitedUser.userName).toBeDefined();
           expect(invitedUser.userEmail).toBeDefined();
         });
+
+        // Save first invited user for OTP authentication flow
+        const firstUser = response.data.newUsers[0];
+        saveInvitedUserData(
+          response.data.accountId,
+          firstUser.userId,
+          firstUser.userEmail,
+        );
       },
       getTimeout("api"),
     );

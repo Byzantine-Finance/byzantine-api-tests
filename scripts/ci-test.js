@@ -33,6 +33,7 @@
  */
 
 import { execSync } from "child_process";
+import { readFileSync, existsSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
@@ -216,6 +217,103 @@ try {
     );
   } else {
     log("Phase 2", "Skipped (passkey tests not enabled)");
+  }
+
+  // ── Phase 3: Invitation + OTP flow ───────────────────────
+  const inviteEnabled = process.env.ENABLE_INVITE_OTP_FLOW === "true";
+  if (inviteEnabled && isPasskeyEnabled && canSign) {
+    log("Phase 3", "User Invitation + OTP Authentication Flow");
+
+    // Step 1: Get invite payload
+    console.log("\n  ── Step 1: Get invite payload ──");
+    run('npx vitest run tests/api/user-invitation.test.js -t "should generate payload"', {
+      ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "true", INVITE_USERS: "false", CI: "true",
+    });
+
+    // Step 2: Sign invite payload with entity credential
+    console.log("  ── Step 2: Sign invite payload ──");
+    run("node scripts/generate-stamps-ci.js");
+
+    // Step 3: Submit invitation
+    console.log("  ── Step 3: Submit invitation ──");
+    run('npx vitest run tests/api/user-invitation.test.js -t "should invite"', {
+      ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "false", INVITE_USERS: "true", CI: "true",
+    });
+    console.log("  ✅ User invited\n");
+
+    // Step 4: Init OTP for invited user
+    console.log("  ── Step 4: Initialize OTP ──");
+    run('npx vitest run tests/api/otp-authentication.test.js -t "should initialize OTP"', {
+      ENABLE_OTP_INIT_AUTH_TESTS: "true",
+      ENABLE_OTP_AUTHENTICATE_TESTS: "false",
+      ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
+      CI: "true",
+    });
+    console.log("  ✅ OTP sent to invited user's email\n");
+
+    // Step 5 & 6: Authenticate OTP + Create authenticator (requires TEST_OTP_CODE)
+    const otpCode = process.env.TEST_OTP_CODE;
+    if (otpCode) {
+      console.log("  ── Step 5: Authenticate with OTP ──");
+      run('npx vitest run tests/api/otp-authentication.test.js -t "should authenticate"', {
+        ENABLE_OTP_INIT_AUTH_TESTS: "false",
+        ENABLE_OTP_AUTHENTICATE_TESTS: "true",
+        ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
+        TEST_OTP_CODE: otpCode,
+        CI: "true",
+      });
+      console.log("  ✅ OTP authenticated\n");
+
+      console.log("  ── Step 6: Create authenticator for invited user ──");
+      run('npx vitest run tests/api/otp-authentication.test.js -t "should create authenticators"', {
+        ENABLE_OTP_INIT_AUTH_TESTS: "false",
+        ENABLE_OTP_AUTHENTICATE_TESTS: "false",
+        ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "true",
+        CI: "true",
+      });
+      console.log("  ✅ Authenticator created for invited user\n");
+
+      // Step 7: Promote invited user to root (role management)
+      const invitedUserFile = join(rootDir, "fixtures/test-data/__generated__/generated-invited-user.json");
+      if (existsSync(invitedUserFile)) {
+        const invitedUser = JSON.parse(readFileSync(invitedUserFile, "utf-8"));
+        if (invitedUser.userId) {
+          console.log("  ── Step 7: Promote invited user to root ──");
+          console.log(`  Target user: ${invitedUser.userId}`);
+
+          // Get role update payload
+          console.log("  [payload] Getting role update payload...");
+          run('npx vitest run tests/api/role-management.test.js -t "should generate payload"', {
+            ENABLE_WRITE_TESTS: "true",
+            UPDATE_ROLE_PAYLOAD: "true",
+            UPDATE_ROLE: "false",
+            TEST_ROLE_TARGET_USER_ID: invitedUser.userId,
+            CI: "true",
+          });
+
+          // Sign with entity credential
+          console.log("  [sign] Signing role update payload...");
+          run("node scripts/generate-stamps-ci.js");
+
+          // Submit
+          console.log("  [submit] Submitting role update...");
+          run('npx vitest run tests/api/role-management.test.js -t "should update user role"', {
+            ENABLE_WRITE_TESTS: "true",
+            UPDATE_ROLE_PAYLOAD: "false",
+            UPDATE_ROLE: "true",
+            TEST_ROLE_TARGET_USER_ID: invitedUser.userId,
+            CI: "true",
+          });
+          console.log("  ✅ Invited user promoted to root");
+        }
+      }
+    } else {
+      console.log("  ⚠️  TEST_OTP_CODE not set. Steps 5-7 skipped.");
+      console.log("  📧 Check the invited user's email for the OTP code.");
+      console.log("  💡 Re-run with: TEST_OTP_CODE=<code> ENABLE_INVITE_OTP_FLOW=true npm run test:ci");
+    }
+  } else if (inviteEnabled) {
+    log("Phase 3", "Skipped (passkey signer or tests not enabled)");
   }
 
   console.log(`\n${DIVIDER}`);
