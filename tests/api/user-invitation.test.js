@@ -52,11 +52,15 @@ describeUserInvitation("Byzantine User Invitation API", () => {
     it(
       "should generate payload for multiple users and save it",
       async () => {
-        // Generate unique emails for each user to avoid conflicts
+        // Use CI_INVITE_EMAIL if set (e.g., Mailslurp disposable inbox for automated OTP),
+        // otherwise generate unique emails to avoid conflicts
+        const ciInviteEmail = process.env.CI_INVITE_EMAIL;
         const newUsersWithUniqueEmails = inviteUsersPasskeyRequest.newUsers.map(
-          (user) => ({
+          (user, index) => ({
             ...user,
-            userEmail: generateUniqueEmail(user.userEmail),
+            userEmail: (ciInviteEmail && index === 0)
+              ? ciInviteEmail
+              : generateUniqueEmail(user.userEmail),
           }),
         );
 

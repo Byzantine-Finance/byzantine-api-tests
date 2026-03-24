@@ -66,6 +66,7 @@
     "vitest": "^3.2.4"
   },
   "optionalDependencies": {
+    "mailslurp-client": "^15.20.1",
     "playwright": "^1.50.0"
   }
 }

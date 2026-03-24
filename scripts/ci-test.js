@@ -15,7 +15,8 @@
  *            activate → deposit → withdraw
  *            Each cycle: get payload → sign with PasskeySigner → submit
  *
- * OTP tests are always disabled in CI (require email-based human intervention).
+ * OTP tests in Phase 3 can be automated via Mailslurp (disposable email inboxes)
+ * or run manually with TEST_OTP_CODE. Set MAILSLURP_API_KEY for full automation.
  *
  * Usage:
  *   node scripts/ci-test.js
@@ -149,7 +150,8 @@ try {
   console.log(`  Activate ETH TX:    ${process.env.ENABLE_PASSKEY_ACTIVATE_ETH_TX_TESTS === "true"}`);
   console.log(`  Deposit TX:         ${process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true"}`);
   console.log(`  Withdraw TX:        ${process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true"}`);
-  console.log(`  OTP tests:          disabled (requires email)`);
+  console.log(`  Invite+OTP flow:    ${process.env.ENABLE_INVITE_OTP_FLOW === "true"}`);
+  console.log(`  OTP retrieval:      ${process.env.MAILSLURP_API_KEY ? "Mailslurp (auto)" : process.env.TEST_OTP_CODE ? "manual" : "disabled"}`);
 
   // ──────────────────────────────────────────────────────────
   // Phase 1: Core tests (no passkey TX submission)
@@ -224,93 +226,131 @@ try {
   if (inviteEnabled && isPasskeyEnabled && canSign) {
     log("Phase 3", "User Invitation + OTP Authentication Flow");
 
-    // Step 1: Get invite payload
-    console.log("\n  ── Step 1: Get invite payload ──");
-    run('npx vitest run tests/api/user-invitation.test.js -t "should generate payload"', {
-      ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "true", INVITE_USERS: "false", CI: "true",
-    });
+    // Determine OTP retrieval method
+    const hasMailslurp = !!process.env.MAILSLURP_API_KEY;
+    const hasManualOtp = !!process.env.TEST_OTP_CODE;
+    const otpMode = hasMailslurp ? "mailslurp" : hasManualOtp ? "manual" : "none";
+    console.log(`  OTP mode: ${otpMode}`);
 
-    // Step 2: Sign invite payload with entity credential
-    console.log("  ── Step 2: Sign invite payload ──");
-    run("node scripts/generate-stamps-ci.js");
+    // Step 0: Create Mailslurp inbox (if available)
+    let mailslurpInbox = null;
+    let inviteEmailEnv = {};
+    if (hasMailslurp) {
+      console.log("\n  ── Step 0: Create disposable email inbox ──");
+      const { MailslurpClient } = await import("../utils/mailslurp.js");
+      const mailslurp = new MailslurpClient();
+      mailslurpInbox = { client: mailslurp, ...(await mailslurp.createInbox()) };
+      inviteEmailEnv = { CI_INVITE_EMAIL: mailslurpInbox.emailAddress };
+      console.log(`  📬 Inbox ready: ${mailslurpInbox.emailAddress}\n`);
+    }
 
-    // Step 3: Submit invitation
-    console.log("  ── Step 3: Submit invitation ──");
-    run('npx vitest run tests/api/user-invitation.test.js -t "should invite"', {
-      ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "false", INVITE_USERS: "true", CI: "true",
-    });
-    console.log("  ✅ User invited\n");
-
-    // Step 4: Init OTP for invited user
-    console.log("  ── Step 4: Initialize OTP ──");
-    run('npx vitest run tests/api/otp-authentication.test.js -t "should initialize OTP"', {
-      ENABLE_OTP_INIT_AUTH_TESTS: "true",
-      ENABLE_OTP_AUTHENTICATE_TESTS: "false",
-      ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
-      CI: "true",
-    });
-    console.log("  ✅ OTP sent to invited user's email\n");
-
-    // Step 5 & 6: Authenticate OTP + Create authenticator (requires TEST_OTP_CODE)
-    const otpCode = process.env.TEST_OTP_CODE;
-    if (otpCode) {
-      console.log("  ── Step 5: Authenticate with OTP ──");
-      run('npx vitest run tests/api/otp-authentication.test.js -t "should authenticate"', {
-        ENABLE_OTP_INIT_AUTH_TESTS: "false",
-        ENABLE_OTP_AUTHENTICATE_TESTS: "true",
-        ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
-        TEST_OTP_CODE: otpCode,
-        CI: "true",
+    try {
+      // Step 1: Get invite payload
+      console.log("\n  ── Step 1: Get invite payload ──");
+      run('npx vitest run tests/api/user-invitation.test.js -t "should generate payload"', {
+        ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "true", INVITE_USERS: "false", CI: "true",
+        ...inviteEmailEnv,
       });
-      console.log("  ✅ OTP authenticated\n");
 
-      console.log("  ── Step 6: Create authenticator for invited user ──");
-      run('npx vitest run tests/api/otp-authentication.test.js -t "should create authenticators"', {
-        ENABLE_OTP_INIT_AUTH_TESTS: "false",
+      // Step 2: Sign invite payload with entity credential
+      console.log("  ── Step 2: Sign invite payload ──");
+      run("node scripts/generate-stamps-ci.js");
+
+      // Step 3: Submit invitation
+      console.log("  ── Step 3: Submit invitation ──");
+      run('npx vitest run tests/api/user-invitation.test.js -t "should invite"', {
+        ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "false", INVITE_USERS: "true", CI: "true",
+        ...inviteEmailEnv,
+      });
+      console.log("  ✅ User invited\n");
+
+      // Step 4: Init OTP for invited user
+      console.log("  ── Step 4: Initialize OTP ──");
+      run('npx vitest run tests/api/otp-authentication.test.js -t "should initialize OTP"', {
+        ENABLE_OTP_INIT_AUTH_TESTS: "true",
         ENABLE_OTP_AUTHENTICATE_TESTS: "false",
-        ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "true",
+        ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
         CI: "true",
       });
-      console.log("  ✅ Authenticator created for invited user\n");
+      console.log("  ✅ OTP sent to invited user's email\n");
 
-      // Step 7: Promote invited user to root (role management)
-      const invitedUserFile = join(rootDir, "fixtures/test-data/__generated__/generated-invited-user.json");
-      if (existsSync(invitedUserFile)) {
-        const invitedUser = JSON.parse(readFileSync(invitedUserFile, "utf-8"));
-        if (invitedUser.userId) {
-          console.log("  ── Step 7: Promote invited user to root ──");
-          console.log(`  Target user: ${invitedUser.userId}`);
+      // Step 5: Get OTP code (Mailslurp auto-retrieval or manual)
+      let otpCode = process.env.TEST_OTP_CODE;
 
-          // Get role update payload
-          console.log("  [payload] Getting role update payload...");
-          run('npx vitest run tests/api/role-management.test.js -t "should generate payload"', {
-            ENABLE_WRITE_TESTS: "true",
-            UPDATE_ROLE_PAYLOAD: "true",
-            UPDATE_ROLE: "false",
-            TEST_ROLE_TARGET_USER_ID: invitedUser.userId,
-            CI: "true",
-          });
-
-          // Sign with entity credential
-          console.log("  [sign] Signing role update payload...");
-          run("node scripts/generate-stamps-ci.js");
-
-          // Submit
-          console.log("  [submit] Submitting role update...");
-          run('npx vitest run tests/api/role-management.test.js -t "should update user role"', {
-            ENABLE_WRITE_TESTS: "true",
-            UPDATE_ROLE_PAYLOAD: "false",
-            UPDATE_ROLE: "true",
-            TEST_ROLE_TARGET_USER_ID: invitedUser.userId,
-            CI: "true",
-          });
-          console.log("  ✅ Invited user promoted to root");
-        }
+      if (hasMailslurp) {
+        console.log("  ── Step 5a: Retrieve OTP code from Mailslurp ──");
+        otpCode = await mailslurpInbox.client.waitForOtpCode(mailslurpInbox.inboxId);
+        console.log(`  🔑 OTP code retrieved: ${otpCode}\n`);
       }
-    } else {
-      console.log("  ⚠️  TEST_OTP_CODE not set. Steps 5-7 skipped.");
-      console.log("  📧 Check the invited user's email for the OTP code.");
-      console.log("  💡 Re-run with: TEST_OTP_CODE=<code> ENABLE_INVITE_OTP_FLOW=true npm run test:ci");
+
+      if (otpCode) {
+        // Step 5b: Authenticate with OTP
+        console.log("  ── Step 5b: Authenticate with OTP ──");
+        run('npx vitest run tests/api/otp-authentication.test.js -t "should authenticate"', {
+          ENABLE_OTP_INIT_AUTH_TESTS: "false",
+          ENABLE_OTP_AUTHENTICATE_TESTS: "true",
+          ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
+          TEST_OTP_CODE: otpCode,
+          CI: "true",
+        });
+        console.log("  ✅ OTP authenticated\n");
+
+        // Step 6: Create authenticator for invited user
+        console.log("  ── Step 6: Create authenticator for invited user ──");
+        run('npx vitest run tests/api/otp-authentication.test.js -t "should create authenticators"', {
+          ENABLE_OTP_INIT_AUTH_TESTS: "false",
+          ENABLE_OTP_AUTHENTICATE_TESTS: "false",
+          ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "true",
+          CI: "true",
+        });
+        console.log("  ✅ Authenticator created for invited user\n");
+
+        // Step 7: Promote invited user to root (role management)
+        const invitedUserFile = join(rootDir, "fixtures/test-data/__generated__/generated-invited-user.json");
+        if (existsSync(invitedUserFile)) {
+          const invitedUser = JSON.parse(readFileSync(invitedUserFile, "utf-8"));
+          if (invitedUser.userId) {
+            console.log("  ── Step 7: Promote invited user to root ──");
+            console.log(`  Target user: ${invitedUser.userId}`);
+
+            // Get role update payload
+            console.log("  [payload] Getting role update payload...");
+            run('npx vitest run tests/api/role-management.test.js -t "should generate payload"', {
+              ENABLE_WRITE_TESTS: "true",
+              UPDATE_ROLE_PAYLOAD: "true",
+              UPDATE_ROLE: "false",
+              TEST_ROLE_TARGET_USER_ID: invitedUser.userId,
+              CI: "true",
+            });
+
+            // Sign with entity credential
+            console.log("  [sign] Signing role update payload...");
+            run("node scripts/generate-stamps-ci.js");
+
+            // Submit
+            console.log("  [submit] Submitting role update...");
+            run('npx vitest run tests/api/role-management.test.js -t "should update user role"', {
+              ENABLE_WRITE_TESTS: "true",
+              UPDATE_ROLE_PAYLOAD: "false",
+              UPDATE_ROLE: "true",
+              TEST_ROLE_TARGET_USER_ID: invitedUser.userId,
+              CI: "true",
+            });
+            console.log("  ✅ Invited user promoted to root");
+          }
+        }
+      } else {
+        console.log("  ⚠️  No OTP code available. Steps 5b-7 skipped.");
+        console.log("  📧 Check the invited user's email for the OTP code.");
+        console.log("  💡 Options to automate:");
+        console.log("     - Set MAILSLURP_API_KEY for automatic OTP retrieval");
+        console.log("     - Set TEST_OTP_CODE=<code> for manual OTP entry");
+      }
+    } finally {
+      // Clean up Mailslurp inbox
+      if (mailslurpInbox) {
+        await mailslurpInbox.client.deleteInbox(mailslurpInbox.inboxId);
+      }
     }
   } else if (inviteEnabled) {
     log("Phase 3", "Skipped (passkey signer or tests not enabled)");
