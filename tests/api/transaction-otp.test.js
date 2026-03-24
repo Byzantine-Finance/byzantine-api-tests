@@ -16,7 +16,14 @@ import {
   assertError,
   assertSchema,
 } from "../../utils/api-assertions.js";
-import { txRequest } from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
+import { existsSync, readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// Load generated passkey data if it exists (avoid crash when file is missing and OTP tests are disabled)
+const __otpDir = dirname(fileURLToPath(import.meta.url));
+const __otpFile = join(__otpDir, "../../fixtures/test-data/__generated__/generated-tx-passkey.json");
+const txRequest = existsSync(__otpFile) ? JSON.parse(readFileSync(__otpFile, "utf-8")) : { deposit: {}, withdraw: {} };
 
 // Skip if OTP and Passkey tests are disabled
 const describeTransactionOtp = FEATURE_FLAGS.enableOtpTests

@@ -43,7 +43,11 @@
     "validate-schemas": "node scripts/validate-schemas.js",
     "sync-schemas": "npm run generate-schemas && npm run validate-schemas",
     "serve": "node scripts/serve.js",
-    "test:generate-stamps": "node scripts/generate-webauthn-stamps.js"
+    "test:generate-stamps": "node scripts/generate-webauthn-stamps.js",
+    "test:generate-stamps:ci": "node scripts/generate-stamps-ci.js",
+    "ci:one-time-setup": "node scripts/ci-one-time-setup.js",
+    "test:ci": "node scripts/ci-test.js",
+    "test:ci:readonly": "CI=true npx vitest run tests/api/health.test.js tests/api/vault-data.test.js"
   },
   "keywords": [],
   "author": "",

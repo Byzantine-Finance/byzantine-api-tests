@@ -1,13 +1,18 @@
 {
   "accounts": {
-    "testUserId": "e60aee39-e3ce-4bcb-9629-2e716992ee02",
-    "testAccountId": "8e0c6d73-7d43-48cb-bc93-dd173b2c290f",
-    "testEntityId": "8e4c63c7-0039-4a2a-9216-00bb1a87be26",
-    "testEntityAccountId": "ee3fecd6-d8b2-48d6-9636-384ed640412c",
+    "testUserId": "33cca032-0efe-40ea-8108-7c99e7728435",
+    "testAccountId": "35ca9fc8-fdea-4642-b9c6-fb8de68cfceb",
+    "testUserEmail": "lin+apitests-1774347570@byzantine.fi",
+    "testEntityId": "93a9bc30-9709-4780-9234-823586af8902",
+    "testEntityAccountId": "e724d8e2-3bd4-4110-8301-d6c68fbd5aaf",
+    "testEntityAPersonCEmail": "lin+for-entity+apitests-1774347573@byzantine.fi",
     "testUsBankAccountId": null,
-    "testEurBankAccountId": null,
-    "entityRootUserId": "d783b247-8f8f-4b93-b9f7-a37048f80f79"
+    "testEurBankAccountId": "86df2304-e206-4026-ba13-7a7d8f81362e",
+    "entityRootUserId": "952a58c6-ad52-4336-b783-0c9237d96525",
+    "ciPasskeyUserId": "689ed2a2-e1e4-4bc7-ad8a-2f133135c042",
+    "ciPasskeyAccountId": "6b446036-1568-4878-8e89-f08e96c8ec70",
+    "ciPasskeyEmail": "lin+ci-passkey-1774275120@byzantine.fi"
   },
-  "lastUpdated": "2026-03-05T14:05:27.311Z",
+  "lastUpdated": "2026-03-24T10:19:35.762Z",
   "lastUpdatedBy": "account-creation.test.js"
 }

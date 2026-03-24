@@ -39,32 +39,39 @@ const describeInitWithdrawPasskey = FEATURE_FLAGS.enablePasskeyInitWithdrawTests
   : describe.skip;
 
 describeInitPasskey("Initiate Passkey transactions API", () => {
-  const testAccountId = TEST_DATA.accounts.testAccountId;
+  // Use a KYC/KYB-approved account for passkey operations
+  // Set TEST_PASSKEY_TARGET_ACCOUNT_ID in .env to a verified account
+  const testActivateAccountId = TEST_DATA.accounts.initActivateTargetAccountId;
+  const testDepositAccountId = TEST_DATA.accounts.initDepositTargetAccountId;
+  const testWithdrawAccountId = TEST_DATA.accounts.initWithdrawTargetAccountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
   const depositAmount = passkeyData.depositAmount;
   const sourceCurrency = passkeyData.sourceCurrency;
-  // Get bank account ID from generated-accounts based on destination currency
+  // Get bank account ID — only needed for fiat off-ramp (usd/eur), not crypto (usdc/eurc)
   const destinationCurrency = passkeyData.destinationCurrency;
-  const bankAccountId = destinationCurrency === "eur" || destinationCurrency === "eurc"
-    ? TEST_DATA.accounts.testEurBankAccountId
-    : TEST_DATA.accounts.testUsBankAccountId;
+  const isCryptoWithdrawal = ["usdc", "eurc"].includes(destinationCurrency);
+  const bankAccountId = isCryptoWithdrawal
+    ? null
+    : destinationCurrency === "eur"
+      ? TEST_DATA.accounts.testEurBankAccountId
+      : TEST_DATA.accounts.testUsBankAccountId;
 
-  // Activate account using Passkey
+  // Activate account using Passkey on both chains
   describeInitActivatePasskey(
     "POST /v1/query/get-activate-account-payload-passkey",
     () => {
       it(
-        "should get activate account payload to sign",
+        "should get activate account payload to sign (Base, chain 8453)",
         async () => {
           const requestBody = {
-            accountId: testAccountId,
+            accountId: testActivateAccountId,
           };
 
           assertSchema(requestBody, "ActivateAccountRequestBody");
 
           const response = await apiClient.post(
-            endpoints.passkey.getActivateAccountPayloadPasskey(chainId),
+            endpoints.passkey.getActivateAccountPayloadPasskey(8453),
             requestBody,
             { authenticated: true }
           );
@@ -72,7 +79,6 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
           assertHasFields(response.data, ["bodyToSign", "transactionId"]);
 
-          // Save activateAccount bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "activateAccount",
             response.data.bodyToSign,
@@ -83,19 +89,28 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
       );
 
       it(
-        "should reject invalid chain ID",
+        "should get activate account payload to sign (Ethereum, chain 1)",
         async () => {
           const requestBody = {
-            accountId: testAccountId,
+            accountId: testActivateAccountId,
           };
 
+          assertSchema(requestBody, "ActivateAccountRequestBody");
+
           const response = await apiClient.post(
-            endpoints.passkey.getActivateAccountPayloadPasskey(99999), // Invalid chain ID
+            endpoints.passkey.getActivateAccountPayloadPasskey(1),
             requestBody,
             { authenticated: true }
           );
 
-          assertError(response, 400);
+          assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
+          assertHasFields(response.data, ["bodyToSign", "transactionId"]);
+
+          saveBodyToSign(
+            "activateAccountEth",
+            response.data.bodyToSign,
+            response.data.transactionId
+          );
         },
         getTimeout("api")
       );
@@ -109,7 +124,7 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
         "should get deposit payload to sign",
         async () => {
           const requestBody = {
-            accountId: testAccountId,
+            accountId: testDepositAccountId,
             vaultAddr: testVaultAddr,
             amount: depositAmount,
             sourceCurrency: sourceCurrency,
@@ -145,11 +160,12 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
         "should get withdraw payload to sign",
         async () => {
           const requestBody = {
-            accountId: testAccountId,
+            accountId: testWithdrawAccountId,
             vaultAddr: testVaultAddr,
             amount: passkeyData.withdrawAmount,
             destinationCurrency: destinationCurrency,
-            bankAccountId: bankAccountId,
+            // bankAccountId only needed for fiat off-ramp (eur/usd), not for crypto (usdc)
+            ...(bankAccountId && { bankAccountId }),
           };
 
           assertSchema(requestBody, "WithdrawRequestBody");

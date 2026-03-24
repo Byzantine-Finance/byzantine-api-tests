@@ -276,6 +276,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
     "deposit",
     "withdraw",
     "activateAccount",
+    "activateAccountEth",
     "inviteUsers",
     "promoteUser",
   ];

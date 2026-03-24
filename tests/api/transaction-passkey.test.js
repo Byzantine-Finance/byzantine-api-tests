@@ -35,6 +35,13 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       flag: "enablePasskeyActivateTxTests",
     },
     {
+      type: "ActivateAccountETH",
+      bodyToSign: txRequest.activateAccountEth.bodyToSign,
+      transactionId: txRequest.activateAccountEth.transactionId,
+      webAuthnStamp: txRequest.activateAccountEth.webAuthnStamp,
+      flag: "enablePasskeyActivateETHTxTests",
+    },
+    {
       type: "Deposit",
       bodyToSign: txRequest.deposit.bodyToSign,
       transactionId: txRequest.deposit.transactionId,
@@ -68,6 +75,13 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
   });
 
   describe("POST /v1/submit/sign-payload-passkey", () => {
+    // Ensure vitest doesn't error on "no tests found" when all TX flags are disabled
+    if (transactionTests.length === 0) {
+      it("should have passkey TX tests enabled to run", () => {
+        console.log("No passkey TX tests enabled. Enable ENABLE_PASSKEY_*_TX_TESTS flags to run.");
+      });
+    }
+
     it.each(transactionTests)(
       "should sign $type payload with Passkey",
       async ({ bodyToSign, transactionId, webAuthnStamp }) => {

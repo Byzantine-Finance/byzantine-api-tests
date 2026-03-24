@@ -115,6 +115,8 @@ export const FEATURE_FLAGS = {
     process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
   enablePasskeyActivateTxTests:
     process.env.ENABLE_PASSKEY_ACTIVATE_TX_TESTS === "true",
+  enablePasskeyActivateETHTxTests:
+    process.env.ENABLE_PASSKEY_ACTIVATE_ETH_TX_TESTS === "true",
   enablePasskeyDepositTxTests:
     process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true",
   enablePasskeyWithdrawTxTests:
@@ -197,6 +199,12 @@ export const TEST_DATA = {
     entityRootUserId: resolveId("TEST_ENTITY_ROOT_USER_ID", generatedTestData.accounts.entityRootUserId),
     testUsBankAccountId: resolveId("TEST_US_BANK_ACCOUNT_ID", generatedTestData.accounts.testUsBankAccountId),
     testEurBankAccountId: resolveId("TEST_EUR_BANK_ACCOUNT_ID", generatedTestData.accounts.testEurBankAccountId),
+    // KYC/KYB-approved account for bank account operations (add-bank-account requires approved status)
+    bankAccountTargetId: process.env.TEST_BANK_ACCOUNT_TARGET_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
+    // KYC/KYB-approved account for passkey operations (init-passkey requires approved status)
+    initActivateTargetAccountId: process.env.TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
+    initDepositTargetAccountId: process.env.TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
+    initWithdrawTargetAccountId: process.env.TEST_INIT_WITHDRAW_TARGET_ACCOUNT_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
   },
 
   users: {

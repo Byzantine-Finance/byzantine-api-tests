@@ -22,8 +22,15 @@ import {
   assertSchema,
 } from "../../utils/api-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
-import txRequest from "../../fixtures/test-data/__generated__/generated-tx-otp.json";
+import { existsSync, readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
+
+// Load generated OTP data if it exists (avoid crash when file is missing and OTP tests are disabled)
+const __otpDir = dirname(fileURLToPath(import.meta.url));
+const __otpFile = join(__otpDir, "../../fixtures/test-data/__generated__/generated-tx-otp.json");
+const txRequest = existsSync(__otpFile) ? JSON.parse(readFileSync(__otpFile, "utf-8")) : {};
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
