@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-20T11:40:15.307Z\nSpec SHA-256: f756cffd249828990571fb076e01540111665debec345fe182ad7566c2449d15",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-25T13:16:38.797Z\nSpec SHA-256: a06c24d0371fc2f27da58548c681cf075ec81bbbd868d7538fae90fdf34968ab",
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -1353,6 +1353,7 @@
       "power_of_attorney",
       "proof_of_address",
       "shareholder_registry",
+      "source_of_funds",
       "state_registry",
       "trust_agreement",
       "other"
@@ -3717,6 +3718,239 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "UpdateEntityAccountRequest": {
+    "type": "object",
+    "description": "Request body for updating an entity account's company details.\nOnly the provided fields will be updated. To add or update entity's associated persons, see the dedicated associated-persons endpoints.",
+    "required": [
+      "accountId"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "entityInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateEntityInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/EntityVerificationDocument"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateEntityAccountResponse": {
+    "type": "object",
+    "description": "Response body for updating an entity account",
+    "required": [
+      "entityId",
+      "accountId",
+      "verificationStatus"
+    ],
+    "properties": {
+      "entityId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "entityInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateEntityInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "entityDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
+      },
+      "missingDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required entity verification documents. Present only if not all required documents have been submitted."
+      },
+      "missingCompanyData": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required company data. Present only if not all required company information has been provided."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateEntityInfo": {
+    "type": "object",
+    "description": "Entity information for update. All fields are optional — only provided fields are updated.",
+    "properties": {
+      "businessLegalName": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The legal name of the business."
+      },
+      "businessTradeName": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The trade name of the business. Can be the same as the entity name."
+      },
+      "businessType": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BusinessType"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "companyNumber": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The registered business number. Depending on the country of registration, we accept these [entity number types](https://docs.byzantine.fi/api-reference/lists/company-number-types)."
+      },
+      "email": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Business contact email."
+      },
+      "website": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Business website."
+      },
+      "logoUrl": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "URL of the entity's logo."
+      },
+      "registeredAddress": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "physicalAddress": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "activityInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "financialInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FinancialInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "highRiskInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighRiskInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "UpdateIndividualAccountRequest": {
     "type": "object",
     "description": "Request body for updating an individual account's user details.\nOnly the provided fields will be updated. Mirrors `CreateIndividualAccountRequest` structure.",
@@ -4459,8 +4693,8 @@
       "not_started",
       "init",
       "under_review",
-      "waiting_for_associated_person_informations",
-      "waiting_for_informations",
+      "awaiting_associated_person_information",
+      "awaiting_information",
       "resubmission_requested",
       "active",
       "rejected",

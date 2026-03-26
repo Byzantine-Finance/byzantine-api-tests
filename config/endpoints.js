@@ -211,6 +211,12 @@ export const endpoints = {
     updateIndividualAccount: "/v1/submit/update-individual-account",
 
     /**
+     * Update an entity account's company details
+     * Only provided fields will be updated
+     */
+    updateEntityAccount: "/v1/submit/update-entity-account",
+
+    /**
      * Add bank account for withdrawals
      */
     addBankAccount: "/v1/submit/add-bank-account",
