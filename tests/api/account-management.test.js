@@ -71,9 +71,23 @@ describeManagement("Account Management API", () => {
       "addEurBankAccount",
       "should add EUR IBAN bank account",
       async () => {
+        // Generate unique valid IBAN to avoid duplicate_external_account error
+        // DE IBAN = DE + 2 check digits + 8 bank code + 10 account number (22 chars total)
+        const bankCode = "37040044";
+        const uniqueAccount = String(Date.now()).slice(-10);
+        // Calculate IBAN check digits: move "DE00" to end, convert letters to numbers (D=13,E=14), mod 97
+        const numericStr = bankCode + uniqueAccount + "131400";
+        const remainder = BigInt(numericStr) % 97n;
+        const checkDigits = String(98n - remainder).padStart(2, "0");
+        const uniqueIban = `DE${checkDigits}${bankCode}${uniqueAccount}`;
+
         const requestBody = {
           ...eurIbanAccount,
           accountId: testAccountId,
+          ibanBankAccountDetails: {
+            ...eurIbanAccount.ibanBankAccountDetails,
+            accountNumber: uniqueIban,
+          },
         };
 
         assertSchema(requestBody, "AddBankAccountRequest");

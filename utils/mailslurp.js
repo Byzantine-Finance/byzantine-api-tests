@@ -41,21 +41,40 @@ export class MailslurpClient {
   }
 
   /**
-   * Wait for an email to arrive and extract the OTP code from it
+   * Wait until at least `count` emails have arrived, then return the count.
+   * Use this to ensure earlier emails (e.g. invitation) have landed before
+   * snapshotting the count for waitForOtpCode's emailIndex.
+   * @param {string} inboxId - The inbox ID to check
+   * @param {number} count - Minimum number of emails to wait for
+   * @param {number} timeoutMs - How long to wait
+   * @returns {number} The number of emails in the inbox (>= count)
+   */
+  async waitForEmailCount(inboxId, count, timeoutMs = DEFAULT_TIMEOUT_MS) {
+    const emails = await this.client.waitForEmailCount(count, inboxId, timeoutMs, true);
+    return emails.length;
+  }
+
+  /**
+   * Wait for an email to arrive and extract the OTP code from it.
+   * Uses emailIndex to skip earlier emails (e.g. invitation emails) and
+   * only read the OTP email.
    * @param {string} inboxId - The inbox ID to watch
    * @param {number} timeoutMs - How long to wait for the email
+   * @param {number} emailIndex - Zero-based index of the email to read (use getEmailCount() before triggering OTP to get this)
    * @returns {string} The extracted OTP code
    */
-  async waitForOtpCode(inboxId, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  async waitForOtpCode(inboxId, timeoutMs = DEFAULT_TIMEOUT_MS, emailIndex = undefined) {
     console.log(
       `⏳ Waiting for OTP email (timeout: ${timeoutMs / 1000}s)...`,
     );
 
-    const email = await this.client.waitForLatestEmail(
-      inboxId,
-      timeoutMs,
-      true,
-    );
+    let email;
+    if (emailIndex !== undefined) {
+      console.log(`  📨 Waiting for email at index ${emailIndex} (skipping earlier emails)...`);
+      email = await this.client.waitForNthEmail(inboxId, emailIndex, timeoutMs, true);
+    } else {
+      email = await this.client.waitForLatestEmail(inboxId, timeoutMs, true);
+    }
 
     if (!email.body) {
       throw new Error("Received email but body is empty");

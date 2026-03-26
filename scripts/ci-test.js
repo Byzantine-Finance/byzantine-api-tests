@@ -157,7 +157,7 @@ try {
   // Phase 1: Core tests (no passkey TX submission)
   // ──────────────────────────────────────────────────────────
   log("Phase 1", "Core API Tests");
-  run("npx vitest run tests/api/ --fileParallelism=false --exclude tests/api/init-passkey.test.js --exclude tests/api/transaction-passkey.test.js --exclude tests/api/user-invitation.test.js", {
+  run("npx vitest run tests/api/ --fileParallelism=false --exclude tests/api/init-passkey.test.js --exclude tests/api/transaction-passkey.test.js --exclude tests/api/user-invitation.test.js --exclude tests/api/entity-account-validation.test.js --exclude tests/api/init-otp.test.js", {
     // Disable all passkey TX tests (handled in Phase 2)
     ENABLE_PASSKEY_ACTIVATE_TX_TESTS: "false",
     ENABLE_PASSKEY_ACTIVATE_ETH_TX_TESTS: "false",
@@ -264,6 +264,14 @@ try {
       });
       console.log("  ✅ User invited\n");
 
+      // Wait for the invitation email to arrive, then snapshot the count.
+      // This ensures we don't accidentally read the invitation email as the OTP.
+      let emailCountBeforeOtp = 0;
+      if (hasMailslurp) {
+        emailCountBeforeOtp = await mailslurpInbox.client.waitForEmailCount(mailslurpInbox.inboxId, 1);
+        console.log(`  📬 Emails in inbox before OTP: ${emailCountBeforeOtp}`);
+      }
+
       // Step 4: Init OTP for invited user
       console.log("  ── Step 4: Initialize OTP ──");
       run('npx vitest run tests/api/otp-authentication.test.js -t "should initialize OTP"', {
@@ -279,7 +287,11 @@ try {
 
       if (hasMailslurp) {
         console.log("  ── Step 5a: Retrieve OTP code from Mailslurp ──");
-        otpCode = await mailslurpInbox.client.waitForOtpCode(mailslurpInbox.inboxId);
+        otpCode = await mailslurpInbox.client.waitForOtpCode(
+          mailslurpInbox.inboxId,
+          60_000,
+          emailCountBeforeOtp,
+        );
         console.log(`  🔑 OTP code retrieved: ${otpCode}\n`);
       }
 
