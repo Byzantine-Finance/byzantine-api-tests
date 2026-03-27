@@ -33,6 +33,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       transactionId: txRequest.activateAccount.transactionId,
       webAuthnStamp: txRequest.activateAccount.webAuthnStamp,
       flag: "enablePasskeyActivateTxTests",
+      chainId: 8453,
     },
     {
       type: "ActivateAccountETH",
@@ -40,6 +41,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       transactionId: txRequest.activateAccountEth.transactionId,
       webAuthnStamp: txRequest.activateAccountEth.webAuthnStamp,
       flag: "enablePasskeyActivateETHTxTests",
+      chainId: 1,
     },
     {
       type: "Deposit",
@@ -47,6 +49,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       transactionId: txRequest.deposit.transactionId,
       webAuthnStamp: txRequest.deposit.webAuthnStamp,
       flag: "enablePasskeyDepositTxTests",
+      chainId,
     },
     {
       type: "Withdrawal",
@@ -54,6 +57,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       transactionId: txRequest.withdraw.transactionId,
       webAuthnStamp: txRequest.withdraw.webAuthnStamp,
       flag: "enablePasskeyWithdrawTxTests",
+      chainId,
     },
   ];
 
@@ -84,7 +88,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
 
     it.each(transactionTests)(
       "should sign $type payload with Passkey",
-      async ({ bodyToSign, transactionId, webAuthnStamp }) => {
+      async ({ bodyToSign, transactionId, webAuthnStamp, chainId: txChainId }) => {
         const requestBody = {
           signedBody: bodyToSign,
           transactionId: transactionId,
@@ -94,7 +98,7 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
         assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
 
         const response = await apiClient.post(
-          endpoints.passkey.signPayloadPasskey(chainId),
+          endpoints.passkey.signPayloadPasskey(txChainId),
           requestBody,
           { 
             authenticated: true,

@@ -29,7 +29,7 @@ const rootDir = dirname(__dirname);
 const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "3000", 10);
 const RP_ID = process.env.VIRTUAL_AUTH_RPID || "localhost";
 const VALID_USER_FILE = join(rootDir, "fixtures/test-data/users/valid-user.json");
-const VALID_ENTITY_FILE = join(rootDir, "fixtures/test-data/entities/valid-entity.json");
+const VALID_ENTITY_FILE = join(rootDir, process.env.CI_SETUP_ENTITY_FIXTURE || "fixtures/test-data/entities/valid-entity.json");
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -68,8 +68,10 @@ async function apiCall(method, path, body = null) {
     headers: { "Content-Type": "application/json", ...authHeaders },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const data = await response.json().catch(() => null);
-  return { status: response.status, ok: response.ok, data };
+  const text = await response.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = null; }
+  return { status: response.status, ok: response.ok, data, rawText: data ? undefined : text };
 }
 
 function uniqueEmail(base) {
@@ -192,7 +194,7 @@ async function main() {
 
       const cred = await createCredentialAndExtractKey(auth, actualPort, "individual");
       const validUser = JSON.parse(readFileSync(VALID_USER_FILE, "utf-8"));
-      const email = uniqueEmail(validUser.userInfo.email || "ci@byzantine.fi");
+      const email = process.env.CI_SETUP_INDIVIDUAL_EMAIL || uniqueEmail(validUser.userInfo.email || "ci@byzantine.fi");
 
       const resp = await apiCall("POST", "/v1/submit/create-individual-account", {
         ...validUser,
@@ -227,8 +229,8 @@ async function main() {
 
       const cred = await createCredentialAndExtractKey(auth, actualPort, "entity");
       const validEntity = JSON.parse(readFileSync(VALID_ENTITY_FILE, "utf-8"));
-      const entityEmail = uniqueEmail(validEntity.entityInfo.email || "ci-entity@byzantine.fi");
-      const rootUserEmail = uniqueEmail(validEntity.rootUsers[0]?.email || "ci-root@byzantine.fi");
+      const entityEmail = process.env.CI_SETUP_ENTITY_EMAIL || uniqueEmail(validEntity.entityInfo.email || "ci-entity@byzantine.fi");
+      const rootUserEmail = process.env.CI_SETUP_ENTITY_ROOT_EMAIL || uniqueEmail(validEntity.rootUsers[0]?.email || "ci-root@byzantine.fi");
 
       const resp = await apiCall("POST", "/v1/submit/create-entity-account", {
         ...validEntity,
@@ -246,7 +248,9 @@ async function main() {
       });
 
       if (!resp.ok) {
-        console.error("  ❌ Entity account creation failed:", JSON.stringify(resp.data));
+        console.error(`  ❌ Entity account creation failed (HTTP ${resp.status}):`, JSON.stringify(resp.data));
+        const rawText = resp.rawText || "";
+        if (rawText) console.error("  Raw response:", rawText);
         process.exit(1);
       }
 
