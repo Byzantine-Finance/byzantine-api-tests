@@ -58,7 +58,7 @@ describeInitPasskey(
     // Activate account using Passkey
     describeInitActivatePasskey("getActivateAccountPayloadPasskey()", () => {
       it(
-        "should get activate account payload to sign",
+        "should get activate account payload to sign (Base, chain 8453)",
         async () => {
           const requestBody = {
             accountId: testAccountId,
@@ -67,7 +67,7 @@ describeInitPasskey(
           assertSchema(requestBody, "ActivateAccountRequestBody");
 
           const sdkResponse = await client.api.getActivateAccountPayloadPasskey(
-            chainId,
+            8453,
             requestBody,
             DUMMY_AUTH,
           );
@@ -79,6 +79,35 @@ describeInitPasskey(
           // Save activateAccount bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "activateAccount",
+            sdkResponse.data.bodyToSign,
+            sdkResponse.data.transactionId,
+          );
+        },
+        getTimeout("api"),
+      );
+
+      it(
+        "should get activate account payload to sign (Ethereum, chain 1)",
+        async () => {
+          const requestBody = {
+            accountId: testAccountId,
+          };
+
+          assertSchema(requestBody, "ActivateAccountRequestBody");
+
+          const sdkResponse = await client.api.getActivateAccountPayloadPasskey(
+            1,
+            requestBody,
+            DUMMY_AUTH,
+          );
+
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(sdkResponse, "PasskeyPayloadRequestResponse");
+          assertDataHasFields(sdkResponse, ["bodyToSign", "transactionId"]);
+
+          // Save activateAccountEth bodyToSign and transactionId to generated-tx-passkey.json
+          saveBodyToSign(
+            "activateAccountEth",
             sdkResponse.data.bodyToSign,
             sdkResponse.data.transactionId,
           );

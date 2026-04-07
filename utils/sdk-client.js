@@ -70,7 +70,10 @@ function setupAutoAuth(client) {
         "/v1/submit/create-individual-account",
         "/v1/submit/update-individual-account",
         "/v1/submit/create-entity-account",
+        "/v1/submit/update-entity-account",
         "/v1/submit/add-bank-account",
+        "/v1/submit/add-associated-person",
+        "/v1/submit/update-associated-person",
         // Passkey transactions
         "/v1/query/get-activate-account-payload-passkey",
         "/v1/query/get-deposit-payload-passkey",

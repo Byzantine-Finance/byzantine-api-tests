@@ -1,13 +1,14 @@
 /**
- * Update Individual Account SDK Tests, what are tested:
+ * Update Account SDK Tests, what are tested:
  * - updateIndividualAccount
+ * - updateEntityAccount
  *
  * Note: These tests use authenticated endpoints and modify data.
  * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
 
-import { describe, it, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
@@ -24,6 +25,7 @@ import {
 
 // Import test data from fixtures
 import updateUserData from "../../fixtures/test-data/users/update-user.json" assert { type: "json" };
+import updateEntityWithDocsData from "../../fixtures/test-data/entities/update-entity.json" assert { type: "json" };
 
 // Skip if auth/write tests are disabled
 const describeUpdateAccount = FEATURE_FLAGS.enableWriteTests
@@ -66,6 +68,47 @@ describeUpdateAccount(
           assertDataUuid(sdkResponse, "userId");
           assertDataUuid(sdkResponse, "accountId");
           assertDataHasFields(sdkResponse, ["verificationStatus"]);
+        },
+        getTimeout("api"),
+      );
+    });
+  },
+);
+
+describeUpdateAccount(
+  "Update Entity Account SDK - Using Integrator SDK",
+  () => {
+    const client = getSdkClient();
+    const testEntityAccountId = TEST_DATA.accounts.testEntityAccountId;
+
+    describe("updateEntityAccount()", () => {
+      it(
+        "should update entity account with entity info and documents",
+        async () => {
+          const requestBody = {
+            ...updateEntityWithDocsData,
+            accountId: testEntityAccountId,
+          };
+
+          assertSchema(requestBody, "UpdateEntityAccountRequest");
+
+          const sdkResponse = await client.api.updateEntityAccount(
+            requestBody,
+            DUMMY_AUTH,
+          );
+
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(
+            sdkResponse,
+            "UpdateEntityAccountResponse",
+          );
+          assertDataUuid(sdkResponse, "entityId");
+          assertDataUuid(sdkResponse, "accountId");
+          assertDataHasFields(sdkResponse, ["verificationStatus"]);
+
+          if (sdkResponse.data.entityDocuments) {
+            expect(Array.isArray(sdkResponse.data.entityDocuments)).toBe(true);
+          }
         },
         getTimeout("api"),
       );
