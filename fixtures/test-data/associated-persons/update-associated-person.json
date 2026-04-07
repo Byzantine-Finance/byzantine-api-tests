@@ -1,0 +1,12 @@
+{
+  "associatedPerson": {
+    "userInfo": {
+      "firstName": "Alice",
+      "lastName": "Dupont",
+      "birthDate": "1985-06-01"
+    },
+    "beneficiaryDetails": {
+      "ownershipPercentage": 35
+    }
+  }
+}

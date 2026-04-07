@@ -143,6 +143,10 @@ export const FEATURE_FLAGS = {
   // Transaction data tests
   enableTransactionDataTests: process.env.ENABLE_TRANSACTION_DATA_TESTS !== "false", // Enabled by default
 
+  // Associated persons tests
+  addAssociatedPerson: process.env.ADD_ASSOCIATED_PERSON !== "false", // Enabled by default
+  updateAssociatedPerson: process.env.UPDATE_ASSOCIATED_PERSON !== "false", // Enabled by default
+
   // Bank account tests
   addUsBankAccount: process.env.ADD_US_BANK_ACCOUNT !== "false", // Enabled by default
   addEurBankAccount: process.env.ADD_EUR_BANK_ACCOUNT !== "false", // Enabled by default

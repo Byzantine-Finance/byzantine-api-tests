@@ -12,6 +12,9 @@ import { describe, it, beforeAll } from "vitest";
 import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import { generateUniqueEmail } from "../../utils/test-helpers.js";
+
+const useFixtureEmail = process.env.USE_FIXTURE_EMAIL === "true";
+const emailFor = (email) => useFixtureEmail ? email : emailFor(email);
 import {
   assertSuccessWithSchema,
   assertDataUuid,
@@ -49,7 +52,7 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
       "should create user with valid data and return typed response",
       async () => {
         // Create a unique email for this test
-        const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
+        const uniqueEmail = emailFor(validUser.userInfo.email);
         const userWithUniqueEmail = {
           ...validUser,
           userInfo: {
@@ -80,7 +83,7 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
       "should create entity account with valid data and return typed response",
       async () => {
         // Use emails directly from the fixture
-        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
+        const uniqueEmail = emailFor(validEntity.entityInfo.email);
         const entityWithUniqueEmails = {
           ...validEntity,
           entityInfo: {
@@ -89,13 +92,13 @@ describeAccountCreation("Byzantine Account Creation SDK", () => {
           },
           rootUsers: validEntity.rootUsers.map((rootUser) => ({
             ...rootUser,
-            email: generateUniqueEmail(rootUser.email),
+            email: emailFor(rootUser.email),
           })),
           associatedPersons: validEntity.associatedPersons?.map((person) => ({
             ...person,
             userInfo: {
               ...person.userInfo,
-              email: generateUniqueEmail(person.userInfo.email),
+              email: emailFor(person.userInfo.email),
             },
           })),
         };

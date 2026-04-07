@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-25T13:16:38.797Z\nSpec SHA-256: a06c24d0371fc2f27da58548c681cf075ec81bbbd868d7538fae90fdf34968ab",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-30T14:52:08.855Z\nSpec SHA-256: d4cdbdebb6839fe01c3ea5794a22beef199689cf7199a1bc20cda2dfd1e4f4f9",
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -70,6 +70,23 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "AddAssociatedPersonRequest": {
+    "type": "object",
+    "description": "Request body for adding an associated person to an entity account.",
+    "required": [
+      "accountId",
+      "associatedPerson"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "associatedPerson": {
+        "$ref": "#/components/schemas/AssociatedPerson"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "AddBankAccountRequest": {
     "type": "object",
     "required": [
@@ -131,56 +148,26 @@
   },
   "AdditionalUserInfo": {
     "type": "object",
-    "description": "Additional user information for KYC. This information is required for users considered high risk or over 60 years of age.",
+    "description": "Additional user information for KYC. All fields are required when provided.",
+    "required": [
+      "employmentStatus",
+      "expectedMonthlyPaymentsUsd",
+      "sourceOfFunds",
+      "mostRecentOccupation"
+    ],
     "properties": {
       "employmentStatus": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/EmploymentStatus"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
+        "$ref": "#/components/schemas/EmploymentStatus"
       },
       "expectedMonthlyPaymentsUsd": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ExpectedMonthlyPayments"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
+        "$ref": "#/components/schemas/ExpectedMonthlyPayments"
       },
       "sourceOfFunds": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserSourceOfFunds"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
+        "$ref": "#/components/schemas/UserSourceOfFunds"
       },
       "mostRecentOccupation": {
-        "type": [
-          "string",
-          "null"
-        ],
-        "description": "Most recent occupation of the user. Required for high risk users.\nMust be a valid six-digit occupation code. See the full list of [occupation codes](https://docs.byzantine.fi/api-reference/lists/occupation-codes).",
+        "type": "string",
+        "description": "Must be a valid six-digit occupation code. See the full list of [occupation codes](https://docs.byzantine.fi/api-reference/lists/occupation-codes).",
         "maxLength": 6,
         "minLength": 6
       }
@@ -3714,6 +3701,164 @@
             "type": "null"
           }
         ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateAssociatedPerson": {
+    "type": "object",
+    "description": "Associated person update payload. All fields are optional — only provided fields are updated.",
+    "properties": {
+      "userInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateUserInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "beneficiaryDetails": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateBeneficiaryDetails"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "verificationDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/UserVerificationDocument"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateAssociatedPersonRequest": {
+    "type": "object",
+    "description": "Request body for updating an associated person's details.",
+    "required": [
+      "beneficiaryId",
+      "associatedPerson"
+    ],
+    "properties": {
+      "beneficiaryId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "associatedPerson": {
+        "$ref": "#/components/schemas/UpdateAssociatedPerson"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateAssociatedPersonResponse": {
+    "type": "object",
+    "description": "Response body for updating an associated person",
+    "required": [
+      "beneficiaryId",
+      "verificationStatus"
+    ],
+    "properties": {
+      "beneficiaryId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "userInfo": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateUserInfo"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "beneficiaryDetails": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateBeneficiaryDetails"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "verificationDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/VerificationDocumentResponse"
+        }
+      },
+      "missingDocuments": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "description": "List of missing required verification documents. Present only if not all required documents have been submitted."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateBeneficiaryDetails": {
+    "type": "object",
+    "description": "Beneficiary details update payload. All fields are optional — only provided fields are updated.",
+    "properties": {
+      "beneficiaryType": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/components/schemas/BeneficiaryType"
+        }
+      },
+      "title": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Required for representatives. The title held at the business."
+      },
+      "ownershipPercentage": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "format": "double",
+        "description": "Required for UBOs. The % of direct or indirect business ownership.",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"

@@ -1,0 +1,22 @@
+{
+  "entityInfo": {
+    "activityInfo": {
+      "businessDescription": "Software development and technology consulting services",
+      "businessIndustry": 541511
+    },
+    "financialInfo": {
+      "preferredPrimaryCurrency": "eur",
+      "sourceOfFunds": "treasury_reserves",
+      "estimatedAnnualRevenueUsd": "100000_999999",
+      "expectedMonthlyPaymentsUsd": 10000,
+      "hasMaterialIntermediaryEntityOwner": false
+    },
+    "highRiskInfo": {
+      "operatesInProhibitedCountries": false,
+      "highRiskActivities": "none_of_the_above",
+      "highRiskActivitiesExplanation": null,
+      "conductsMoneyServices": false,
+      "conductsMoneyServicesDescription": null
+    }
+  }
+}

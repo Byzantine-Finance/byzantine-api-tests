@@ -217,6 +217,16 @@ export const endpoints = {
     updateEntityAccount: "/v1/submit/update-entity-account",
 
     /**
+     * Add an associated person to an entity account
+     */
+    addAssociatedPerson: "/v1/submit/add-associated-person",
+
+    /**
+     * Update an associated person's details
+     */
+    updateAssociatedPerson: "/v1/submit/update-associated-person",
+
+    /**
      * Add bank account for withdrawals
      */
     addBankAccount: "/v1/submit/add-bank-account",
