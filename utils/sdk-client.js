@@ -6,6 +6,7 @@
 import { ByzantineClient } from "@byzantine/integrator-sdk";
 import dotenv from "dotenv";
 import { getEnvironmentBaseURL, isProduction } from "../config/environments.js";
+import { confirmProductionRequest } from "./production-confirm.js";
 
 dotenv.config();
 
@@ -43,6 +44,11 @@ export function createSdkClient(options = {}) {
     },
   });
 
+  // Set up production confirmation middleware (before auth, so user sees body before signing)
+  if (isProduction()) {
+    setupProductionConfirm(client);
+  }
+
   // Set up the auto authentication headers
   setupAutoAuth(client);
 
@@ -50,6 +56,52 @@ export function createSdkClient(options = {}) {
   setupDebugging(client);
 
   return client;
+}
+
+/**
+ * Set up production confirmation middleware for write requests
+ * Previews request body and asks for y/n confirmation before sending
+ * @param {ByzantineClient} client - SDK client instance
+ */
+function setupProductionConfirm(client) {
+  const writeMethods = ["POST", "PUT", "PATCH", "DELETE"];
+
+  client.api.client.use({
+    async onRequest({ request }) {
+      if (!writeMethods.includes(request.method.toUpperCase())) {
+        return request;
+      }
+
+      const url = new URL(request.url);
+      const path = url.pathname + url.search;
+
+      let body = undefined;
+      if (request.body) {
+        const clonedRequest = request.clone();
+        const text = await clonedRequest.text();
+        if (text) {
+          try {
+            body = JSON.parse(text);
+          } catch {
+            body = text;
+          }
+        }
+      }
+
+      const confirmed = await confirmProductionRequest(
+        request.method,
+        path,
+        body
+      );
+      if (!confirmed) {
+        throw new Error(
+          "Request cancelled by user (production confirmation)."
+        );
+      }
+
+      return request;
+    },
+  });
 }
 
 /**

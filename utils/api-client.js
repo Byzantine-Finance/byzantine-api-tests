@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { API_CONFIG } from "../config/api-config.js";
 import { getEnvironmentBaseURL, isProduction } from "../config/environments.js";
 import { generateAuthHeaders } from "./auth.js";
+import { confirmProductionRequest } from "./production-confirm.js";
 
 dotenv.config();
 
@@ -177,6 +178,17 @@ export async function makeRequest(method, path, options = {}) {
         console.error("Failed to generate auth headers:", error.message);
       }
       throw error;
+    }
+  }
+
+  // In production, preview write requests and ask for confirmation
+  const isWriteMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(
+    method.toUpperCase()
+  );
+  if (isProduction() && isWriteMethod) {
+    const confirmed = await confirmProductionRequest(method, path, options.body);
+    if (!confirmed) {
+      throw new Error("Request cancelled by user (production confirmation).");
     }
   }
 

@@ -99,8 +99,8 @@ export const FEATURE_FLAGS = {
   enableHealthTests: true,
 
   // Tests that modify data (POST/PUT/DELETE) - only in dev/staging
-  enableWriteTests:
-    !isProduction() && process.env.ENABLE_WRITE_TESTS === "true",
+  enableWriteTests:                                                                                                                                                                        
+    (!isProduction() || process.env.FORCE_WRITE_TESTS === "true") && process.env.ENABLE_WRITE_TESTS === "true",
 
   // Vault currency selection
   useEurVault: process.env.EUR_VAULT === "true",
