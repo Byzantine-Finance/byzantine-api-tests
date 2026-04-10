@@ -94,7 +94,7 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
           `✅ Generated and saved payload for ${users.length} users:`,
         );
         users.forEach((user, index) => {
-          console.log(`   ${index + 1}. ${user.userName} (${user.userEmail})`);
+          console.log(`   ${index + 1}. ${user.firstName} ${user.lastName} (${user.userEmail})`);
         });
         console.log(
           `📝 Next step: Sign the bodyToSign with passkey to get webAuthnStamp`,
@@ -148,7 +148,8 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
         // Verify each invited user details
         sdkResponse.data.newUsers.forEach((invitedUser) => {
           assertValidUuid(invitedUser.userId);
-          expect(invitedUser.userName).toBeDefined();
+          expect(invitedUser.firstName).toBeDefined();
+          expect(invitedUser.lastName).toBeDefined();
           expect(invitedUser.userEmail).toBeDefined();
         });
       },

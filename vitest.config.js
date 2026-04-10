@@ -8,5 +8,6 @@ export default defineConfig({
     // In CI, run test files sequentially to ensure correct data flow
     // (account-creation before account-data, init-passkey before transaction-passkey, etc.)
     fileParallelism: !isCI,
+    exclude: ["**/node_modules/**", "**/.claude/worktrees/**"],
   },
 });

@@ -83,7 +83,8 @@ describe("Account Data SDK", () => {
           if (member.userId != null) {
             assertValidUuid(member.userId);
           }
-          expect(member.userName).toBeDefined();
+          expect(member.firstName).toBeDefined();
+          expect(member.lastName).toBeDefined();
           expect(member.userEmail).toBeDefined();
           expect(member.role).toMatch(
             /^(root|admin|view|self_custodial|beneficiary)$/,
@@ -104,7 +105,8 @@ describe("Account Data SDK", () => {
 
             // Verify PendingInvitation schema fields
             assertValidUuid(invitation.invitationId);
-            expect(invitation.userName).toBeDefined();
+            expect(invitation.firstName).toBeDefined();
+            expect(invitation.lastName).toBeDefined();
             expect(invitation.userEmail).toBeDefined();
             assertValidUuid(invitation.invitedBy);
 

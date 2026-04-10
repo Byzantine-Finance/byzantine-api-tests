@@ -63,9 +63,11 @@ describeInvitationQueries("Invitation Query API", () => {
           assertValidUuid(invitation.user_id);
           assertValidUuid(invitation.inviter_id);
           expect(invitation.account_name).toBeDefined();
-          expect(invitation.user_name).toBeDefined();
+          expect(invitation.first_name).toBeDefined();
+          expect(invitation.last_name).toBeDefined();
           expect(invitation.user_email).toBeDefined();
-          expect(invitation.inviter_name).toBeDefined();
+          expect(invitation.inviter_first_name).toBeDefined();
+          expect(invitation.inviter_last_name).toBeDefined();
           expect(invitation.status).toMatch(
             /^(pending|accepted|rejected|cancelled)$/,
           );
