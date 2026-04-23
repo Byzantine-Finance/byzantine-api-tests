@@ -113,6 +113,8 @@ export const FEATURE_FLAGS = {
     process.env.ENABLE_PASSKEY_INIT_DEPOSIT_TESTS === "true",
   enablePasskeyInitWithdrawTests:
     process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
+  enablePasskeyInitVaultUpgradeTests:
+    process.env.ENABLE_PASSKEY_INIT_VAULT_UPGRADE_TESTS === "true",
   enablePasskeyActivateTxTests:
     process.env.ENABLE_PASSKEY_ACTIVATE_TX_TESTS === "true",
   enablePasskeyActivateETHTxTests:
@@ -121,6 +123,12 @@ export const FEATURE_FLAGS = {
     process.env.ENABLE_PASSKEY_DEPOSIT_TX_TESTS === "true",
   enablePasskeyWithdrawTxTests:
     process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
+  enablePasskeyVaultUpgradeTxTests:
+    process.env.ENABLE_PASSKEY_VAULT_UPGRADE_TX_TESTS === "true",
+  enableVaultUpgradeValidationTests:
+    process.env.ENABLE_VAULT_UPGRADE_VALIDATION_TESTS === "true",
+  enableFasterTransactionValidationTests:
+    process.env.ENABLE_FASTER_TRANSACTION_VALIDATION_TESTS === "true",
 
   // Account creation tests
   createUser: process.env.CREATE_USER !== "false", // Enabled by default
@@ -205,10 +213,12 @@ export const TEST_DATA = {
     testEurBankAccountId: resolveId("TEST_EUR_BANK_ACCOUNT_ID", generatedTestData.accounts.testEurBankAccountId),
     // KYC/KYB-approved account for bank account operations (add-bank-account requires approved status)
     bankAccountTargetId: process.env.TEST_BANK_ACCOUNT_TARGET_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
-    // KYC/KYB-approved account for passkey operations (init-passkey requires approved status)
-    initActivateTargetAccountId: process.env.TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
-    initDepositTargetAccountId: process.env.TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
-    initWithdrawTargetAccountId: process.env.TEST_INIT_WITHDRAW_TARGET_ACCOUNT_ID || resolveId("TEST_ACCOUNT_ID", generatedTestData.accounts.testAccountId),
+    // KYC/KYB-approved account for passkey operations (init-passkey requires approved status).
+    // No fallback — must be set explicitly in .env so a non-approved account doesn't silently get used.
+    initActivateTargetAccountId: process.env.TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID || null,
+    initDepositTargetAccountId: process.env.TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID || null,
+    initWithdrawTargetAccountId: process.env.TEST_INIT_WITHDRAW_TARGET_ACCOUNT_ID || null,
+    initVaultUpgradeTargetAccountId: process.env.TEST_INIT_VAULT_UPGRADE_TARGET_ACCOUNT_ID || null,
   },
 
   users: {

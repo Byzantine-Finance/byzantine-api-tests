@@ -73,6 +73,19 @@ function runPasskeyCycle(name, { initFlag, initTest, txFlag, txTest, extraInitEn
 
   console.log(`\n  ── ${name} ──`);
 
+  // When running via ci-test.js, all three passkey init cycles operate on the
+  // single CI_PASSKEY_ACCOUNT_ID (the account registered by ci-one-time-setup.js).
+  // These overrides take priority over any TEST_INIT_*_TARGET_ACCOUNT_ID values
+  // in .env, so direct `npx vitest` runs keep using the per-cycle .env vars.
+  const ciAccountId = process.env.CI_PASSKEY_ACCOUNT_ID;
+  const ciAccountOverrides = ciAccountId
+    ? {
+        TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID: ciAccountId,
+        TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID: ciAccountId,
+        TEST_INIT_WITHDRAW_TARGET_ACCOUNT_ID: ciAccountId,
+      }
+    : {};
+
   // Step 1: Get payload
   console.log(`  [init] Getting bodyToSign payload...`);
   run(
@@ -87,6 +100,7 @@ function runPasskeyCycle(name, { initFlag, initTest, txFlag, txTest, extraInitEn
       // Override the specific one we want
       [initFlag]: "true",
       CI: "true",
+      ...ciAccountOverrides,
       ...extraInitEnv,
     }
   );
@@ -157,7 +171,7 @@ try {
   // Phase 1: Core tests (no passkey TX submission)
   // ──────────────────────────────────────────────────────────
   log("Phase 1", "Core API Tests");
-  run("npx vitest run tests/api/ --fileParallelism=false --exclude tests/api/init-passkey.test.js --exclude tests/api/transaction-passkey.test.js --exclude tests/api/user-invitation.test.js --exclude tests/api/entity-account-validation.test.js --exclude tests/api/init-otp.test.js", {
+  run("npx vitest run tests/api/ --fileParallelism=false --exclude tests/api/init-passkey.test.js --exclude tests/api/transaction-passkey.test.js --exclude tests/api/user-invitation.test.js --exclude tests/api/entity-account-validation.test.js --exclude tests/api/init-otp.test.js --exclude tests/api/entity-update-flow.test.js", {
     // Disable all passkey TX tests (handled in Phase 2)
     ENABLE_PASSKEY_ACTIVATE_TX_TESTS: "false",
     ENABLE_PASSKEY_ACTIVATE_ETH_TX_TESTS: "false",
@@ -179,6 +193,12 @@ try {
   // ──────────────────────────────────────────────────────────
   if (isPasskeyEnabled && canSign) {
     log("Phase 2", "Passkey Transaction Cycles (activate → deposit → withdraw)");
+
+    if (!process.env.CI_PASSKEY_ACCOUNT_ID) {
+      throw new Error(
+        "CI_PASSKEY_ACCOUNT_ID is not set. Phase 2 requires it — this is the single account ID used for activate/deposit/withdraw cycles (populated by ci-one-time-setup.js)."
+      );
+    }
 
     // Activate on Base
     runPasskeyCycle("Activate (Base, chain 8453)", {
@@ -203,6 +223,12 @@ try {
       txFlag: "ENABLE_PASSKEY_DEPOSIT_TX_TESTS",
       txTest: "Deposit",
     });
+
+    // Let the deposit settle before initializing the withdraw payload
+    if (process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true") {
+      console.log("\n  ⏳ Waiting 10s for deposit to settle before withdraw...");
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+    }
 
     // Withdraw
     runPasskeyCycle("Withdraw", {

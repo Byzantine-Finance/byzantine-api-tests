@@ -1,17 +1,5 @@
 [
   {
-    "vault_address": "0x0863cf361ea7f92fd53223a2fa1e58f799544e82",
-    "chain_id": 8453,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x7c51228c60fe580249f0bd99f61740c0594b23b3",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
     "vault_address": "0x30cacd22f178c9e57b0b010e1f9432881aa530c4",
     "chain_id": 1,
     "is_active": true,
@@ -68,6 +56,78 @@
   {
     "vault_address": "0x3d6a627d992f717e11353f275a7970ad4af073ac",
     "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x4f8372b6f05d787d44e4523595430f76c81d6c15",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x550101d2be9ede413d4d320e42b331f9b2688fd6",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x885984bd7a15aded423096fa1b82c556e8bb30fd",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xd827f29506a10a64c5cc75993d8ef58daaf7746a",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x0863cf361ea7f92fd53223a2fa1e58f799544e82",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x7c51228c60fe580249f0bd99f61740c0594b23b3",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x2aa897b23c8b4079445b2d5d258d3f0ba93d7430",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xcab87a163c99ae0bc91a41a2e1672b084483e591",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xe44b314e95a40a590975fc878dabd0c76c25a366",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x79ab64382d06fd32e414a9904a7af9a185e4025a",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x2f99e35ea811f3cc230b26dff817604b5d4b6e38",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xed7603df0d6d7387d42d05fac92cb42c4a275744",
+    "chain_id": 1,
     "is_active": true,
     "is_asynchronous": false
   }

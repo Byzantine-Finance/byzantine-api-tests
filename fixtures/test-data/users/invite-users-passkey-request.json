@@ -2,7 +2,8 @@
   "accountId": "PLACEHOLDER_ACCOUNT_ID",
   "newUsers": [
     {
-      "userName": "newuser3",
+      "firstName": "New",
+      "lastName": "User3",
       "userEmail": "lin+invited@byzantine.fi"
     }
   ]

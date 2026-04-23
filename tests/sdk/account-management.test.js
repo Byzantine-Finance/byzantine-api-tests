@@ -53,7 +53,7 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         const sdkResponse = await client.api.addBankAccount(requestBody, DUMMY_AUTH);
 
         // Assert SDK behavior: success with expected data shape
-        assertSuccessWithSchema(sdkResponse, "OffRampAddress");
+        assertSuccessWithSchema(sdkResponse, "LiquidationAddress");
         assertDataUuid(sdkResponse, "bankAccountId");
 
         // Save bank account ID for use in other tests
@@ -77,7 +77,7 @@ describeManagement("Account Management SDK - Using Integrator SDK", () => {
         const sdkResponse = await client.api.addBankAccount(requestBody, DUMMY_AUTH);
 
         // Assert SDK behavior: success with expected data shape
-        assertSuccessWithSchema(sdkResponse, "OffRampAddress");
+        assertSuccessWithSchema(sdkResponse, "LiquidationAddress");
         assertDataUuid(sdkResponse, "bankAccountId");
 
         // Save bank account ID for use in other tests

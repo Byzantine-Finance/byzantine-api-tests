@@ -57,7 +57,7 @@ describeManagement("Account Management API", () => {
     //       { authenticated: true }
     //     );
 
-    //     assertSuccessWithSchema(response, "OffRampAddress");
+    //     assertSuccessWithSchema(response, "LiquidationAddress");
     //     assertValidUuid(response.data.bankAccountId);
 
     //     // Save bank account ID for use in other tests
@@ -98,7 +98,7 @@ describeManagement("Account Management API", () => {
           { authenticated: true }
         );
 
-        assertSuccessWithSchema(response, "OffRampAddress");
+        assertSuccessWithSchema(response, "LiquidationAddress");
         assertValidUuid(response.data.bankAccountId);
 
         // Save bank account ID for use in other tests

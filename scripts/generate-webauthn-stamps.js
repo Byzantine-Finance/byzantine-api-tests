@@ -44,6 +44,7 @@ const SIGNABLE_TYPES = [
   "activateAccount",
   "inviteUsers",
   "promoteUser",
+  "vaultUpgrade",
 ];
 
 async function main() {

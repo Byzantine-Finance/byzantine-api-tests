@@ -230,6 +230,7 @@ describe("Account Data API", () => {
       async () => {
         const response = await apiClient.get(
           endpoints.accounts.getBankAccounts(testAccountId),
+          { authenticated: true },
         );
         assertSuccess(response);
         assertSuccessWithSchema(response, "GetBankAccountsResponse");
@@ -242,6 +243,7 @@ describe("Account Data API", () => {
       async () => {
         const response = await apiClient.get(
           endpoints.accounts.getBankAccounts(testAccountId, "usd"),
+          { authenticated: true },
         );
         assertSuccess(response);
         assertSuccessWithSchema(response, "GetBankAccountsResponse");

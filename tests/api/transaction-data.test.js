@@ -30,7 +30,8 @@ describeTransactionData("Transaction Data API", () => {
       "should get all transactions for an account by account ID",
       async () => {
         const response = await apiClient.get(
-          endpoints.transactions.getByAccountId(testAccountId)
+          endpoints.transactions.getByAccountId(testAccountId),
+          { authenticated: true }
         );
 
         assertSuccessWithArraySchema(response, "TurnkeyTransaction");
@@ -52,7 +53,8 @@ describeTransactionData("Transaction Data API", () => {
       "should get deposit transaction by transaction ID",
       async () => {
         const response = await apiClient.get(
-          endpoints.transactions.getById(depositTransaction.transactionId)
+          endpoints.transactions.getById(depositTransaction.transactionId),
+          { authenticated: true }
         );
 
         assertSuccessWithSchema(response, "TurnkeyTransaction");
@@ -66,7 +68,8 @@ describeTransactionData("Transaction Data API", () => {
       async () => {
         const fakeId = "00000000-0000-0000-0000-000000000000";
         const response = await apiClient.get(
-          endpoints.transactions.getById(fakeId)
+          endpoints.transactions.getById(fakeId),
+          { authenticated: true }
         );
 
         assertError(response, 404);
@@ -80,7 +83,8 @@ describeTransactionData("Transaction Data API", () => {
       "should get withdrawal transaction by transaction ID",
       async () => {
         const response = await apiClient.get(
-          endpoints.transactions.getById(withdrawTransaction.transactionId)
+          endpoints.transactions.getById(withdrawTransaction.transactionId),
+          { authenticated: true }
         );
 
         assertSuccessWithSchema(response, "TurnkeyTransaction");

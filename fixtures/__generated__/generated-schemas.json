@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-04-09T15:05:05.898Z\nSpec SHA-256: dcc8d3e58ae82d80e618686866e9ca783de4b84c1c202436002fc3c8da82714b",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-04-22T08:50:58.116Z\nSpec SHA-256: 0d5e85507baeb8a3c72a4b702ca192f0defc30ffbd1dbf7529ea957c065820ad",
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -138,7 +138,7 @@
   "AddBankAccountResponse": {
     "allOf": [
       {
-        "$ref": "#/components/schemas/OffRampAddress"
+        "$ref": "#/components/schemas/LiquidationAddress"
       },
       {
         "type": "object"
@@ -355,6 +355,63 @@
       "calculated_at": {
         "type": "string",
         "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "Asset": {
+    "type": "object",
+    "required": [
+      "address",
+      "name",
+      "symbol",
+      "decimals",
+      "image_url",
+      "approx_price",
+      "category",
+      "chain_id"
+    ],
+    "properties": {
+      "address": {
+        "type": "string",
+        "description": "Token contract address"
+      },
+      "name": {
+        "type": "string",
+        "description": "Token name"
+      },
+      "symbol": {
+        "type": "string",
+        "description": "Token symbol"
+      },
+      "decimals": {
+        "type": "integer",
+        "format": "int32",
+        "description": "Token decimals",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "image_url": {
+        "type": "string",
+        "description": "Token image URL"
+      },
+      "approx_price": {
+        "type": "number",
+        "format": "double",
+        "description": "Approximate price in USD",
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "category": {
+        "type": "string",
+        "description": "Token category (e.g., \"lst\", \"eth\", \"bitcoin\")"
+      },
+      "chain_id": {
+        "type": "integer",
+        "format": "int32",
+        "description": "Chain ID",
+        "minimum": -2147483648,
+        "maximum": 2147483647
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1937,7 +1994,7 @@
   "GetBankAccountItemResponse": {
     "allOf": [
       {
-        "$ref": "#/components/schemas/OffRampAddress"
+        "$ref": "#/components/schemas/LiquidationAddress"
       },
       {
         "type": "object",
@@ -2882,6 +2939,43 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "LiquidationAddress": {
+    "type": "object",
+    "required": [
+      "bankAccountId",
+      "accountId",
+      "name",
+      "liquidationAddress",
+      "createdAt",
+      "destinationCurrency",
+      "destinationRail"
+    ],
+    "properties": {
+      "bankAccountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "name": {
+        "type": "string"
+      },
+      "liquidationAddress": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "destinationCurrency": {
+        "$ref": "#/components/schemas/Currency"
+      },
+      "destinationRail": {
+        "$ref": "#/components/schemas/PaymentRail"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "NaiveDateTime": {
     "type": "string",
     "format": "date-time",
@@ -2924,39 +3018,6 @@
       },
       "oidcToken": {
         "type": "string"
-      }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "OffRampAddress": {
-    "type": "object",
-    "required": [
-      "bankAccountId",
-      "accountId",
-      "name",
-      "liquidationAddress",
-      "createdAt",
-      "currency"
-    ],
-    "properties": {
-      "bankAccountId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "accountId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "name": {
-        "type": "string"
-      },
-      "liquidationAddress": {
-        "type": "string"
-      },
-      "createdAt": {
-        "type": "string",
-        "format": "date-time"
-      },
-      "currency": {
-        "$ref": "#/components/schemas/Currency"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -3087,6 +3148,16 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "PaymentRail": {
+    "type": "string",
+    "enum": [
+      "ach",
+      "sepa",
+      "ethereum",
+      "base"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "PaymentRailVirtualAccount": {
     "type": "string",
     "enum": [
@@ -3171,21 +3242,14 @@
           "null"
         ],
         "format": "date-time",
-        "description": "Exact timestamp when the transaction was broadcasted on-chain. Only available for `completed` transactions."
+        "description": "Exact timestamp when the transaction was broadcasted on-chain."
       },
-      "transactionReceipt": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/TransactionReceipt"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
+      "transactionHash": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The on-chain transaction hash. Available immediately after broadcast - poll\nRPC's `eth_getTransactionReceipt` to get the full receipt."
       },
       "fiatDepositInstructions": {
         "anyOf": [
@@ -3227,7 +3291,7 @@
     ],
     "properties": {
       "signedBody": {
-        "$ref": "#/components/schemas/SignRawPayloadRequest"
+        "$ref": "#/components/schemas/SignedBody"
       },
       "transactionId": {
         "$ref": "#/components/schemas/Uuid"
@@ -3296,6 +3360,66 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "SignRawPayloadsParams": {
+    "type": "object",
+    "description": "The parameters object containing the specific intent data for this batch of transactions.",
+    "required": [
+      "signWith",
+      "payloads",
+      "encoding",
+      "hashFunction"
+    ],
+    "properties": {
+      "signWith": {
+        "type": "string",
+        "description": "A Wallet account address, Private Key address, or Private Key identifier."
+      },
+      "payloads": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "An array of raw unsigned payloads to be signed."
+      },
+      "encoding": {
+        "type": "string",
+        "description": "How the payload is encoded: `PAYLOAD_ENCODING_HEXADECIMAL` or `PAYLOAD_ENCODING_EIP7702_AUTHORIZATION`"
+      },
+      "hashFunction": {
+        "type": "string",
+        "description": "Rather Turnkey should hash the message or not: `HASH_FUNCTION_NO_OP` or `HASH_FUNCTION_KECCAK256`"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SignRawPayloadsRequest": {
+    "type": "object",
+    "description": "The object that needs to be signed by the end user to make a batch of transactions.",
+    "required": [
+      "type",
+      "timestampMs",
+      "organizationId",
+      "parameters"
+    ],
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "Defaults to `ACTIVITY_TYPE_SIGN_RAW_PAYLOADS`."
+      },
+      "timestampMs": {
+        "type": "string",
+        "description": "UNIX timestamp of the creation of the transaction."
+      },
+      "organizationId": {
+        "type": "string",
+        "description": "The account ID making the transaction."
+      },
+      "parameters": {
+        "$ref": "#/components/schemas/SignRawPayloadsParams"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "SignTransactionParams": {
     "type": "object",
     "description": "The parameters object containing the specific intent data for this transaction.",
@@ -3346,6 +3470,18 @@
         "$ref": "#/components/schemas/SignTransactionParams"
       }
     },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "SignedBody": {
+    "oneOf": [
+      {
+        "$ref": "#/components/schemas/SignRawPayloadRequest"
+      },
+      {
+        "$ref": "#/components/schemas/SignRawPayloadsRequest"
+      }
+    ],
+    "description": "Accepts either a single-payload or a multi-payload request Turnkey request",
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "SourceDepositInstructions": {
@@ -3588,7 +3724,9 @@
       "waiting_for_funds",
       "funds_in_transfer",
       "processing",
-      "completed"
+      "completed",
+      "simulation_failed",
+      "reverted"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -3600,7 +3738,9 @@
       "approve",
       "approve_deposit",
       "deposit",
-      "withdraw"
+      "withdraw",
+      "transfer",
+      "withdraw_transfer"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -3748,6 +3888,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/Decimal"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "relatedTransactionId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
               }
             ]
           },
@@ -4723,110 +4877,50 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "VaultV2Transaction": {
+  "VaultUpgradePayloadResponse": {
     "type": "object",
+    "description": "Response containing the two raw payloads to sign (withdraw from Base and deposit on Ethereum) in one passkey prompt.",
     "required": [
-      "timestamp",
-      "amountAssetsTransferred",
-      "amountSharesTransferred",
-      "currentBalanceShares",
-      "hash",
-      "type"
+      "bodyToSign",
+      "transactionId",
+      "sourceAmount",
+      "destinationAmount",
+      "destinationVaultAddr"
     ],
     "properties": {
-      "timestamp": {
-        "type": "integer",
-        "format": "int64",
-        "description": "Transaction timestamp in milliseconds",
-        "minimum": 0,
-        "maximum": 9223372036854776000
+      "bodyToSign": {
+        "$ref": "#/components/schemas/SignRawPayloadsRequest"
       },
-      "amountAssetsTransferred": {
-        "type": "number",
-        "format": "double",
-        "description": "Amount of assets transferred",
-        "minimum": -1.7976931348623157e+308,
-        "maximum": 1.7976931348623157e+308
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
       },
-      "amountSharesTransferred": {
-        "type": "number",
-        "format": "double",
-        "description": "Amount of shares transferred",
-        "minimum": -1.7976931348623157e+308,
-        "maximum": 1.7976931348623157e+308
+      "sourceAmount": {
+        "$ref": "#/components/schemas/Decimal"
       },
-      "currentBalanceShares": {
-        "type": "number",
-        "format": "double",
-        "description": "Current balance in shares after this transaction",
-        "minimum": -1.7976931348623157e+308,
-        "maximum": 1.7976931348623157e+308
+      "destinationAmount": {
+        "$ref": "#/components/schemas/Decimal"
       },
-      "hash": {
+      "destinationVaultAddr": {
         "type": "string",
-        "description": "Transaction hash"
-      },
-      "type": {
-        "type": "string",
-        "description": "Transaction type"
+        "description": "The destination vault address on Ethereum."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "VaultV2VaultPosition": {
+  "VaultUpgradeRequestBody": {
     "type": "object",
+    "description": "Request body for initiating a vault upgrade (Base -> Ethereum)",
     "required": [
-      "addressVault",
-      "chain_id",
-      "shares",
-      "ratio",
-      "lastUpdateTxHash",
-      "lastUpdateTimestamp",
-      "transactions"
+      "accountId",
+      "sourceVaultAddr"
     ],
     "properties": {
-      "addressVault": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "sourceVaultAddr": {
         "type": "string",
-        "description": "Vault address"
-      },
-      "chain_id": {
-        "type": "integer",
-        "format": "int32",
-        "description": "Chain ID",
-        "minimum": -2147483648,
-        "maximum": 2147483647
-      },
-      "shares": {
-        "type": "number",
-        "format": "double",
-        "description": "User's shares in this vault",
-        "minimum": -1.7976931348623157e+308,
-        "maximum": 1.7976931348623157e+308
-      },
-      "ratio": {
-        "type": "number",
-        "format": "double",
-        "description": "Share to asset ratio (last share price)",
-        "minimum": -1.7976931348623157e+308,
-        "maximum": 1.7976931348623157e+308
-      },
-      "lastUpdateTxHash": {
-        "type": "string",
-        "description": "Hash of the last update transaction"
-      },
-      "lastUpdateTimestamp": {
-        "type": "integer",
-        "format": "int64",
-        "description": "Timestamp of the last update in milliseconds",
-        "minimum": 0,
-        "maximum": 9223372036854776000
-      },
-      "transactions": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/VaultV2Transaction"
-        },
-        "description": "List of transactions for this vault"
+        "description": "The address of the source vault on Base (8453)"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -4944,6 +5038,13 @@
     "type": "array",
     "items": {
       "$ref": "#/components/schemas/TopVault"
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "get_assets_200": {
+    "type": "array",
+    "items": {
+      "$ref": "#/components/schemas/Asset"
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },

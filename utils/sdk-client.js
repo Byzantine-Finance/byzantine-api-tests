@@ -130,6 +130,7 @@ function setupAutoAuth(client) {
         "/v1/query/get-activate-account-payload-passkey",
         "/v1/query/get-deposit-payload-passkey",
         "/v1/query/get-withdraw-payload-passkey",
+        "/v1/query/get-vault-upgrade-payload-passkey",
         "/v1/submit/sign-payload-passkey",
         // OTP transactions
         "/v1/query/init-deposit-otp",

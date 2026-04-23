@@ -59,6 +59,14 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       flag: "enablePasskeyWithdrawTxTests",
       chainId,
     },
+    {
+      type: "VaultUpgrade",
+      bodyToSign: txRequest.vaultUpgrade?.bodyToSign,
+      transactionId: txRequest.vaultUpgrade?.transactionId,
+      webAuthnStamp: txRequest.vaultUpgrade?.webAuthnStamp,
+      flag: "enablePasskeyVaultUpgradeTxTests",
+      chainId: 8453,
+    },
   ];
 
   // Filter tests based on feature flags in test.config.js

@@ -17,7 +17,12 @@ export const endpoints = {
     /**
      * Get all Byzantine vaults
      */
-    top: "/v1/top-vaults",
+    top: "/v1/query/top-vaults",
+
+    /**
+     * Get supported assets
+     */
+    assets: "/v1/query/assets",
 
     /**
      * Get vault APY
@@ -25,7 +30,7 @@ export const endpoints = {
      * @param {string} period - Optional: daily, weekly, monthly, yearly, all
      */
     getApy: (vaultId, period = null) => {
-      const path = `/v1/apy/${vaultId}`;
+      const path = `/v1/query/apy/${vaultId}`;
       return period ? `${path}?period=${period}` : path;
     },
 
@@ -35,7 +40,7 @@ export const endpoints = {
      * @param {object} params - Query parameters (start_date, end_date, limit, offset, order)
      */
     getHistory: (vaultId, params = {}) => {
-      const path = `/v1/history/${vaultId}`;
+      const path = `/v1/query/history/${vaultId}`;
       const queryParams = new URLSearchParams();
 
       if (params.start_date)
@@ -151,6 +156,12 @@ export const endpoints = {
      */
     getWithdrawPayloadPasskey: (chainId) =>
       `/v1/query/get-withdraw-payload-passkey?chain_id=${chainId}`,
+
+    /**
+     * Get vault upgrade payload to sign (passkey auth)
+     * Returns two raw payloads (withdraw from Base, deposit on Ethereum) to sign in one prompt
+     */
+    getVaultUpgradePayloadPasskey: "/v1/query/get-vault-upgrade-payload-passkey",
 
     /**
      * Submit signed raw payload (passkey auth)

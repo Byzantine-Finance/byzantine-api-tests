@@ -49,6 +49,7 @@ const SIGNABLE_TYPES = [
   "activateAccountEth",
   "inviteUsers",
   "promoteUser",
+  "vaultUpgrade",
 ];
 
 // Payload types that require the entity credential

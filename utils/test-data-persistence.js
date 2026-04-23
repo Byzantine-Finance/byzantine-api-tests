@@ -279,6 +279,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
     "activateAccountEth",
     "inviteUsers",
     "promoteUser",
+    "vaultUpgrade",
   ];
   if (!validTypes.includes(transactionType)) {
     throw new Error(
@@ -296,28 +297,45 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
 
     // inviteUsers uses CreateUsersRequest structure (with parameters.users)
     // promoteUser uses UpdateRootQuorumRequest structure (with parameters.threshold, userIds)
+    // vaultUpgrade uses SignRawPayloadsRequest structure (with parameters.payloads array)
     // Other types use SignRawPayloadRequest structure (with parameters.signWith, payload, etc.)
     const isSpecialStructure =
       transactionType === "inviteUsers" || transactionType === "promoteUser";
+    const isMultiPayload = transactionType === "vaultUpgrade";
 
-    const bodyToSignData = isSpecialStructure
-      ? {
-          type: bodyToSign.type,
-          timestampMs: bodyToSign.timestampMs,
-          organizationId: bodyToSign.organizationId,
-          parameters: bodyToSign.parameters, // Keep entire parameters object
-        }
-      : {
-          type: bodyToSign.type,
-          timestampMs: bodyToSign.timestampMs,
-          organizationId: bodyToSign.organizationId,
-          parameters: {
-            signWith: bodyToSign.parameters.signWith,
-            payload: bodyToSign.parameters.payload,
-            encoding: bodyToSign.parameters.encoding,
-            hashFunction: bodyToSign.parameters.hashFunction,
-          },
-        };
+    let bodyToSignData;
+    if (isSpecialStructure) {
+      bodyToSignData = {
+        type: bodyToSign.type,
+        timestampMs: bodyToSign.timestampMs,
+        organizationId: bodyToSign.organizationId,
+        parameters: bodyToSign.parameters, // Keep entire parameters object
+      };
+    } else if (isMultiPayload) {
+      bodyToSignData = {
+        type: bodyToSign.type,
+        timestampMs: bodyToSign.timestampMs,
+        organizationId: bodyToSign.organizationId,
+        parameters: {
+          signWith: bodyToSign.parameters.signWith,
+          payloads: bodyToSign.parameters.payloads,
+          encoding: bodyToSign.parameters.encoding,
+          hashFunction: bodyToSign.parameters.hashFunction,
+        },
+      };
+    } else {
+      bodyToSignData = {
+        type: bodyToSign.type,
+        timestampMs: bodyToSign.timestampMs,
+        organizationId: bodyToSign.organizationId,
+        parameters: {
+          signWith: bodyToSign.parameters.signWith,
+          payload: bodyToSign.parameters.payload,
+          encoding: bodyToSign.parameters.encoding,
+          hashFunction: bodyToSign.parameters.hashFunction,
+        },
+      };
+    }
 
     // Update the appropriate section based on transaction type
     const updatedData = {

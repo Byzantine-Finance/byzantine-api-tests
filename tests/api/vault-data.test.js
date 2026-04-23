@@ -27,7 +27,7 @@ describeVaults("Vaults API", () => {
     it(
       "should return list of vaults",
       async () => {
-        const response = await apiClient.get(endpoints.vaults.top);
+        const response = await apiClient.get(endpoints.vaults.top, { authenticated: true });
         assertSuccess(response);
         assertNonEmptyArray(response.data);
 
@@ -40,7 +40,7 @@ describeVaults("Vaults API", () => {
     it(
       "should return vaults matching schema",
       async () => {
-        const response = await apiClient.get(endpoints.vaults.top);
+        const response = await apiClient.get(endpoints.vaults.top, { authenticated: true });
         assertSuccessWithArraySchema(response, "TopVault");
       },
       getTimeout("api")
@@ -49,7 +49,7 @@ describeVaults("Vaults API", () => {
     it(
       "should have valid vault addresses",
       async () => {
-        const response = await apiClient.get(endpoints.vaults.top);
+        const response = await apiClient.get(endpoints.vaults.top, { authenticated: true });
         assertSuccess(response);
 
         response.data.forEach((vault) => {
@@ -65,14 +65,15 @@ describeVaults("Vaults API", () => {
       "should return APY for specific vault",
       async () => {
         // First get a vault ID
-        const vaultsResponse = await apiClient.get(endpoints.vaults.top);
+        const vaultsResponse = await apiClient.get(endpoints.vaults.top, { authenticated: true });
         assertSuccess(vaultsResponse);
 
         const vaultId = vaultsResponse.data[0].vault_address;
 
         // Then get its APY
         const apyResponse = await apiClient.get(
-          endpoints.vaults.getApy(vaultId)
+          endpoints.vaults.getApy(vaultId),
+          { authenticated: true }
         );
         assertSuccessWithSchema(apyResponse, "ApyResponse");
       },
@@ -83,14 +84,15 @@ describeVaults("Vaults API", () => {
       "should return APY for specific period",
       async () => {
         // Get a vault ID
-        const vaultsResponse = await apiClient.get(endpoints.vaults.top);
+        const vaultsResponse = await apiClient.get(endpoints.vaults.top, { authenticated: true });
         assertSuccess(vaultsResponse);
 
         const vaultId = vaultsResponse.data[0].vault_address;
 
         // Get daily APY
         const apyResponse = await apiClient.get(
-          endpoints.vaults.getApy(vaultId, "daily")
+          endpoints.vaults.getApy(vaultId, "daily"),
+          { authenticated: true }
         );
         assertSuccessWithSchema(apyResponse, "ApyResponse");
       },
