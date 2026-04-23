@@ -25,7 +25,6 @@ import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
 import { existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Load generated OTP data if it exists (avoid crash when file is missing and OTP tests are disabled)
 const __otpDir = dirname(fileURLToPath(import.meta.url));
@@ -45,8 +44,12 @@ describeInitOtp("Initiate OTP transactions API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const depositAmount = passkeyData.depositAmount;
-  const sourceCurrency = passkeyData.sourceCurrency;
+  // Amounts + currencies come from .env (DEPOSIT_AMOUNT, SOURCE_CURRENCY,
+  // WITHDRAW_AMOUNT, DESTINATION_CURRENCY). Set them before running this file.
+  const depositAmount = process.env.DEPOSIT_AMOUNT;
+  const sourceCurrency = process.env.SOURCE_CURRENCY;
+  const withdrawAmount = process.env.WITHDRAW_AMOUNT;
+  const destinationCurrency = process.env.DESTINATION_CURRENCY;
 
   describeInitDepositOtp("POST /v1/query/init-deposit-otp", () => {
     it(
@@ -104,8 +107,8 @@ describeInitOtp("Initiate OTP transactions API", () => {
         const requestBody = {
           accountId: testAccountId,
           vaultAddr: testVaultAddr,
-          amount: passkeyData.withdrawAmount,
-          destinationCurrency: passkeyData.destinationCurrency,
+          amount: withdrawAmount,
+          destinationCurrency: destinationCurrency,
         };
 
         assertSchema(requestBody, "WithdrawRequestBody");

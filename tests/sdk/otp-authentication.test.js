@@ -4,17 +4,15 @@
  * - otpAuth (authenticate with OTP code)
  * - createAuthenticatorsOtp (create passkeys via OTP session)
  *
- * Note: OTP tests require receiving real OTP codes via email
+ * Flow:
+ * 1. Initialize OTP — sends email with OTP code to invited user
+ * 2. Authenticate with OTP code — returns session ID (requires human to enter OTP)
+ * 3. Use session ID to create authenticators (passkey for the invited user)
  *
  * Control individual tests with flags:
  * - ENABLE_OTP_INIT_AUTH_TESTS=true/false
  * - ENABLE_OTP_AUTHENTICATE_TESTS=true/false
  * - ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS=true/false
- *
- * Flow:
- * 1. Initialize OTP - sends email with OTP code
- * 2. Authenticate with OTP code - returns session ID
- * 3. Use session ID to create authenticators (passkeys)
  *
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
@@ -34,8 +32,8 @@ import {
 import {
   saveOtpData,
   loadOtpData,
+  loadInvitedUserData,
 } from "../../utils/test-data-persistence.js";
-import { TEST_DATA } from "../../config/test.config.js";
 
 // Individual test flags for granular control
 const describeInitOtpAuth = FEATURE_FLAGS.enableOtpInitAuthTests
@@ -51,51 +49,56 @@ const describeCreateAuthenticatorsOtp =
 
 describe("OTP Authentication SDK", () => {
   const client = getSdkClient();
-  const testAccountId = TEST_DATA.accounts.testEntityAccountId;
-  const invitedUserId = "235708ce-c4d4-4f87-8ac3-e6df8821bef1"; // TODO: store somewhere 
+  // Load invited user data (saved by user-invitation.test.js)
+  const invitedUser = loadInvitedUserData();
+  const testAccountId =
+    process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID || invitedUser.accountId;
+  const testUserId = invitedUser.userId;
 
-  // Load saved OTP data from previous test runs (if available)
+  // Load saved OTP data from previous test runs
   const savedOtpData = loadOtpData();
   let otpId = savedOtpData.otpId;
   let sessionId = savedOtpData.sessionId;
 
-  if (otpId) {
-    console.log(`📂 Loaded saved otpId: ${otpId}`);
+  if (testUserId) {
+    console.log(`📂 Invited user: ${testUserId} (${invitedUser.email})`);
+  } else {
+    console.log(
+      "⚠️  No invited user found. Run user-invitation tests first.",
+    );
   }
-  if (sessionId) {
-    console.log(`📂 Loaded saved sessionId: ${sessionId}`);
-  }
+  if (otpId) console.log(`📂 Loaded saved otpId: ${otpId}`);
+  if (sessionId) console.log(`📂 Loaded saved sessionId: ${sessionId}`);
 
   describeInitOtpAuth("initOtp()", () => {
     it(
-      "should initialize OTP for a user and send email",
+      "should initialize OTP for the invited user and send email",
       async () => {
+        expect(testAccountId).toBeDefined();
+        expect(testUserId).toBeDefined();
+
         const requestBody = {
           accountId: testAccountId,
-          userId: invitedUserId,
+          userId: testUserId,
         };
 
         assertSchema(requestBody, "InitOtpRequest");
 
-        const sdkResponse = await client.api.initOtp(
-          requestBody,
-          DUMMY_AUTH,
-        );
+        const sdkResponse = await client.api.initOtp(requestBody, DUMMY_AUTH);
 
         assertSuccessWithSchema(sdkResponse, "InitOtpResponse");
         assertDataHasFields(sdkResponse, ["otpId"]);
 
-        // Save otpId for next test
         otpId = sdkResponse.data.otpId;
         expect(otpId).toBeDefined();
         expect(typeof otpId).toBe("string");
 
-        // Persist otpId to file for use in separate test runs
         saveOtpData(otpId);
 
         console.log(`✅ OTP initialized. otpId: ${otpId}`);
+        console.log(`📧 Check email (${invitedUser.email}) for OTP code`);
         console.log(
-          `📧 Check email for OTP code to use in authenticate test`,
+          `💡 Set TEST_OTP_CODE=<code> and re-run with ENABLE_OTP_AUTHENTICATE_TESTS=true`,
         );
       },
       getTimeout("api"),
@@ -106,96 +109,155 @@ describe("OTP Authentication SDK", () => {
     it(
       "should authenticate with valid OTP code and return session",
       async () => {
-        // This test requires manual OTP code entry
         const otpCode = process.env.TEST_OTP_CODE;
 
         if (!otpCode) {
           console.warn(
-            "⚠️  Skipping OTP authentication test - no OTP code provided",
-          );
-          console.log(
-            "💡 Set TEST_OTP_CODE environment variable with the code from email",
+            "⚠️  Skipping — set TEST_OTP_CODE env var with the code from email",
           );
           return;
         }
 
         if (!otpId) {
-          console.warn(
-            "⚠️  Skipping OTP authentication test - no otpId from init-otp test",
-          );
+          console.warn("⚠️  Skipping — no otpId. Run init-otp test first.");
           return;
         }
 
         const requestBody = {
           accountId: testAccountId,
-          userId: invitedUserId,
+          userId: testUserId,
           otpId: otpId,
           otpCode: otpCode,
         };
 
         assertSchema(requestBody, "OtpAuthRequestBody");
 
-        const sdkResponse = await client.api.otpAuth(
-          requestBody,
-          DUMMY_AUTH,
-        );
+        const sdkResponse = await client.api.otpAuth(requestBody, DUMMY_AUTH);
 
         assertSuccessWithSchema(sdkResponse, "OtpAuthResponse");
-        assertDataHasFields(sdkResponse, [
-          "session",
-          "sessionId",
-          "expiresAt",
-        ]);
+        assertDataHasFields(sdkResponse, ["session", "sessionId", "expiresAt"]);
 
-        // Validate session fields
         assertValidUuid(sdkResponse.data.sessionId);
         expect(sdkResponse.data.session).toBeDefined();
         expect(sdkResponse.data.expiresAt).toBeDefined();
 
-        // Save sessionId for next test
         sessionId = sdkResponse.data.sessionId;
-
-        // Persist sessionId to file for use in separate test runs
         saveOtpData(otpId, sessionId);
 
         console.log(`✅ OTP authenticated. sessionId: ${sessionId}`);
-        console.log(
-          `⏰ Session expires at: ${sdkResponse.data.expiresAt}`,
-        );
+        console.log(`⏰ Session expires at: ${sdkResponse.data.expiresAt}`);
       },
       getTimeout("api"),
     );
   });
 
-  describeCreateAuthenticatorsOtp(
-    "createAuthenticatorsOtp()",
-    () => {
-      it(
-        "should create authenticators using OTP session",
-        async () => {
-          if (!sessionId) {
-            console.warn(
-              "⚠️  Skipping create authenticators test - no sessionId from otp-auth test",
-            );
-            return;
-          }
+  describeCreateAuthenticatorsOtp("createAuthenticatorsOtp()", () => {
+    it(
+      "should create virtual authenticator for the invited user",
+      async () => {
+        if (!sessionId) {
+          console.warn(
+            "⚠️  Skipping — no sessionId. Run otp-auth test first.",
+          );
+          return;
+        }
 
-          // Use authenticator data from valid-user.json
+        // Create a real virtual authenticator credential using Playwright + CDP
+        // so we can extract the private key and use it for signing later
+        const { createServer } = await import("http");
+        const { readFileSync, writeFileSync } = await import("fs");
+        const { join, dirname } = await import("path");
+        const { fileURLToPath } = await import("url");
+
+        const __dir = dirname(fileURLToPath(import.meta.url));
+        const rootDir = join(__dir, "../..");
+        const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "3000", 10);
+        const RP_ID = process.env.VIRTUAL_AUTH_RPID || "localhost";
+
+        // Start minimal server for WebAuthn page context
+        const mimeTypes = { ".html": "text/html", ".js": "application/javascript", ".json": "application/json" };
+        const server = createServer((req, res) => {
+          try {
+            const urlPath = req.url === "/" ? "tests/web/api-testing.html" : req.url.substring(1);
+            const filePath = join(rootDir, urlPath.split("?")[0]);
+            const ext = filePath.substring(filePath.lastIndexOf("."));
+            const content = readFileSync(filePath);
+            res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
+            res.end(content);
+          } catch { res.writeHead(404); res.end("Not found"); }
+        });
+        const actualPort = await new Promise((resolve) => {
+          server.listen(PORT, () => resolve(server.address().port));
+        });
+
+        const { VirtualAuthenticator } = await import("../../utils/virtual-authenticator.js");
+        const auth = new VirtualAuthenticator({ rpId: RP_ID, port: actualPort });
+        await auth.setup();
+
+        try {
+          // Navigate and create credential
+          await auth.page.goto(`http://localhost:${actualPort}/tests/web/api-testing.html`);
+          const credential = await auth.page.evaluate(
+            async ({ rpId, rpName }) => {
+              const challenge = crypto.getRandomValues(new Uint8Array(32));
+              const cred = await navigator.credentials.create({
+                publicKey: {
+                  challenge,
+                  rp: { id: rpId, name: rpName },
+                  user: {
+                    id: new TextEncoder().encode("invited-user"),
+                    name: "invited-user@byzantine.fi",
+                    displayName: "Invited User",
+                  },
+                  pubKeyCredParams: [
+                    { alg: -7, type: "public-key" },
+                    { alg: -257, type: "public-key" },
+                  ],
+                  authenticatorSelection: {
+                    authenticatorAttachment: "platform",
+                    residentKey: "preferred",
+                    userVerification: "preferred",
+                  },
+                  timeout: 60000,
+                },
+              });
+              function bufferToBase64url(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = "";
+                for (const byte of bytes) binary += String.fromCharCode(byte);
+                return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+              }
+              const clientDataStr = new TextDecoder().decode(cred.response.clientDataJSON);
+              const clientData = JSON.parse(clientDataStr);
+              return {
+                credentialId: bufferToBase64url(cred.rawId),
+                clientDataJson: bufferToBase64url(cred.response.clientDataJSON),
+                attestationObject: bufferToBase64url(cred.response.attestationObject),
+                challengeFromClientData: clientData.challenge,
+              };
+            },
+            { rpId: RP_ID, rpName: "Byzantine Test" }
+          );
+
+          // Extract private key via CDP
+          const { credentials } = await auth.cdpSession.send("WebAuthn.getCredentials", {
+            authenticatorId: auth.authenticatorId,
+          });
+          const privateKeyBase64 = credentials[credentials.length - 1].privateKey;
+
+          console.log(`  Virtual credential ID: ${credential.credentialId}`);
+          console.log(`  Private key extracted (${privateKeyBase64.length} chars)`);
+
+          // Register the authenticator with the API
           const authenticators = [
             {
-              authenticatorName: "Passkey",
-              challenge:
-                "Hsa7hWL4VOmHFgV0jZHFa8zVcXvt0gT69hbgE9znyiQ",
+              authenticatorName: "CI Invited User Passkey",
+              challenge: credential.challengeFromClientData,
               attestation: {
-                credentialId: "UHA5LqAHX7SLxNUTM6_MeHE",
-                clientDataJson:
-                  "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiSHNhN2hXTDRWT21IRmdWMGpaSEZhOHpWY1h2dDBnVDY5aGJnRTl6bnlpUSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImNyb3NzT3JpZ2luIjpmYWxzZX0",
-                attestationObject:
-                  "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEHA5LqAHX7SLxNUTM6_MeHGlAQIDJiABIVggkCN_kwFHNrqiWI6n4jlE4spGPCTUUI-RtplXUsOs1hEiWCBRIhVyRosbljVFN0gPX4omuhqiL6klWGlUNeZ33-OOPA",
-                transports: [
-                  "AUTHENTICATOR_TRANSPORT_HYBRID",
-                  "AUTHENTICATOR_TRANSPORT_INTERNAL",
-                ],
+                credentialId: credential.credentialId,
+                clientDataJson: credential.clientDataJson,
+                attestationObject: credential.attestationObject,
+                transports: ["AUTHENTICATOR_TRANSPORT_INTERNAL"],
               },
             },
           ];
@@ -203,7 +265,7 @@ describe("OTP Authentication SDK", () => {
           const requestBody = {
             sessionId: sessionId,
             accountId: testAccountId,
-            userId: invitedUserId,
+            userId: testUserId,
             authenticators: authenticators,
           };
 
@@ -214,22 +276,36 @@ describe("OTP Authentication SDK", () => {
             DUMMY_AUTH,
           );
 
-          assertSuccessWithSchema(
-            sdkResponse,
-            "CreateAuthenticatorsOtpResponse",
-          );
+          assertSuccessWithSchema(sdkResponse, "CreateAuthenticatorsOtpResponse");
           assertDataHasFields(sdkResponse, ["authenticatorIds"]);
-
-          // Validate authenticatorIds
           expect(sdkResponse.data.authenticatorIds).toBeInstanceOf(Array);
           expect(sdkResponse.data.authenticatorIds.length).toBeGreaterThan(0);
 
           console.log(
-            `✅ Created ${sdkResponse.data.authenticatorIds.length} authenticator(s)`,
+            `✅ Created ${sdkResponse.data.authenticatorIds.length} authenticator(s) for invited user`,
           );
-        },
-        getTimeout("api"),
-      );
-    },
-  );
+
+          // Save credentials to generated-invited-user.json for future signing
+          const INVITED_USER_FILE = join(
+            rootDir,
+            "fixtures/test-data/__generated__/generated-invited-user.json",
+          );
+          const existingData = JSON.parse(readFileSync(INVITED_USER_FILE, "utf-8"));
+          const updatedData = {
+            ...existingData,
+            credentialId: credential.credentialId,
+            privateKey: privateKeyBase64,
+            authenticatorIds: sdkResponse.data.authenticatorIds,
+            lastUpdated: new Date().toISOString(),
+          };
+          writeFileSync(INVITED_USER_FILE, JSON.stringify(updatedData, null, 2), "utf-8");
+          console.log(`📝 Saved credential + private key to generated-invited-user.json`);
+        } finally {
+          await auth.teardown();
+          await new Promise((resolve) => server.close(resolve));
+        }
+      },
+      getTimeout("passkey"),
+    );
+  });
 });

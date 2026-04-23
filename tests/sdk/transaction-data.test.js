@@ -7,7 +7,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import {
   getTimeout,
   FEATURE_FLAGS,
@@ -34,7 +34,10 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
     it(
       "should return array of transactions with expected structure",
       async () => {
-        const sdkResponse = await client.api.getTransactions(testAccountId);
+        const sdkResponse = await client.api.getTransactions(
+          testAccountId,
+          DUMMY_AUTH,
+        );
 
         // Assert SDK behavior: array with expected data shape
         assertArrayWithSchema(sdkResponse, "TurnkeyTransaction");
@@ -56,7 +59,8 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
       "should get deposit transaction by transaction ID",
       async () => {
         const sdkResponse = await client.api.getTransaction(
-          depositTransaction.transactionId
+          depositTransaction.transactionId,
+          DUMMY_AUTH,
         );
 
         // Assert SDK behavior: success with expected data shape
@@ -70,7 +74,7 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
       "should return 404 error for non-existent transaction",
       async () => {
         const fakeId = "00000000-0000-0000-0000-000000000000";
-        const sdkResponse = await client.api.getTransaction(fakeId);
+        const sdkResponse = await client.api.getTransaction(fakeId, DUMMY_AUTH);
 
         // Assert SDK error handling
         assertError(sdkResponse);
@@ -84,7 +88,8 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
       "should get withdrawal transaction by transaction ID",
       async () => {
         const sdkResponse = await client.api.getTransaction(
-          withdrawTransaction.transactionId
+          withdrawTransaction.transactionId,
+          DUMMY_AUTH,
         );
 
         // Assert SDK behavior: success with expected data shape

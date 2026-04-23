@@ -22,7 +22,6 @@ import {
 } from "../../utils/api-assertions.js";
 import { saveBodyToSign } from "../../utils/test-data-persistence.js";
 import txRequest from "../../fixtures/test-data/__generated__/generated-tx-passkey.json";
-import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if Passkey tests are disabled
 const describeInitPasskey = FEATURE_FLAGS.enablePasskeyTests
@@ -46,10 +45,13 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
   const testWithdrawAccountId = TEST_DATA.accounts.initWithdrawTargetAccountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const depositAmount = passkeyData.depositAmount;
-  const sourceCurrency = passkeyData.sourceCurrency;
+  // Amounts + currencies come from .env (DEPOSIT_AMOUNT, SOURCE_CURRENCY,
+  // WITHDRAW_AMOUNT, DESTINATION_CURRENCY). Set them before running this file.
+  const depositAmount = process.env.DEPOSIT_AMOUNT;
+  const sourceCurrency = process.env.SOURCE_CURRENCY;
+  const withdrawAmount = process.env.WITHDRAW_AMOUNT;
   // Get bank account ID — only needed for fiat off-ramp (usd/eur), not crypto (usdc/eurc)
-  const destinationCurrency = passkeyData.destinationCurrency;
+  const destinationCurrency = process.env.DESTINATION_CURRENCY;
   const isCryptoWithdrawal = ["usdc", "eurc"].includes(destinationCurrency);
   const bankAccountId = isCryptoWithdrawal
     ? null
@@ -162,7 +164,7 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           const requestBody = {
             accountId: testWithdrawAccountId,
             vaultAddr: testVaultAddr,
-            amount: passkeyData.withdrawAmount,
+            amount: withdrawAmount,
             destinationCurrency: destinationCurrency,
             // bankAccountId only needed for fiat off-ramp (eur/usd), not for crypto (usdc)
             ...(bankAccountId && { bankAccountId }),

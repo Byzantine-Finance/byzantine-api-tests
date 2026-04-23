@@ -17,7 +17,10 @@ import { describe, it, expect } from "vitest";
 import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import { generateUniqueEmail } from "../../utils/test-helpers.js";
-import { saveBodyToSign } from "../../utils/test-data-persistence.js";
+import {
+  saveBodyToSign,
+  saveInvitedUserData,
+} from "../../utils/test-data-persistence.js";
 import {
   assertSuccessWithSchema,
   assertError,
@@ -43,8 +46,13 @@ const TEST_SUITE_FLAGS = {
 
 describeUserInvitation("Byzantine User Invitation SDK", () => {
   const client = getSdkClient();
-  const testAccountId = TEST_DATA.accounts.testEntityAccountId;
-  const inviterUserId = TEST_DATA.accounts.entityRootUserId;
+  // Use CI entity passkey account when available (has registered passkey for signing)
+  const testAccountId =
+    process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID ||
+    TEST_DATA.accounts.testEntityAccountId;
+  const inviterUserId =
+    process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID ||
+    TEST_DATA.accounts.entityRootUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
@@ -54,11 +62,16 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
     it(
       "should generate payload for multiple users and save it",
       async () => {
-        // Generate unique emails for each user to avoid conflicts
+        // Use CI_INVITE_EMAIL if set (e.g., Mailslurp disposable inbox for automated OTP),
+        // otherwise generate unique emails to avoid conflicts
+        const ciInviteEmail = process.env.CI_INVITE_EMAIL;
         const newUsersWithUniqueEmails = inviteUsersPasskeyRequest.newUsers.map(
-          (user) => ({
+          (user, index) => ({
             ...user,
-            userEmail: generateUniqueEmail(user.userEmail),
+            userEmail:
+              ciInviteEmail && index === 0
+                ? ciInviteEmail
+                : generateUniqueEmail(user.userEmail),
           }),
         );
 
@@ -152,6 +165,14 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
           expect(invitedUser.lastName).toBeDefined();
           expect(invitedUser.userEmail).toBeDefined();
         });
+
+        // Save first invited user for OTP authentication flow
+        const firstUser = sdkResponse.data.newUsers[0];
+        saveInvitedUserData(
+          sdkResponse.data.accountId,
+          firstUser.userId,
+          firstUser.userEmail,
+        );
       },
       getTimeout("api"),
     );

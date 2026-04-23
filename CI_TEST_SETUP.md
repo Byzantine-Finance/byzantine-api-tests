@@ -41,11 +41,17 @@ CI_PASSKEY_ACCOUNT_ID=
 # USE_VIRTUAL_AUTH=true
 ```
 
-**KYC-approved target accounts (for init-passkey)**
+**KYC-approved target accounts**
 ```
+# Phase 1 account-management (add-bank-account requires KYC/KYB-approved status).
+# If unset, falls back to TEST_ACCOUNT_ID / generated testAccountId, which may not be approved.
+TEST_BANK_ACCOUNT_TARGET_ID=
+
+# Phase 2 init-passkey cycles (activate / deposit / withdraw)
 TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID=
 TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID=
 TEST_INIT_WITHDRAW_TARGET_ACCOUNT_ID=
+
 ```
 
 **OTP retrieval (one required for Phase 3 steps 5b–7)**
@@ -54,6 +60,15 @@ MAILSLURP_API_KEY=        # auto
 # or
 TEST_OTP_CODE=<code>      # manual
 ```
+
+**Deposit / withdraw amounts + currencies (required — read only from `.env`)**
+```
+DEPOSIT_AMOUNT=1
+SOURCE_CURRENCY=eur
+WITHDRAW_AMOUNT=1.9
+DESTINATION_CURRENCY=eur
+```
+Used by `init-passkey` and `init-otp` tests (both api and sdk suites). No fixture fallback — if these are unset the request body will fail schema validation, making the misconfiguration obvious.
 
 **Optional**
 ```
@@ -69,18 +84,23 @@ DEBUG_MODE=true           # verbose request/response logs
 ## 4. Command
 
 ```bash
-npm run test:ci
+npm run test:ci          # runs tests/api/ (default)
+npm run test:ci:sdk      # runs tests/sdk/
+# or, inline:
+TEST_SUITE=sdk node scripts/ci-test.js
 ```
+
+`TEST_SUITE` (default `api`) swaps the test directory for all three phases. Orchestration, env vars, and stamp signing are identical between suites — only the test files differ. The active suite is printed in the run header.
 
 ---
 
 ## Test execution order
 
-`ci-test.js` only runs `tests/api/` files. SDK tests are NOT invoked.
+`ci-test.js` runs either `tests/api/` or `tests/sdk/` depending on `TEST_SUITE`. The phase breakdown below refers to the selected suite's files (e.g. `tests/${TEST_SUITE}/init-passkey.test.js`).
 
-### Phase 1 — Core API tests (single vitest run, `--fileParallelism=false`)
+### Phase 1 — Core tests (single vitest run, `--fileParallelism=false`)
 
-All `tests/api/**/*.test.js` except `init-passkey`, `transaction-passkey`, `user-invitation`, `entity-account-validation`, `init-otp`, `entity-update-flow`.
+All `tests/${TEST_SUITE}/**/*.test.js` except `init-passkey`, `transaction-passkey`, `user-invitation`, `init-otp`, `entity-update-flow` (plus `validation/entity-account-validation` when `TEST_SUITE=api` — no validation subfolder under `tests/sdk/`).
 
 Files run (vitest-internal order, each completes before the next):
 - `health`, `account-creation`, `associated-persons`, `update-account`, `account-management`, `account-data`, `vault-data`, `transaction-data`, `transaction-otp`, `otp-authentication`, `role-management`, `invitation-queries`, `init-vault-upgrade-passkey`, `validation/vault-upgrade-validation`

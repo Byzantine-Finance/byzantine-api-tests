@@ -18,10 +18,10 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { apiClient } from "../../utils/api-client.js";
-import { endpoints } from "../../config/endpoints.js";
-import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
-import { generateUniqueEmail } from "../../utils/test-helpers.js";
+import { apiClient } from "../../../utils/api-client.js";
+import { endpoints } from "../../../config/endpoints.js";
+import { getTimeout, FEATURE_FLAGS } from "../../../config/test.config.js";
+import { generateUniqueEmail } from "../../../utils/test-helpers.js";
 import {
   assertError,
   assertSuccess,
@@ -30,9 +30,9 @@ import {
   assertSchema,
   assertHasFields,
   assertDoesNotHaveFields,
-} from "../../utils/api-assertions.js";
+} from "../../../utils/api-assertions.js";
 
-import validEntity from "../../fixtures/test-data/entities/valid-entity.json" assert { type: "json" };
+import validEntity from "../../../fixtures/test-data/entities/valid-entity.json" assert { type: "json" };
 
 const describeValidation =
   FEATURE_FLAGS.enableWriteTests &&

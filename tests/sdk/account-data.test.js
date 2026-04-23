@@ -33,7 +33,10 @@ describe("Account Data SDK", () => {
     it(
       "should get user details by user ID",
       async () => {
-        const sdkResponse = await client.api.getUserDetails(testUserId);
+        const sdkResponse = await client.api.getUserDetails(
+          { userId: testUserId },
+          DUMMY_AUTH,
+        );
         assertSuccessWithSchema(sdkResponse, "GetUserResponse");
 
         // Verify accounts is now an array of GetAccountResponse objects
@@ -58,7 +61,10 @@ describe("Account Data SDK", () => {
     it(
       "should get entity details by entity ID",
       async () => {
-        const sdkResponse = await client.api.getEntityDetails(testEntityId);
+        const sdkResponse = await client.api.getEntityDetails(
+          testEntityId,
+          DUMMY_AUTH,
+        );
         assertSuccessWithSchema(sdkResponse, "GetEntityResponse");
 
         // Verify account structure (changed from accountId to account object)
@@ -219,7 +225,10 @@ describe("Account Data SDK", () => {
     it(
       "should get bank accounts for an account",
       async () => {
-        const sdkResponse = await client.api.getBankAccounts(testAccountId);
+        const sdkResponse = await client.api.getBankAccounts(
+          testAccountId,
+          DUMMY_AUTH,
+        );
         assertSuccess(sdkResponse);
         assertSuccessWithSchema(sdkResponse, "GetBankAccountsResponse");
       },
@@ -231,6 +240,7 @@ describe("Account Data SDK", () => {
       async () => {
         const sdkResponse = await client.api.getBankAccounts(
           testAccountId,
+          DUMMY_AUTH,
           "usd",
         );
         assertSuccess(sdkResponse);

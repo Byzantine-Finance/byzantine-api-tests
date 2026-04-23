@@ -22,7 +22,6 @@ import {
   assertSchema,
 } from "../../utils/sdk-assertions.js";
 import { saveOtpTransactionId } from "../../utils/test-data-persistence.js";
-import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
 // Skip if OTP tests are disabled
 const describeInitOtp = FEATURE_FLAGS.enableOtpTests ? describe : describe.skip;
@@ -38,8 +37,12 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
-  const depositAmount = passkeyData.depositAmount;
-  const sourceCurrency = passkeyData.sourceCurrency;
+  // Amounts + currencies come from .env (DEPOSIT_AMOUNT, SOURCE_CURRENCY,
+  // WITHDRAW_AMOUNT, DESTINATION_CURRENCY). Set them before running this file.
+  const depositAmount = process.env.DEPOSIT_AMOUNT;
+  const sourceCurrency = process.env.SOURCE_CURRENCY;
+  const withdrawAmount = process.env.WITHDRAW_AMOUNT;
+  const destinationCurrency = process.env.DESTINATION_CURRENCY;
 
   describeInitDepositOtp("initDepositOtp()", () => {
     it(
@@ -101,8 +104,8 @@ describeInitOtp("Initiate OTP transactions SDK - Using Integrator SDK", () => {
         const requestBody = {
           accountId: testAccountId,
           vaultAddr: testVaultAddr,
-          amount: passkeyData.withdrawAmount,
-          destinationCurrency: passkeyData.destinationCurrency,
+          amount: withdrawAmount,
+          destinationCurrency: destinationCurrency,
         };
 
         assertSchema(requestBody, "WithdrawRequestBody");

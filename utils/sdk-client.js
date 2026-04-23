@@ -152,6 +152,15 @@ function setupAutoAuth(client) {
         "/v1/query/get-account-balances",
         "/v1/query/get-account-details",
         "/v1/query/get-customers",
+        "/v1/query/get-user-details",
+        "/v1/query/get-entity-details",
+        "/v1/query/get-bank-accounts",
+        // Transaction data
+        "/v1/query/get-transaction",
+        "/v1/query/get-transactions",
+        // Vault data
+        "/v1/query/top-vaults",
+        "/v1/query/apy/",
       ];
 
       // Check if this path requires authentication

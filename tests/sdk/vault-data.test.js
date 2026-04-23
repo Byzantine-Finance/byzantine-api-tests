@@ -7,7 +7,7 @@
  */
 
 import { describe, it } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   assertSuccess,
@@ -30,7 +30,7 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
     it(
       "should return list of vaults",
       async () => {
-        const sdkResponse = await client.api.getTopVaults();
+        const sdkResponse = await client.api.getTopVaults(DUMMY_AUTH);
 
         // Assert SDK behavior: array response
         assertSuccess(sdkResponse);
@@ -45,7 +45,7 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
     it(
       "should return vaults with expected structure",
       async () => {
-        const sdkResponse = await client.api.getTopVaults();
+        const sdkResponse = await client.api.getTopVaults(DUMMY_AUTH);
 
         // Assert SDK behavior: array with expected data shape
         assertArrayWithSchema(sdkResponse, "TopVault");
@@ -56,7 +56,7 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
     it(
       "should have valid vault addresses",
       async () => {
-        const sdkResponse = await client.api.getTopVaults();
+        const sdkResponse = await client.api.getTopVaults(DUMMY_AUTH);
 
         // Assert SDK behavior
         assertSuccess(sdkResponse);
@@ -75,14 +75,14 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
       "should return APY for specific vault with expected structure",
       async () => {
         // First get a vault ID
-        const vaultsResponse = await client.api.getTopVaults();
+        const vaultsResponse = await client.api.getTopVaults(DUMMY_AUTH);
         assertSuccess(vaultsResponse);
         assertDataArray(vaultsResponse, 1);
 
         const vaultId = vaultsResponse.data[0].vault_address;
 
         // Then get its APY
-        const apyResponse = await client.api.getVaultApy(vaultId);
+        const apyResponse = await client.api.getVaultApy(vaultId, DUMMY_AUTH);
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(apyResponse, "ApyResponse");
@@ -94,16 +94,18 @@ describeVaults("Vaults SDK - Using Integrator SDK", () => {
       "should return APY for specific period",
       async () => {
         // Get a vault ID
-        const vaultsResponse = await client.api.getTopVaults();
+        const vaultsResponse = await client.api.getTopVaults(DUMMY_AUTH);
         assertSuccess(vaultsResponse);
         assertDataArray(vaultsResponse, 1);
 
         const vaultId = vaultsResponse.data[0].vault_address;
 
         // Get daily APY
-        const apyResponse = await client.api.getVaultApy(vaultId, {
-          period: "daily",
-        });
+        const apyResponse = await client.api.getVaultApy(
+          vaultId,
+          DUMMY_AUTH,
+          "daily",
+        );
 
         // Assert SDK behavior: success with expected data shape
         assertSuccessWithSchema(apyResponse, "ApyResponse");

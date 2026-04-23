@@ -46,6 +46,15 @@ const rootDir = join(__dirname, "..");
 
 const DIVIDER = "═".repeat(60);
 
+// Which test suite to run: "api" (direct HTTP, default) or "sdk" (Integrator SDK).
+// Orchestration is identical; only the test file paths differ.
+const TEST_SUITE = (process.env.TEST_SUITE || "api").toLowerCase();
+if (!["api", "sdk"].includes(TEST_SUITE)) {
+  throw new Error(`Invalid TEST_SUITE="${TEST_SUITE}". Must be "api" or "sdk".`);
+}
+const testsDir = `tests/${TEST_SUITE}`;
+const testFile = (name) => `${testsDir}/${name}.test.js`;
+
 function log(phase, description) {
   console.log(`\n${DIVIDER}`);
   console.log(`  ${phase}: ${description}`);
@@ -89,7 +98,7 @@ function runPasskeyCycle(name, { initFlag, initTest, txFlag, txTest, extraInitEn
   // Step 1: Get payload
   console.log(`  [init] Getting bodyToSign payload...`);
   run(
-    `npx vitest run tests/api/init-passkey.test.js -t "${initTest}"`,
+    `npx vitest run ${testFile("init-passkey")} -t "${initTest}"`,
     {
       ENABLE_PASSKEY_TESTS: "true",
       [initFlag]: "true",
@@ -112,7 +121,7 @@ function runPasskeyCycle(name, { initFlag, initTest, txFlag, txTest, extraInitEn
   // Step 3: Submit
   console.log(`  [submit] Submitting signed payload...`);
   run(
-    `npx vitest run tests/api/transaction-passkey.test.js -t "${txTest}"`,
+    `npx vitest run ${testFile("transaction-passkey")} -t "${txTest}"`,
     {
       ENABLE_PASSKEY_TESTS: "true",
       [txFlag]: "true",
@@ -158,6 +167,7 @@ try {
   console.log(`\n${DIVIDER}`);
   console.log("  Byzantine Integrator SDK - CI Test Runner");
   console.log(DIVIDER);
+  console.log(`  Test suite:         ${TEST_SUITE} (${testsDir}/)`);
   console.log(`  Passkey tests:      ${isPasskeyEnabled}`);
   console.log(`  Signer mode:        ${signerMode}`);
   console.log(`  Activate TX:        ${process.env.ENABLE_PASSKEY_ACTIVATE_TX_TESTS === "true"}`);
@@ -170,8 +180,19 @@ try {
   // ──────────────────────────────────────────────────────────
   // Phase 1: Core tests (no passkey TX submission)
   // ──────────────────────────────────────────────────────────
-  log("Phase 1", "Core API Tests");
-  run("npx vitest run tests/api/ --fileParallelism=false --exclude tests/api/init-passkey.test.js --exclude tests/api/transaction-passkey.test.js --exclude tests/api/user-invitation.test.js --exclude tests/api/entity-account-validation.test.js --exclude tests/api/init-otp.test.js --exclude tests/api/entity-update-flow.test.js", {
+  log("Phase 1", `Core ${TEST_SUITE.toUpperCase()} Tests`);
+  const phase1Excludes = [
+    "init-passkey",
+    "transaction-passkey",
+    "user-invitation",
+    "init-otp",
+    "entity-update-flow",
+  ].map((name) => `--exclude ${testFile(name)}`);
+  // validation/ subfolder only exists under tests/api/
+  if (TEST_SUITE === "api") {
+    phase1Excludes.push("--exclude tests/api/validation/entity-account-validation.test.js");
+  }
+  run(`npx vitest run ${testsDir}/ --fileParallelism=false ${phase1Excludes.join(" ")}`, {
     // Disable all passkey TX tests (handled in Phase 2)
     ENABLE_PASSKEY_ACTIVATE_TX_TESTS: "false",
     ENABLE_PASSKEY_ACTIVATE_ETH_TX_TESTS: "false",
@@ -273,7 +294,7 @@ try {
     try {
       // Step 1: Get invite payload
       console.log("\n  ── Step 1: Get invite payload ──");
-      run('npx vitest run tests/api/user-invitation.test.js -t "should generate payload"', {
+      run(`npx vitest run ${testFile("user-invitation")} -t "should generate payload"`, {
         ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "true", INVITE_USERS: "false", CI: "true",
         ...inviteEmailEnv,
       });
@@ -284,7 +305,7 @@ try {
 
       // Step 3: Submit invitation
       console.log("  ── Step 3: Submit invitation ──");
-      run('npx vitest run tests/api/user-invitation.test.js -t "should invite"', {
+      run(`npx vitest run ${testFile("user-invitation")} -t "should invite"`, {
         ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "false", INVITE_USERS: "true", CI: "true",
         ...inviteEmailEnv,
       });
@@ -300,7 +321,7 @@ try {
 
       // Step 4: Init OTP for invited user
       console.log("  ── Step 4: Initialize OTP ──");
-      run('npx vitest run tests/api/otp-authentication.test.js -t "should initialize OTP"', {
+      run(`npx vitest run ${testFile("otp-authentication")} -t "should initialize OTP"`, {
         ENABLE_OTP_INIT_AUTH_TESTS: "true",
         ENABLE_OTP_AUTHENTICATE_TESTS: "false",
         ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
@@ -324,7 +345,7 @@ try {
       if (otpCode) {
         // Step 5b: Authenticate with OTP
         console.log("  ── Step 5b: Authenticate with OTP ──");
-        run('npx vitest run tests/api/otp-authentication.test.js -t "should authenticate"', {
+        run(`npx vitest run ${testFile("otp-authentication")} -t "should authenticate"`, {
           ENABLE_OTP_INIT_AUTH_TESTS: "false",
           ENABLE_OTP_AUTHENTICATE_TESTS: "true",
           ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
@@ -335,7 +356,7 @@ try {
 
         // Step 6: Create authenticator for invited user
         console.log("  ── Step 6: Create authenticator for invited user ──");
-        run('npx vitest run tests/api/otp-authentication.test.js -t "should create authenticators"', {
+        run(`npx vitest run ${testFile("otp-authentication")} -t "should create authenticators"`, {
           ENABLE_OTP_INIT_AUTH_TESTS: "false",
           ENABLE_OTP_AUTHENTICATE_TESTS: "false",
           ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "true",
@@ -353,7 +374,7 @@ try {
 
             // Get role update payload
             console.log("  [payload] Getting role update payload...");
-            run('npx vitest run tests/api/role-management.test.js -t "should generate payload"', {
+            run(`npx vitest run ${testFile("role-management")} -t "should generate payload"`, {
               ENABLE_WRITE_TESTS: "true",
               UPDATE_ROLE_PAYLOAD: "true",
               UPDATE_ROLE: "false",
@@ -367,7 +388,7 @@ try {
 
             // Submit
             console.log("  [submit] Submitting role update...");
-            run('npx vitest run tests/api/role-management.test.js -t "should update user role"', {
+            run(`npx vitest run ${testFile("role-management")} -t "should update user role"`, {
               ENABLE_WRITE_TESTS: "true",
               UPDATE_ROLE_PAYLOAD: "false",
               UPDATE_ROLE: "true",

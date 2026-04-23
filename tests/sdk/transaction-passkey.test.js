@@ -34,6 +34,15 @@ describeTransactionPasskey(
         transactionId: txRequest.activateAccount.transactionId,
         webAuthnStamp: txRequest.activateAccount.webAuthnStamp,
         flag: "enablePasskeyActivateTxTests",
+        chainId: 8453,
+      },
+      {
+        type: "ActivateAccountETH",
+        bodyToSign: txRequest.activateAccountEth.bodyToSign,
+        transactionId: txRequest.activateAccountEth.transactionId,
+        webAuthnStamp: txRequest.activateAccountEth.webAuthnStamp,
+        flag: "enablePasskeyActivateETHTxTests",
+        chainId: 1,
       },
       {
         type: "Deposit",
@@ -41,6 +50,7 @@ describeTransactionPasskey(
         transactionId: txRequest.deposit.transactionId,
         webAuthnStamp: txRequest.deposit.webAuthnStamp,
         flag: "enablePasskeyDepositTxTests",
+        chainId,
       },
       {
         type: "Withdrawal",
@@ -48,6 +58,7 @@ describeTransactionPasskey(
         transactionId: txRequest.withdraw.transactionId,
         webAuthnStamp: txRequest.withdraw.webAuthnStamp,
         flag: "enablePasskeyWithdrawTxTests",
+        chainId,
       },
       {
         type: "VaultUpgrade",
@@ -55,6 +66,7 @@ describeTransactionPasskey(
         transactionId: txRequest.vaultUpgrade?.transactionId,
         webAuthnStamp: txRequest.vaultUpgrade?.webAuthnStamp,
         flag: "enablePasskeyVaultUpgradeTxTests",
+        chainId: 8453,
       },
     ];
 
@@ -76,9 +88,18 @@ describeTransactionPasskey(
     });
 
     describe("signPayloadPasskey()", () => {
+      // Ensure vitest doesn't error on "no tests found" when all TX flags are disabled
+      if (transactionTests.length === 0) {
+        it("should have passkey TX tests enabled to run", () => {
+          console.log(
+            "No passkey TX tests enabled. Enable ENABLE_PASSKEY_*_TX_TESTS flags to run.",
+          );
+        });
+      }
+
       it.each(transactionTests)(
         "should sign $type payload with Passkey",
-        async ({ bodyToSign, transactionId, webAuthnStamp }) => {
+        async ({ bodyToSign, transactionId, webAuthnStamp, chainId: txChainId }) => {
           const requestBody = {
             signedBody: bodyToSign,
             transactionId: transactionId,
@@ -88,7 +109,7 @@ describeTransactionPasskey(
           assertSchema(requestBody, "SignPayloadRequestBodyPasskey");
 
           const sdkResponse = await client.api.signPayloadPasskey(
-            chainId,
+            txChainId,
             requestBody,
             DUMMY_AUTH,
           );

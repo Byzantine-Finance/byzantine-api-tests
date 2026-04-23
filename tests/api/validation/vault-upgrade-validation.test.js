@@ -303,9 +303,9 @@ describeValidation("Vault Upgrade Validation (Base -> Ethereum)", () => {
   const accountId = TEST_DATA.accounts.initVaultUpgradeTargetAccountId;
   const sourceVaultAddr = process.env.TEST_VAULT_UPGRADE_SOURCE_ADDR;
   const bankAccountId = process.env.REAL_BANK_ACCOUNT_ID;
-  const destinationCurrency = process.env.DESTINATION_CURRENCY;
-  const depositAmount = process.env.DEPOSIT_AMOUNT;
-  const sourceCurrency = process.env.SOURCE_CURRENCY;
+  const destinationCurrency = process.env.UPGRADE_VAULT_DESTINATION_CURRENCY;
+  const depositAmount = process.env.UPGRADE_VAULT_DEPOSIT_AMOUNT;
+  const sourceCurrency = process.env.UPGRADE_VAULT_SOURCE_CURRENCY;
 
   // Shared state across blocks (populated by earlier blocks when they run together)
   const state = {
