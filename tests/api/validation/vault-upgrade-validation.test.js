@@ -322,7 +322,7 @@ describeValidation("Vault Upgrade Validation (Base -> Ethereum)", () => {
       { authenticated: true }
     );
     assertSuccessWithSchema(accountDetails, "GetAccountDetailsResponse");
-    state.walletAddress = accountDetails.data.walletAddress;
+    state.walletAddress = accountDetails.data.walletDetails.walletAddress;
     expect(state.walletAddress).toBeTruthy();
     console.log(`  Account ID: ${accountId}`);
     console.log(`  Wallet:     ${state.walletAddress}`);

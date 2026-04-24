@@ -179,7 +179,7 @@ describe("OTP Authentication API", () => {
 
           const __dir = dirname(fileURLToPath(import.meta.url));
           const rootDir = join(__dir, "../..");
-          const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "3000", 10);
+          const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "0", 10);
           const RP_ID = process.env.VIRTUAL_AUTH_RPID || "localhost";
 
           // Start minimal server for WebAuthn page context

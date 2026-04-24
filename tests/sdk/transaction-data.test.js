@@ -26,10 +26,7 @@ const describeTransactionData = FEATURE_FLAGS.enableTransactionDataTests
 
 describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
-  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
-  const testAccountId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
-    ? process.env.CI_PASSKEY_ACCOUNT_ID
-    : passkeyData.accountId;
+  const testAccountId = process.env.GET_TRANSACTIONS_ACCOUNT_ID || passkeyData.accountId;
   let depositTransaction;
   let withdrawTransaction;
 
@@ -37,10 +34,7 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
     it(
       "should return array of transactions with expected structure",
       async () => {
-        const sdkResponse = await client.api.getTransactions(
-          testAccountId,
-          DUMMY_AUTH,
-        );
+        const sdkResponse = await client.api.getTransactions(testAccountId, DUMMY_AUTH);
 
         // Assert SDK behavior: array with expected data shape
         assertArrayWithSchema(sdkResponse, "TurnkeyTransaction");

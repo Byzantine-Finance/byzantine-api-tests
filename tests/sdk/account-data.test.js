@@ -29,7 +29,10 @@ describe("Account Data SDK", () => {
   const testEntityId = TEST_DATA.accounts.testEntityId;
   const testEntityAccountId = TEST_DATA.accounts.testEntityAccountId;
   const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
-  const bankAccountsId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
+  const bankAccountsId = (orchestrated && process.env.TEST_BANK_ACCOUNT_TARGET_ID)
+    ? process.env.TEST_BANK_ACCOUNT_TARGET_ID
+    : testAccountId;
+  const balancesAccountId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
     ? process.env.CI_PASSKEY_ACCOUNT_ID
     : testAccountId;
 
@@ -165,8 +168,11 @@ describe("Account Data SDK", () => {
         assertValidUuid(sdkResponse.data.accountId);
         expect(sdkResponse.data.accountName).toBeDefined();
         expect(sdkResponse.data.accountType).toMatch(/^(individual|company)$/);
-        expect(sdkResponse.data.walletAddress).toBeDefined();
-        expect(typeof sdkResponse.data.isSelfCustodial).toBe("boolean");
+        expect(sdkResponse.data.walletDetails).toBeDefined();
+        expect(sdkResponse.data.walletDetails.walletAddress).toBeDefined();
+        expect(typeof sdkResponse.data.walletDetails.isTurnkeyWallet).toBe("boolean");
+        expect(typeof sdkResponse.data.walletDetails.isSmartAccount.ethereum).toBe("boolean");
+        expect(typeof sdkResponse.data.walletDetails.isSmartAccount.base).toBe("boolean");
       },
       getTimeout("api"),
     );
@@ -183,8 +189,11 @@ describe("Account Data SDK", () => {
         assertValidUuid(sdkResponse.data.accountId);
         expect(sdkResponse.data.accountName).toBeDefined();
         expect(sdkResponse.data.accountType).toMatch(/^(individual|company)$/);
-        expect(sdkResponse.data.walletAddress).toBeDefined();
-        expect(typeof sdkResponse.data.isSelfCustodial).toBe("boolean");
+        expect(sdkResponse.data.walletDetails).toBeDefined();
+        expect(sdkResponse.data.walletDetails.walletAddress).toBeDefined();
+        expect(typeof sdkResponse.data.walletDetails.isTurnkeyWallet).toBe("boolean");
+        expect(typeof sdkResponse.data.walletDetails.isSmartAccount.ethereum).toBe("boolean");
+        expect(typeof sdkResponse.data.walletDetails.isSmartAccount.base).toBe("boolean");
       },
       getTimeout("api"),
     );
@@ -196,6 +205,12 @@ describe("Account Data SDK", () => {
       async () => {
         const sdkResponse = await client.api.getCustomers(DUMMY_AUTH);
         assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
+        const biz = sdkResponse.data.businessCustomers || [];
+        const ind = sdkResponse.data.individualCustomers || [];
+        console.log(`  Business: ${biz.length}, Individual: ${ind.length}`);
+        [...biz.slice(0, 3), ...ind.slice(0, 3)].forEach((c) =>
+          console.log(`  - ${JSON.stringify(c)}`),
+        );
       },
       getTimeout("api"),
     );
@@ -203,11 +218,11 @@ describe("Account Data SDK", () => {
     it(
       "should filter customers by type: individual",
       async () => {
-        const sdkResponse = await client.api.getCustomers(
-          DUMMY_AUTH,
-          "individual",
-        );
+        const sdkResponse = await client.api.getCustomers(DUMMY_AUTH, "individual");
         assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
+        const ind = sdkResponse.data.individualCustomers || [];
+        console.log(`  Individual customers: ${ind.length}`);
+        ind.slice(0, 3).forEach((c) => console.log(`  - ${JSON.stringify(c)}`));
       },
       getTimeout("api"),
     );
@@ -215,11 +230,11 @@ describe("Account Data SDK", () => {
     it(
       "should filter customers by type: business",
       async () => {
-        const sdkResponse = await client.api.getCustomers(
-          DUMMY_AUTH,
-          "business",
-        );
+        const sdkResponse = await client.api.getCustomers(DUMMY_AUTH, "business");
         assertSuccessWithSchema(sdkResponse, "GetCustomersResponse");
+        const biz = sdkResponse.data.businessCustomers || [];
+        console.log(`  Business customers: ${biz.length}`);
+        biz.slice(0, 3).forEach((c) => console.log(`  - ${JSON.stringify(c)}`));
       },
       getTimeout("api"),
     );
@@ -245,7 +260,7 @@ describe("Account Data SDK", () => {
         const sdkResponse = await client.api.getBankAccounts(
           bankAccountsId,
           DUMMY_AUTH,
-          "usd",
+          "eur",
         );
         assertSuccess(sdkResponse);
         assertSuccessWithSchema(sdkResponse, "GetBankAccountsResponse");
@@ -259,7 +274,7 @@ describe("Account Data SDK", () => {
       "should get account balances by account ID",
       async () => {
         const sdkResponse = await client.api.getAccountBalances(
-          testAccountId,
+          balancesAccountId,
           DUMMY_AUTH,
         );
         assertSuccess(sdkResponse);
@@ -274,10 +289,10 @@ describe("Account Data SDK", () => {
       "should get account balances with optional chain_id and include_test_vaults",
       async () => {
         const sdkResponse = await client.api.getAccountBalances(
-          testAccountId,
+          balancesAccountId,
           DUMMY_AUTH,
           {
-            chain_id: 1,
+            chain_id: 8453,
             include_test_vaults: false,
           },
         );

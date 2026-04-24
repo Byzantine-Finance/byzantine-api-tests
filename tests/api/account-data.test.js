@@ -26,7 +26,10 @@ describe("Account Data API", () => {
   const testEntityAccountId = TEST_DATA.accounts.testEntityAccountId;
   const testEntityId = TEST_DATA.accounts.testEntityId;
   const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
-  const bankAccountsId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
+  const bankAccountsId = (orchestrated && process.env.TEST_BANK_ACCOUNT_TARGET_ID)
+    ? process.env.TEST_BANK_ACCOUNT_TARGET_ID
+    : testAccountId;
+  const balancesAccountId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
     ? process.env.CI_PASSKEY_ACCOUNT_ID
     : testAccountId;
 
@@ -165,14 +168,17 @@ describe("Account Data API", () => {
         assertValidUuid(response.data.accountId);
         expect(response.data.accountName).toBeDefined();
         expect(response.data.accountType).toMatch(/^(individual|company)$/);
-        expect(response.data.walletAddress).toBeDefined();
-        expect(typeof response.data.isSelfCustodial).toBe("boolean");
+        expect(response.data.walletDetails).toBeDefined();
+        expect(response.data.walletDetails.walletAddress).toBeDefined();
+        expect(typeof response.data.walletDetails.isTurnkeyWallet).toBe("boolean");
+        expect(typeof response.data.walletDetails.isSmartAccount.ethereum).toBe("boolean");
+        expect(typeof response.data.walletDetails.isSmartAccount.base).toBe("boolean");
       },
       getTimeout("api"),
     );
 
     it(
-      "should get user account details by account ID",
+      "should get entity account details by account ID",
       async () => {
         const response = await apiClient.get(
           endpoints.accounts.getAccountDetails(testEntityAccountId),
@@ -183,8 +189,11 @@ describe("Account Data API", () => {
         assertValidUuid(response.data.accountId);
         expect(response.data.accountName).toBeDefined();
         expect(response.data.accountType).toMatch(/^(individual|company)$/);
-        expect(response.data.walletAddress).toBeDefined();
-        expect(typeof response.data.isSelfCustodial).toBe("boolean");
+        expect(response.data.walletDetails).toBeDefined();
+        expect(response.data.walletDetails.walletAddress).toBeDefined();
+        expect(typeof response.data.walletDetails.isTurnkeyWallet).toBe("boolean");
+        expect(typeof response.data.walletDetails.isSmartAccount.ethereum).toBe("boolean");
+        expect(typeof response.data.walletDetails.isSmartAccount.base).toBe("boolean");
       },
       getTimeout("api"),
     );
@@ -246,7 +255,7 @@ describe("Account Data API", () => {
       "should filter bank accounts by currency",
       async () => {
         const response = await apiClient.get(
-          endpoints.accounts.getBankAccounts(bankAccountsId, "usd"),
+          endpoints.accounts.getBankAccounts(bankAccountsId, "eur"),
           { authenticated: true },
         );
         assertSuccess(response);
@@ -261,7 +270,7 @@ describe("Account Data API", () => {
       "should get account balances by account ID",
       async () => {
         const response = await apiClient.get(
-          endpoints.accounts.getAccountBalances(testAccountId),
+          endpoints.accounts.getAccountBalances(balancesAccountId),
           { authenticated: true },
         );
         assertSuccess(response);
@@ -276,8 +285,8 @@ describe("Account Data API", () => {
       "should get account balances with optional chain_id and include_test_vaults",
       async () => {
         const response = await apiClient.get(
-          endpoints.accounts.getAccountBalances(testAccountId, {
-            chain_id: 1,
+          endpoints.accounts.getAccountBalances(balancesAccountId, {
+            chain_id: 8453,
             include_test_vaults: false,
           }),
           { authenticated: true },

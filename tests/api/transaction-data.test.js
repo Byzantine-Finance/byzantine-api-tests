@@ -21,11 +21,7 @@ const describeTransactionData = FEATURE_FLAGS.enableTransactionDataTests
   : describe.skip;
 
 describeTransactionData("Transaction Data API", () => {
-  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
-  const testAccountId =
-    orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID
-      ? process.env.CI_PASSKEY_ACCOUNT_ID
-      : passkeyData.accountId;
+  const testAccountId = process.env.GET_TRANSACTIONS_ACCOUNT_ID || passkeyData.accountId;
   let depositTransaction;
   let withdrawTransaction;
 
