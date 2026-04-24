@@ -1,3 +1,10 @@
 {
-  "accountId": "123e4567-e89b-12d3-a456-426614174000"
+  "residentialAddress": {
+    "streetLine1": "20 rue de Sevres",
+    "city": "Paris",
+    "postalCode": "75007",
+    "country": "FRA",
+    "streetLine2": null,
+    "state": null
+  }
 }

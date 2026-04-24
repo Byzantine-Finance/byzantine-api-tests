@@ -1,11 +1,6 @@
 {
-  "accountId": "f78c26d1-b39c-42c1-9df8-3b8f4a2fc019",
-  "userId": "1add39e7-375f-4110-8edb-1390b426fc40",
-  "email": "lin+invited+apitests-1774364143@byzantine.fi",
-  "lastUpdated": "2026-03-24T14:58:44.433Z",
-  "credentialId": "",
-  "privateKey": "",
-  "authenticatorIds": [
-    "9c5b540a-4e51-4b1a-bd97-0afafaf259c0"
-  ]
+  "accountId": "7807f4c0-a9b0-4b18-bcd7-f2f2f0396327",
+  "userId": "bc845d4f-3984-4674-b0ef-44f6bfbab417",
+  "email": "1f0d7eda-72ff-415b-8602-8fccfc38a2f2@mailslurp.xyz",
+  "lastUpdated": "2026-04-23T16:03:31.385Z"
 }

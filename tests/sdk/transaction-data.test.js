@@ -26,7 +26,10 @@ const describeTransactionData = FEATURE_FLAGS.enableTransactionDataTests
 
 describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
-  const testAccountId = passkeyData.accountId;
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const testAccountId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
+    ? process.env.CI_PASSKEY_ACCOUNT_ID
+    : passkeyData.accountId;
   let depositTransaction;
   let withdrawTransaction;
 

@@ -2,13 +2,13 @@
   "associatedPersons": [
     {
       "userInfo": {
-        "firstName": "John",
-        "lastName": "Smith",
-        "email": "lin+for-john@example.com",
+        "firstName": "Alice",
+        "lastName": "Martin",
+        "email": "lin+for-alice-ci-test@example.com",
         "birthDate": "1990-01-01",
         "nationality": "FRA",
         "residentialAddress": {
-          "streetLine1": "33 Rue La Fayette",
+          "streetLine1": "1 Rue La Fayette",
           "city": "Paris",
           "postalCode": "75009",
           "country": "FRA",

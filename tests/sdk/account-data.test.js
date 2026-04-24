@@ -28,6 +28,10 @@ describe("Account Data SDK", () => {
   const testUserId = TEST_DATA.accounts.testUserId;
   const testEntityId = TEST_DATA.accounts.testEntityId;
   const testEntityAccountId = TEST_DATA.accounts.testEntityAccountId;
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const bankAccountsId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
+    ? process.env.CI_PASSKEY_ACCOUNT_ID
+    : testAccountId;
 
   describe("getUserDetails()", () => {
     it(
@@ -226,7 +230,7 @@ describe("Account Data SDK", () => {
       "should get bank accounts for an account",
       async () => {
         const sdkResponse = await client.api.getBankAccounts(
-          testAccountId,
+          bankAccountsId,
           DUMMY_AUTH,
         );
         assertSuccess(sdkResponse);
@@ -239,7 +243,7 @@ describe("Account Data SDK", () => {
       "should filter bank accounts by currency",
       async () => {
         const sdkResponse = await client.api.getBankAccounts(
-          testAccountId,
+          bankAccountsId,
           DUMMY_AUTH,
           "usd",
         );

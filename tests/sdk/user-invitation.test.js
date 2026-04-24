@@ -46,13 +46,19 @@ const TEST_SUITE_FLAGS = {
 
 describeUserInvitation("Byzantine User Invitation SDK", () => {
   const client = getSdkClient();
-  // Use CI entity passkey account when available (has registered passkey for signing)
-  const testAccountId =
-    process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID ||
-    TEST_DATA.accounts.testEntityAccountId;
-  const inviterUserId =
-    process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID ||
-    TEST_DATA.accounts.entityRootUserId;
+  // Under ci-test.js, the orchestrator sets CI_TEST_ORCHESTRATED=true and the
+  // CI entity passkey account (the one with a registered passkey for signing)
+  // takes priority. Direct `npx vitest` runs fall back to the generated
+  // TEST_DATA so local runs don't accidentally hit the CI account.
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const testAccountId = orchestrated
+    ? process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID ||
+      TEST_DATA.accounts.testEntityAccountId
+    : TEST_DATA.accounts.testEntityAccountId;
+  const inviterUserId = orchestrated
+    ? process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID ||
+      TEST_DATA.accounts.entityRootUserId
+    : TEST_DATA.accounts.entityRootUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
@@ -176,5 +182,106 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
       },
       getTimeout("api"),
     );
+  });
+
+  // ── Invitation queries (run AFTER the invite submission above) ──
+  // Declared after the invite describe so vitest's in-file ordering runs them
+  // next. Gated only by the outer ENABLE_WRITE_TESTS flag so ad-hoc runs can
+  // still query pre-existing invitations even with INVITE_USERS=false.
+  describe("Invitation queries", () => {
+    let accountInvitationsResponse = null;
+
+    describe("getInvitationsByAccountId()", () => {
+      it(
+        "should get invitations for entity account",
+        async () => {
+          if (!testAccountId) {
+            console.warn(
+              "⚠️  Skipping test - no CI_ENTITY_PASSKEY_ACCOUNT_ID or testEntityAccountId available",
+            );
+            return;
+          }
+
+          const sdkResponse = await client.api.getInvitationsByAccountId(
+            testAccountId,
+            DUMMY_AUTH,
+          );
+
+          // Store response for reuse by the getInvitationsByEmail test
+          accountInvitationsResponse = sdkResponse;
+
+          assertSuccessWithSchema(sdkResponse, "GetInvitationsResponse");
+          expect(sdkResponse.data.invitations).toBeInstanceOf(Array);
+
+          if (sdkResponse.data.invitations.length > 0) {
+            const invitation = sdkResponse.data.invitations[0];
+            assertSchema(invitation, "GetInvitationResponse");
+            assertValidUuid(invitation.invitation_id);
+            assertValidUuid(invitation.account_id);
+            assertValidUuid(invitation.user_id);
+            assertValidUuid(invitation.inviter_id);
+            expect(invitation.account_name).toBeDefined();
+            expect(invitation.first_name).toBeDefined();
+            expect(invitation.last_name).toBeDefined();
+            expect(invitation.user_email).toBeDefined();
+            expect(invitation.inviter_first_name).toBeDefined();
+            expect(invitation.inviter_last_name).toBeDefined();
+            expect(invitation.status).toMatch(
+              /^(pending|accepted|rejected|cancelled)$/,
+            );
+            expect(invitation.created_at).toBeDefined();
+            expect(invitation.updated_at).toBeDefined();
+          }
+
+          console.log(
+            `✅ Found ${sdkResponse.data.invitations.length} invitation(s) for entity account ${testAccountId}`,
+          );
+        },
+        getTimeout("api"),
+      );
+    });
+
+    describe("getInvitationsByEmail()", () => {
+      it(
+        "should get all invitations for an email address",
+        async () => {
+          if (
+            !accountInvitationsResponse ||
+            accountInvitationsResponse.error ||
+            !accountInvitationsResponse.data ||
+            accountInvitationsResponse.data.invitations.length === 0
+          ) {
+            console.warn(
+              "⚠️  Skipping test - no invitations found from previous test to extract email",
+            );
+            return;
+          }
+
+          const testEmail =
+            accountInvitationsResponse.data.invitations[0].user_email;
+          console.log(`📧 Using email from previous response: ${testEmail}`);
+
+          const sdkResponse = await client.api.getInvitationsByEmail(
+            testEmail,
+            DUMMY_AUTH,
+          );
+
+          assertSuccessWithSchema(sdkResponse, "GetInvitationsResponse");
+          expect(sdkResponse.data.invitations).toBeInstanceOf(Array);
+
+          if (sdkResponse.data.invitations.length > 0) {
+            const invitation = sdkResponse.data.invitations[0];
+            assertSchema(invitation, "GetInvitationResponse");
+            expect(invitation.user_email).toBe(testEmail);
+            console.log(
+              `✅ Found ${sdkResponse.data.invitations.length} invitation(s) for email ${testEmail}`,
+            );
+          } else {
+            console.log(`ℹ️  No invitations found for email ${testEmail}`);
+          }
+        },
+        getTimeout("api"),
+      );
+    });
   });
 });

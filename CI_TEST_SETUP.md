@@ -103,7 +103,9 @@ TEST_SUITE=sdk node scripts/ci-test.js
 All `tests/${TEST_SUITE}/**/*.test.js` except `init-passkey`, `transaction-passkey`, `user-invitation`, `init-otp`, `entity-update-flow` (plus `validation/entity-account-validation` when `TEST_SUITE=api` — no validation subfolder under `tests/sdk/`).
 
 Files run (vitest-internal order, each completes before the next):
-- `health`, `account-creation`, `associated-persons`, `update-account`, `account-management`, `account-data`, `vault-data`, `transaction-data`, `transaction-otp`, `otp-authentication`, `role-management`, `invitation-queries`, `init-vault-upgrade-passkey`, `validation/vault-upgrade-validation`
+- `health`, `account-creation`, `associated-persons`, `update-account`, `account-management`, `account-data`, `vault-data`, `transaction-data`, `transaction-otp`, `otp-authentication`, `role-management`, `init-vault-upgrade-passkey`, `validation/vault-upgrade-validation`
+
+(Invitation queries now live inside `user-invitation.test.js` and run as part of Phase 3 Step 3, right after the invitation is sent — see below.)
 
 ### Phase 2 — Passkey cycles (strict order, each = init → sign → submit)
 
@@ -129,7 +131,7 @@ Files run (vitest-internal order, each completes before the next):
 
 1. `user-invitation` -t `"should generate payload"`
 2. `generate-stamps-ci.js` (sign invite)
-3. `user-invitation` -t `"should invite"`
+3. `user-invitation` (full file with `INVITE_PAYLOAD=false`, `INVITE_USERS=true`) — runs the invite submission and then the `Invitation queries` describe (`getInvitationsByAccountId` + `getInvitationsByEmail`) against the freshly-created invitation.
 4. `otp-authentication` -t `"should initialize OTP"`
 5. Retrieve OTP (Mailslurp auto or `TEST_OTP_CODE`)
 6. `otp-authentication` -t `"should authenticate"`

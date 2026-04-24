@@ -25,6 +25,10 @@ describe("Account Data API", () => {
   const testUserId = TEST_DATA.accounts.testUserId;
   const testEntityAccountId = TEST_DATA.accounts.testEntityAccountId;
   const testEntityId = TEST_DATA.accounts.testEntityId;
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const bankAccountsId = (orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID)
+    ? process.env.CI_PASSKEY_ACCOUNT_ID
+    : testAccountId;
 
   describe("GET /v1/query/get-user-details", () => {
     it(
@@ -229,7 +233,7 @@ describe("Account Data API", () => {
       "should get bank accounts for an account",
       async () => {
         const response = await apiClient.get(
-          endpoints.accounts.getBankAccounts(testAccountId),
+          endpoints.accounts.getBankAccounts(bankAccountsId),
           { authenticated: true },
         );
         assertSuccess(response);
@@ -242,7 +246,7 @@ describe("Account Data API", () => {
       "should filter bank accounts by currency",
       async () => {
         const response = await apiClient.get(
-          endpoints.accounts.getBankAccounts(testAccountId, "usd"),
+          endpoints.accounts.getBankAccounts(bankAccountsId, "usd"),
           { authenticated: true },
         );
         assertSuccess(response);

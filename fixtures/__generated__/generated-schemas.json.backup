@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-03-30T14:52:08.855Z\nSpec SHA-256: d4cdbdebb6839fe01c3ea5794a22beef199689cf7199a1bc20cda2dfd1e4f4f9",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-04-09T15:05:05.898Z\nSpec SHA-256: dcc8d3e58ae82d80e618686866e9ca783de4b84c1c202436002fc3c8da82714b",
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -893,6 +893,13 @@
           "$ref": "#/components/schemas/AssociatedPerson"
         }
       },
+      "walletAddress": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional wallet address for self-custodial accounts. If provided, no Turnkey sub-organization will be created and `required_approvals` will be set to 0."
+      },
       "byzantineTermsSignedAt": {
         "type": "string",
         "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
@@ -909,6 +916,7 @@
       "verificationStatus",
       "entityInfo",
       "rootUsers",
+      "walletAddress",
       "byzantineTermsSignedAt"
     ],
     "properties": {
@@ -947,6 +955,10 @@
         "items": {
           "$ref": "#/components/schemas/AssociatedPersonResponse"
         }
+      },
+      "walletAddress": {
+        "type": "string",
+        "description": "The wallet address associated with this account."
       },
       "byzantineTermsSignedAt": {
         "type": "string",
@@ -1013,6 +1025,13 @@
         "type": "string",
         "description": "The timestamp when the Byzantine Finance Terms & Conditions were signed. For more information, see [individual account creation - KYC](https://docs.byzantine.fi/api-reference/kyc)."
       },
+      "walletAddress": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional wallet address for self-custodial accounts. If provided, no Turnkey sub-organization will be created and `required_approvals` will be set to 0."
+      },
       "authenticators": {
         "type": [
           "array",
@@ -1034,6 +1053,7 @@
       "accountId",
       "verificationStatus",
       "userInfo",
+      "walletAddress",
       "byzantineTermsSignedAt",
       "isPasskeyActivated",
       "isOtpActivated"
@@ -1073,6 +1093,10 @@
         "items": {
           "$ref": "#/components/schemas/VerificationDocumentResponse"
         }
+      },
+      "walletAddress": {
+        "type": "string",
+        "description": "The wallet address associated with this account."
       },
       "byzantineTermsSignedAt": {
         "type": "string",
@@ -2142,10 +2166,12 @@
       "account_name",
       "user_id",
       "role",
-      "user_name",
+      "first_name",
+      "last_name",
       "user_email",
       "inviter_id",
-      "inviter_name",
+      "inviter_first_name",
+      "inviter_last_name",
       "status",
       "created_at",
       "updated_at"
@@ -2166,7 +2192,10 @@
       "role": {
         "$ref": "#/components/schemas/AccountUserRole"
       },
-      "user_name": {
+      "first_name": {
+        "type": "string"
+      },
+      "last_name": {
         "type": "string"
       },
       "user_email": {
@@ -2175,7 +2204,10 @@
       "inviter_id": {
         "$ref": "#/components/schemas/Uuid"
       },
-      "inviter_name": {
+      "inviter_first_name": {
+        "type": "string"
+      },
+      "inviter_last_name": {
         "type": "string"
       },
       "status": {
@@ -2695,7 +2727,8 @@
       "invitation_id",
       "account_id",
       "user_id",
-      "user_name",
+      "first_name",
+      "last_name",
       "user_email",
       "invited_by",
       "status",
@@ -2712,7 +2745,10 @@
       "user_id": {
         "$ref": "#/components/schemas/Uuid"
       },
-      "user_name": {
+      "first_name": {
+        "type": "string"
+      },
+      "last_name": {
         "type": "string"
       },
       "user_email": {
@@ -2823,16 +2859,21 @@
     "description": "The details of the new users invited.",
     "required": [
       "userId",
-      "userName",
+      "firstName",
+      "lastName",
       "userEmail"
     ],
     "properties": {
       "userId": {
         "$ref": "#/components/schemas/Uuid"
       },
-      "userName": {
+      "firstName": {
         "type": "string",
-        "description": "The name of the new user."
+        "description": "The first name of the new user."
+      },
+      "lastName": {
+        "type": "string",
+        "description": "The last name of the new user."
       },
       "userEmail": {
         "type": "string",
@@ -2851,13 +2892,18 @@
     "type": "object",
     "description": "The details of the new user to invite.",
     "required": [
-      "userName",
+      "firstName",
+      "lastName",
       "userEmail"
     ],
     "properties": {
-      "userName": {
+      "firstName": {
         "type": "string",
-        "description": "The name of the user to invite."
+        "description": "The first name of the user to invite."
+      },
+      "lastName": {
+        "type": "string",
+        "description": "The last name of the user to invite."
       },
       "userEmail": {
         "type": "string",
@@ -3059,7 +3105,8 @@
       "invitationId",
       "userId",
       "role",
-      "userName",
+      "firstName",
+      "lastName",
       "userEmail",
       "invitedBy"
     ],
@@ -3073,7 +3120,10 @@
       "role": {
         "$ref": "#/components/schemas/AccountUserRole"
       },
-      "userName": {
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
         "type": "string"
       },
       "userEmail": {
@@ -3413,7 +3463,8 @@
     "description": "Response body for a team member",
     "required": [
       "userId",
-      "userName",
+      "firstName",
+      "lastName",
       "userEmail",
       "role",
       "joinedAt"
@@ -3422,7 +3473,10 @@
       "userId": {
         "$ref": "#/components/schemas/Uuid"
       },
-      "userName": {
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
         "type": "string"
       },
       "userEmail": {

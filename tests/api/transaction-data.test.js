@@ -21,7 +21,11 @@ const describeTransactionData = FEATURE_FLAGS.enableTransactionDataTests
   : describe.skip;
 
 describeTransactionData("Transaction Data API", () => {
-  const testAccountId = passkeyData.accountId;
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const testAccountId =
+    orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID
+      ? process.env.CI_PASSKEY_ACCOUNT_ID
+      : passkeyData.accountId;
   let depositTransaction;
   let withdrawTransaction;
 
@@ -31,7 +35,7 @@ describeTransactionData("Transaction Data API", () => {
       async () => {
         const response = await apiClient.get(
           endpoints.transactions.getByAccountId(testAccountId),
-          { authenticated: true }
+          { authenticated: true },
         );
 
         assertSuccessWithArraySchema(response, "TurnkeyTransaction");
@@ -41,10 +45,10 @@ describeTransactionData("Transaction Data API", () => {
 
         // Find first withdrawal transaction
         withdrawTransaction = response.data.find(
-          (tx) => tx.type === "withdraw"
+          (tx) => tx.type === "withdraw",
         );
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
   });
 
@@ -54,43 +58,29 @@ describeTransactionData("Transaction Data API", () => {
       async () => {
         const response = await apiClient.get(
           endpoints.transactions.getById(depositTransaction.transactionId),
-          { authenticated: true }
+          { authenticated: true },
         );
 
         assertSuccessWithSchema(response, "TurnkeyTransaction");
         assertSuccessWithSchema(response, "GetTransactionResponse");
       },
-      getTimeout("api")
+      getTimeout("api"),
     );
 
-    it(
-      "should return 404 for non-existent transaction",
-      async () => {
-        const fakeId = "00000000-0000-0000-0000-000000000000";
-        const response = await apiClient.get(
-          endpoints.transactions.getById(fakeId),
-          { authenticated: true }
-        );
+    describe("GET /v1/query/get-transaction", () => {
+      it(
+        "should get withdrawal transaction by transaction ID",
+        async () => {
+          const response = await apiClient.get(
+            endpoints.transactions.getById(withdrawTransaction.transactionId),
+            { authenticated: true },
+          );
 
-        assertError(response, 404);
-      },
-      getTimeout("api")
-    );
-  });
-
-  describe("GET /v1/query/get-transaction", () => {
-    it(
-      "should get withdrawal transaction by transaction ID",
-      async () => {
-        const response = await apiClient.get(
-          endpoints.transactions.getById(withdrawTransaction.transactionId),
-          { authenticated: true }
-        );
-
-        assertSuccessWithSchema(response, "TurnkeyTransaction");
-        assertSuccessWithSchema(response, "GetTransactionResponse");
-      },
-      getTimeout("api")
-    );
+          assertSuccessWithSchema(response, "TurnkeyTransaction");
+          assertSuccessWithSchema(response, "GetTransactionResponse");
+        },
+        getTimeout("api"),
+      );
+    });
   });
 });

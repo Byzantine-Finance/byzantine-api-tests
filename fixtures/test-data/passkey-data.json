@@ -2,8 +2,8 @@
     "accountId": "8b4f8ee4-8bbd-4ddc-897e-f77a167bb6a9",
     "walletAddress": "0xc4c8D37A80475C69e229cA4792e10eeC91d1b437",
     "email": "lin+apitests-1767793108@byzantine.fi",
-    "depositAmount": "0.2",
-    "sourceCurrency": "eurc",
-    "withdrawAmount": "0.2",
-    "destinationCurrency": "eurc"
+    "depositAmount": "1",
+    "sourceCurrency": "eur",
+    "withdrawAmount": "1.9",
+    "destinationCurrency": "eur"
 }
