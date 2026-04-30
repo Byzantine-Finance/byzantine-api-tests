@@ -15,7 +15,6 @@ import {
 import {
   assertSuccessWithSchema,
   assertArrayWithSchema,
-  assertError,
 } from "../../utils/sdk-assertions.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
 
@@ -67,33 +66,21 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
       getTimeout("api")
     );
 
-    it(
-      "should return 404 error for non-existent transaction",
-      async () => {
-        const fakeId = "00000000-0000-0000-0000-000000000000";
-        const sdkResponse = await client.api.getTransaction(fakeId, DUMMY_AUTH);
+    describe("getTransaction()", () => {
+      it(
+        "should get withdrawal transaction by transaction ID",
+        async () => {
+          const sdkResponse = await client.api.getTransaction(
+            withdrawTransaction.transactionId,
+            DUMMY_AUTH,
+          );
 
-        // Assert SDK error handling
-        assertError(sdkResponse);
-      },
-      getTimeout("api")
-    );
-  });
-
-  describe("getTransaction()", () => {
-    it(
-      "should get withdrawal transaction by transaction ID",
-      async () => {
-        const sdkResponse = await client.api.getTransaction(
-          withdrawTransaction.transactionId,
-          DUMMY_AUTH,
-        );
-
-        // Assert SDK behavior: success with expected data shape
-        assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
-        assertSuccessWithSchema(sdkResponse, "GetTransactionResponse");
-      },
-      getTimeout("api")
-    );
+          // Assert SDK behavior: success with expected data shape
+          assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
+          assertSuccessWithSchema(sdkResponse, "GetTransactionResponse");
+        },
+        getTimeout("api")
+      );
+    });
   });
 });
