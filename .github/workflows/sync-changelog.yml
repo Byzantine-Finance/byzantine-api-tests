@@ -1,0 +1,83 @@
+name: Sync CHANGELOG to docs
+
+on:
+  push:
+    branches: [main, test/changelog]
+    paths: ["CHANGELOG.md"]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout docs repository
+        uses: actions/checkout@v4
+        with:
+          repository: Byzantine-Finance/docs
+          token: ${{ secrets.DOCS_REPO_TOKEN }}
+          path: docs-repo
+
+      - name: Inject CHANGELOG body into changelog.mdx
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          src = Path("CHANGELOG.md").read_text()
+
+          # Remove the page title "# Changelog"
+          src = re.sub(r"\A# [^\n]*\n+", "", src, count=1)
+
+          # MDX requires void HTML tags to self-close
+          src = re.sub(r"<br\s*/?>", "<br />", src)
+
+          # Drop reference-style link definitions that point into the private repo
+          src = re.sub(
+              r"^\[[^\]]+\]:\s+https?://github\.com/Byzantine-Finance/byzantine-api-tests/\S*\s*\n?",
+              "",
+              src,
+              flags=re.MULTILINE,
+          )
+
+          page = Path("docs-repo/api-reference/changelog.mdx")
+          old = page.read_text()
+          parts = old.split("---", 2)
+          if len(parts) < 3:
+              raise SystemExit("changelog.mdx is missing frontmatter")
+          frontmatter = f"---{parts[1]}---"
+          page.write_text(f"{frontmatter}\n\n{src.strip()}\n")
+          PY
+
+      - name: Open PR on docs repo
+        working-directory: docs-repo
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
+        run: |
+          if git diff --quiet -- api-reference/changelog.mdx; then
+            echo "No changelog changes to sync."
+            exit 0
+          fi
+          git config user.name "changelog-bot"
+          git config user.email "changelog-bot@users.noreply.github.com"
+          BRANCH="chore/sync-changelog-${GITHUB_SHA::7}"
+          git checkout -B "$BRANCH"
+          git add api-reference/changelog.mdx
+          git commit -m "Sync changelog from byzantine-api-tests@${GITHUB_SHA::7}"
+          # Force-push: this branch is bot-owned, safe to overwrite on reruns
+          git push --force origin "$BRANCH"
+          # Only open a PR if one doesn't already exist for this branch
+          if gh pr view "$BRANCH" --repo Byzantine-Finance/docs >/dev/null 2>&1; then
+            echo "PR already exists for $BRANCH — branch updated in place."
+          else
+            gh pr create \
+              --repo Byzantine-Finance/docs \
+              --base main \
+              --head "$BRANCH" \
+              --title "Sync changelog (byzantine-api-tests@${GITHUB_SHA::7})" \
+              --body "Automated sync of \`CHANGELOG.md\` from \`Byzantine-Finance/byzantine-api-tests@${GITHUB_SHA}\`."
+          fi
