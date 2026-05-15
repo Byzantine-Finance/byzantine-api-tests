@@ -38,7 +38,7 @@ jobs:
 
           # Drop reference-style link definitions that point into the private repo
           src = re.sub(
-              r"^\[[^\]]+\]:\s+https?://github\.com/Byzantine-Finance/byzantine-api-tests/\S*\s*\n?",
+              r"^\[[^\]]+\]:\s+https?://github\.com/Byzantine-Finance/byzantine-api/\S*\s*\n?",
               "",
               src,
               flags=re.MULTILINE,
