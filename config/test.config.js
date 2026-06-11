@@ -151,6 +151,11 @@ export const FEATURE_FLAGS = {
   // Transaction data tests
   enableTransactionDataTests: process.env.ENABLE_TRANSACTION_DATA_TESTS !== "false", // Enabled by default
 
+  // Webhook tests
+  // Read-only webhook queries (list subscriptions, list deliveries) - enabled by default.
+  // The create/update/delete/test/retry lifecycle is additionally gated by enableWriteTests.
+  enableWebhookTests: process.env.ENABLE_WEBHOOK_TESTS !== "false", // Enabled by default
+
   // Associated persons tests
   addAssociatedPerson: process.env.ADD_ASSOCIATED_PERSON !== "false", // Enabled by default
   updateAssociatedPerson: process.env.UPDATE_ASSOCIATED_PERSON !== "false", // Enabled by default

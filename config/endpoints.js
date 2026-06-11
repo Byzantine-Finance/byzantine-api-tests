@@ -297,6 +297,49 @@ export const endpoints = {
   },
 
   // ============================================
+  // Webhooks
+  // ============================================
+  webhooks: {
+    /**
+     * Webhook subscriptions collection
+     * POST to create a subscription (CreateWebhookSubscriptionRequest),
+     * GET to list all subscriptions (ListWebhookSubscriptionsResponse)
+     */
+    subscriptions: "/v1/webhooks/subscriptions",
+
+    /**
+     * A single webhook subscription by ID
+     * PATCH to update (UpdateWebhookSubscriptionRequest),
+     * DELETE to remove
+     * @param {string} subscriptionId - UUID
+     */
+    subscription: (subscriptionId) =>
+      `/v1/webhooks/subscriptions/${subscriptionId}`,
+
+    /**
+     * Send a signed test webhook for a subscription
+     * Returns TestWebhookDeliveryResponse
+     * @param {string} subscriptionId - UUID
+     */
+    testSubscription: (subscriptionId) =>
+      `/v1/webhooks/subscriptions/${subscriptionId}/test`,
+
+    /**
+     * Webhook delivery history
+     * GET to list deliveries (ListWebhookDeliveriesResponse)
+     */
+    deliveries: "/v1/webhooks/deliveries",
+
+    /**
+     * Retry a webhook delivery
+     * Returns TestWebhookDeliveryResponse
+     * @param {string} deliveryId - UUID
+     */
+    retryDelivery: (deliveryId) =>
+      `/v1/webhooks/deliveries/${deliveryId}/retry`,
+  },
+
+  // ============================================
   // User Role Management
   // ============================================
   roles: {
