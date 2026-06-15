@@ -36,7 +36,7 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
         const sdkResponse = await client.api.getTransactions(testAccountId, DUMMY_AUTH);
 
         // Assert SDK behavior: array with expected data shape
-        assertArrayWithSchema(sdkResponse, "TurnkeyTransaction");
+        assertArrayWithSchema(sdkResponse, "TransactionView");
 
         // Find first deposit transaction
         depositTransaction = sdkResponse.data.find((tx) => tx.type === "deposit");
@@ -60,7 +60,7 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
         );
 
         // Assert SDK behavior: success with expected data shape
-        assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
+        assertSuccessWithSchema(sdkResponse, "TransactionView");
         assertSuccessWithSchema(sdkResponse, "GetTransactionResponse");
       },
       getTimeout("api")
@@ -76,7 +76,7 @@ describeTransactionData("Transaction Data SDK - Using Integrator SDK", () => {
           );
 
           // Assert SDK behavior: success with expected data shape
-          assertSuccessWithSchema(sdkResponse, "TurnkeyTransaction");
+          assertSuccessWithSchema(sdkResponse, "TransactionView");
           assertSuccessWithSchema(sdkResponse, "GetTransactionResponse");
         },
         getTimeout("api")

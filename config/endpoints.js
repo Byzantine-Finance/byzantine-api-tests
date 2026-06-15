@@ -355,6 +355,28 @@ export const endpoints = {
      */
     updateUsersRole: "/v1/submit/update-users-role",
   },
+
+  // ============================================
+  // Inbound provider webhooks (external receivers — no integrator auth)
+  // These are the endpoints KYC/payment providers call to notify the API.
+  // The API re-fetches the applicant's LIVE status, so the emitted
+  // customer.*/transaction.* event reflects the real provider status, not the
+  // payload body. Used in local testing to trigger lifecycle events.
+  // ============================================
+  providers: {
+    /**
+     * Sumsub inbound KYC webhook.
+     * Signed with HMAC-SHA256(rawBody, SUMSUB_WEBHOOK_SECRET) in the
+     * `x-payload-digest` header. Triggers a live applicant re-fetch which,
+     * if the applicant is approved (GREEN), emits `customer.active`.
+     */
+    sumsubWebhook: "/v1/sumsub/webhook",
+
+    /**
+     * Bridge inbound webhook (analogous, for payment/customer events).
+     */
+    bridgeWebhook: "/v1/bridge/webhook",
+  },
 };
 
 /**

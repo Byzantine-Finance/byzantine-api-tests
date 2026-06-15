@@ -34,7 +34,7 @@ describeTransactionData("Transaction Data API", () => {
           { authenticated: true },
         );
 
-        assertSuccessWithArraySchema(response, "TurnkeyTransaction");
+        assertSuccessWithArraySchema(response, "TransactionView");
 
         // Find first deposit transaction
         depositTransaction = response.data.find((tx) => tx.type === "deposit");
@@ -57,7 +57,7 @@ describeTransactionData("Transaction Data API", () => {
           { authenticated: true },
         );
 
-        assertSuccessWithSchema(response, "TurnkeyTransaction");
+        assertSuccessWithSchema(response, "TransactionView");
         assertSuccessWithSchema(response, "GetTransactionResponse");
       },
       getTimeout("api"),
@@ -72,7 +72,7 @@ describeTransactionData("Transaction Data API", () => {
             { authenticated: true },
           );
 
-          assertSuccessWithSchema(response, "TurnkeyTransaction");
+          assertSuccessWithSchema(response, "TransactionView");
           assertSuccessWithSchema(response, "GetTransactionResponse");
         },
         getTimeout("api"),

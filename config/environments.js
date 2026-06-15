@@ -9,13 +9,20 @@
 export const ENVIRONMENTS = {
   development: {
     name: "development",
-    apiBaseURL: process.env.DEV_API_URL || "https://dev.api.byzantine.fi",
+    // Getter so the URL is read from process.env at access time, not at module
+    // load time — otherwise a later dotenv.config() (e.g. in api-client.js) is
+    // missed and DEV_API_URL from .env is ignored.
+    get apiBaseURL() {
+      return process.env.DEV_API_URL || "https://dev.api.byzantine.fi";
+    },
     displayName: "Development",
     isProduction: false,
   },
   production: {
     name: "production",
-    apiBaseURL: process.env.PROD_API_URL || "https://api.byzantine.fi",
+    get apiBaseURL() {
+      return process.env.PROD_API_URL || "https://api.byzantine.fi";
+    },
     displayName: "Production",
     isProduction: true,
   },
