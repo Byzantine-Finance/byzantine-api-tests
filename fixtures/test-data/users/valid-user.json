@@ -2,9 +2,10 @@
   "userInfo": {
     "firstName": "Lin",
     "lastName": "Huuu",
-    "email": "lin@byzantine.fi",
+    "email": "lin+fakedata-1@byzantine.fi",
     "birthDate": "1990-01-01",
     "nationality": "FRA",
+    "countryOfBirth": "FRA",
     "residentialAddress": {
       "streetLine1": "1 rue de Sevres",
       "city": "Paris",
