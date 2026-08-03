@@ -173,6 +173,18 @@ export const FEATURE_FLAGS = {
   // here. Needs ENABLE_WRITE_TESTS + TEST_WEBHOOK_URL. See webhook-concurrency.test.js.
   enableWebhookConcurrencyTests: process.env.ENABLE_WEBHOOK_CONCURRENCY_TESTS === "true",
 
+  // Event history tests (GET /v1/query/events) - read-only, enabled by default
+  enableEventsTests: process.env.ENABLE_EVENTS_TESTS !== "false", // Enabled by default
+
+  // Integrator key management (/v1/integrator/*)
+  // whoami is read-only and enabled by default.
+  enableIntegratorTests: process.env.ENABLE_INTEGRATOR_TESTS !== "false", // Enabled by default
+  // Opt-in: the credential lifecycle issues REAL credentials on the integrator
+  // account (create → update → delete). Additionally gated by enableWriteTests,
+  // so it never runs against production. See integrator-credentials.test.js.
+  enableIntegratorCredentialTests:
+    process.env.ENABLE_INTEGRATOR_CREDENTIAL_TESTS === "true",
+
   // Associated persons tests
   addAssociatedPerson: process.env.ADD_ASSOCIATED_PERSON !== "false", // Enabled by default
   updateAssociatedPerson: process.env.UPDATE_ASSOCIATED_PERSON !== "false", // Enabled by default

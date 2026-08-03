@@ -381,6 +381,72 @@ export const endpoints = {
   },
 
   // ============================================
+  // Event history
+  // Persisted lifecycle events owned by the integrator, newest first. Same
+  // payload shape as an outbound webhook (WebhookLifecycleEventPayload) plus a
+  // `createdAt` — so it works as a pull-based alternative to webhooks.
+  // ============================================
+  events: {
+    /**
+     * List persisted lifecycle events (ListEventsResponse: { events, nextCursor }).
+     * Cursor-paginated — pass the previous page's `nextCursor` and keep filters
+     * unchanged while paging.
+     * @param {object} params - Optional: accountId, userId, transactionId,
+     *   eventType, createdAfter, createdBefore, cursor, limit (1..250, default 100)
+     */
+    list: (params = {}) => {
+      const allowed = [
+        "accountId",
+        "userId",
+        "transactionId",
+        "eventType",
+        "createdAfter",
+        "createdBefore",
+        "cursor",
+        "limit",
+      ];
+      const queryParams = new URLSearchParams();
+      for (const key of allowed) {
+        if (params[key] != null) queryParams.append(key, params[key]);
+      }
+      const query = queryParams.toString();
+      return query ? `/v1/query/events?${query}` : "/v1/query/events";
+    },
+  },
+
+  // ============================================
+  // Integrator key management
+  // Credentials are the (pubkey, accessScope) pairs that authenticate integrator
+  // requests. A `read_only` credential may only call query routes; issuing,
+  // editing and deleting credentials requires a `read_write` one.
+  // ============================================
+  integrator: {
+    /**
+     * Current credential's identity and capabilities (CurrentIntegratorResponse:
+     * { integratorId, accessScope, capabilities: { canWrite } })
+     */
+    whoami: "/v1/integrator/whoami",
+
+    /**
+     * Issue a new credential for the authenticated integrator.
+     * POST body is a CreateCredentialPayload ({ accessScope?, label? });
+     * responds 201 with CreateCredentialResponse — the only time `privateKey`
+     * is ever returned.
+     */
+    credentials: "/v1/integrator/credentials",
+
+    /**
+     * A single credential, addressed by its public key.
+     * PATCH to update (UpdateCredentialPayload → CredentialSummaryResponse),
+     * DELETE to remove (204). A credential can neither deactivate/demote nor
+     * delete itself, so the integrator always keeps one working read-write key.
+     * @param {string} pubkey - Compressed SEC1 public key, 0x-prefixed
+     */
+    credential: (pubkey) =>
+      `/v1/integrator/credentials/${encodeURIComponent(pubkey)}`,
+  },
+
+  // ============================================
   // User Role Management
   // ============================================
   roles: {

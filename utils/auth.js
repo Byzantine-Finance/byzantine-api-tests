@@ -9,6 +9,32 @@ import elliptic from "elliptic";
 const ec = new elliptic.ec("p256");
 
 /**
+ * Derive the compressed SEC1 public key (0x-prefixed hex) for a private key.
+ * This is the `X-Pubkey` the API identifies a credential by, so it is also the
+ * path segment for /v1/integrator/credentials/{pubkey}.
+ *
+ * @param {string} privateKey - ECDSA P-256 private key (hex, with or without 0x)
+ * @returns {string} Compressed public key, 0x-prefixed
+ */
+export function derivePublicKey(privateKey) {
+  if (!privateKey) {
+    throw new Error("Private key is required to derive a public key");
+  }
+
+  const cleanPrivateKey = privateKey.replace(/^0x/, "");
+
+  try {
+    return `0x${ec.keyFromPrivate(cleanPrivateKey, "hex").getPublic(true, "hex")}`;
+  } catch (error) {
+    throw new Error(
+      `Invalid private key format: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+
+/**
  * Generate authentication headers (X-Pubkey, X-Timestamp, X-Signature)
  * Required for endpoints with integrator_auth security
  *

@@ -11,6 +11,7 @@
     "customer.active",
     "customer.rejected",
     "transaction.created",
+    "transaction.withdrawal_initiated",
     "transaction.waiting_for_funds",
     "transaction.payment_in_review",
     "transaction.funds_in_transfer",

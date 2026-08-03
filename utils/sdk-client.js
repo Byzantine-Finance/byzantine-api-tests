@@ -162,9 +162,15 @@ function setupAutoAuth(client) {
         // Webhooks (covers subscriptions, /{id}, /{id}/test, deliveries, /{id}/retry)
         "/v1/webhooks/subscriptions",
         "/v1/webhooks/deliveries",
+        // Event history
+        "/v1/query/events",
+        // Integrator key management (whoami, credentials, credentials/{pubkey})
+        "/v1/integrator/",
         // Vault data
         "/v1/query/top-vaults",
         "/v1/query/apy/",
+        "/v1/query/assets",
+        "/v1/query/history/",
       ];
 
       // Check if this path requires authentication

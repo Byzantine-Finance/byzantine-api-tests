@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-07-27T08:38:15.814Z\nSpec SHA-256: 7ee58804f080d0db7c7238728f63c79add53ddce4694dcd4d53e7d6a836ff5ac",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-08-03T08:40:03.442Z\nSpec SHA-256: 969402c8967f6f92b4ad657f6734dcfae58737bd6cb47114c9e3666aa454c1de",
   "AccountMinimalView": {
     "type": "object",
     "description": "Minimal data of an account",
@@ -1007,6 +1007,60 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "CreateCredentialPayload": {
+    "type": "object",
+    "properties": {
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional label for the new credential."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateCredentialResponse": {
+    "type": "object",
+    "required": [
+      "pubkey",
+      "privateKey",
+      "integratorId",
+      "accessScope",
+      "active"
+    ],
+    "properties": {
+      "pubkey": {
+        "type": "string",
+        "description": "Public key identifying the newly issued credential."
+      },
+      "privateKey": {
+        "type": "string",
+        "description": "Private key for the newly issued credential. Returned only at creation time."
+      },
+      "integratorId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "active": {
+        "type": "boolean",
+        "description": "Whether the credential is active immediately after creation."
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Label of the credential."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "CreateEntityAccountRequest": {
     "type": "object",
     "description": "Request body for creating a Byzantine entity",
@@ -1386,6 +1440,39 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "CredentialSummaryResponse": {
+    "type": "object",
+    "required": [
+      "pubkey",
+      "integratorId",
+      "accessScope",
+      "active"
+    ],
+    "properties": {
+      "pubkey": {
+        "type": "string",
+        "description": "Public key identifying the credential."
+      },
+      "integratorId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "active": {
+        "type": "boolean",
+        "description": "Whether the credential is active."
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Label of the credential."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "CryptoCurrency": {
     "type": "string",
     "description": "On-chain currencies only (subset of `Currency`), for requests where fiat makes no sense.",
@@ -1403,6 +1490,39 @@
       "usdc",
       "eurc"
     ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CurrentIntegratorCapabilities": {
+    "type": "object",
+    "required": [
+      "canWrite"
+    ],
+    "properties": {
+      "canWrite": {
+        "type": "boolean",
+        "description": "Whether the current credential may call mutation-capable routes."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CurrentIntegratorResponse": {
+    "type": "object",
+    "required": [
+      "integratorId",
+      "accessScope",
+      "capabilities"
+    ],
+    "properties": {
+      "integratorId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "capabilities": {
+        "$ref": "#/components/schemas/CurrentIntegratorCapabilities"
+      }
+    },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "CustomerQueryType": {
@@ -1856,6 +1976,27 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "EventHistoryItem": {
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/WebhookLifecycleEventPayload"
+      },
+      {
+        "type": "object",
+        "required": [
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    ],
+    "description": "Canonical lifecycle event payload plus its database creation time.",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "ExpectedMonthlyPayments": {
     "type": "string",
     "description": "Expected monthly payments in USD. Required for high risk users.",
@@ -1905,6 +2046,16 @@
         "type": "boolean"
       }
     },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "FxhWithdrawalStatus": {
+    "type": "string",
+    "description": "Lifecycle status of a queued FXH withdrawal request.",
+    "enum": [
+      "pending",
+      "cancelled",
+      "settled"
+    ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "GetAccountBalanceQuery": {
@@ -3119,6 +3270,14 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "IntegratorAccessScope": {
+    "type": "string",
+    "enum": [
+      "read_write",
+      "read_only"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "InvitationStatus": {
     "type": "string",
     "description": "Status of an invitation.",
@@ -3343,6 +3502,116 @@
       },
       "destinationRail": {
         "$ref": "#/components/schemas/PaymentRail"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ListEventsQuery": {
+    "type": "object",
+    "properties": {
+      "accountId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "userId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "transactionId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "eventType": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Filter by a lifecycle event type. `webhook.test` is not a lifecycle event."
+      },
+      "createdAfter": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": "Exclusive lower bound on database creation time."
+      },
+      "createdBefore": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": "Exclusive upper bound on database creation time."
+      },
+      "cursor": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Opaque page cursor. Keep filters unchanged while paging."
+      },
+      "limit": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Page size from 1 to 250. Defaults to 100.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ListEventsResponse": {
+    "type": "object",
+    "description": "One page of events with an opaque cursor for the next page, if any.",
+    "required": [
+      "events"
+    ],
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EventHistoryItem"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -3751,6 +4020,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "withdrawalRequest": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawalRequestView"
               }
             ]
           },
@@ -4261,6 +4544,7 @@
     "description": "The current status of the transaction.",
     "enum": [
       "created",
+      "withdrawal_initiated",
       "waiting_for_funds",
       "funds_in_transfer",
       "funds_received",
@@ -4268,7 +4552,8 @@
       "completed",
       "simulation_failed",
       "reverted",
-      "refunded"
+      "refunded",
+      "cancelled"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -4448,6 +4733,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/AccountMinimalView"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "withdrawalRequest": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawalRequestView"
               }
             ]
           },
@@ -4650,6 +4949,40 @@
         "description": "Required for UBOs. The % of direct or indirect business ownership.",
         "minimum": -1.7976931348623157e+308,
         "maximum": 1.7976931348623157e+308
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateCredentialPayload": {
+    "type": "object",
+    "properties": {
+      "accessScope": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntegratorAccessScope"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "active": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "New active status for the credential. Left untouched when omitted."
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "New label for the credential. Left untouched when omitted."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -5943,6 +6276,7 @@
       "customer.rejected",
       "customer.deleted",
       "transaction.created",
+      "transaction.withdrawal_initiated",
       "transaction.waiting_for_funds",
       "transaction.payment_in_review",
       "transaction.funds_in_transfer",
@@ -6244,6 +6578,22 @@
             "type": "null"
           }
         ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "WithdrawalRequestView": {
+    "type": "object",
+    "required": [
+      "requestId",
+      "status"
+    ],
+    "properties": {
+      "requestId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "status": {
+        "$ref": "#/components/schemas/FxhWithdrawalStatus"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"

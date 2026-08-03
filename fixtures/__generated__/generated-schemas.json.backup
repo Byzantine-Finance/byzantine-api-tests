@@ -1,5 +1,52 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-07-06T16:07:38.658Z\nSpec SHA-256: 7dc0172ff1b8c58c661d758e9cca0af3e1c1feb50cc78d7f421307a6b73afe16",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-07-27T08:38:15.814Z\nSpec SHA-256: 7ee58804f080d0db7c7238728f63c79add53ddce4694dcd4d53e7d6a836ff5ac",
+  "AccountMinimalView": {
+    "type": "object",
+    "description": "Minimal data of an account",
+    "required": [
+      "accountName"
+    ],
+    "properties": {
+      "accountName": {
+        "type": "string"
+      },
+      "entityId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ownerUserId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "imageUrl": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "AccountUserRole": {
     "type": "string",
     "description": "Role of a user in an account.",
@@ -535,6 +582,31 @@
       },
       "attestation": {
         "$ref": "#/components/schemas/Attestation"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "AuthenticatorView": {
+    "type": "object",
+    "description": "WebAuthn authenticator registered on an account",
+    "required": [
+      "credentialId",
+      "createdAt"
+    ],
+    "properties": {
+      "credentialId": {
+        "type": "string",
+        "description": "The raw base64url id to use in `allowCredentials` for signing ceremonies."
+      },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1296,6 +1368,12 @@
       "url": {
         "type": "string"
       },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "enabled": {
         "type": "boolean"
       },
@@ -1306,6 +1384,15 @@
         }
       }
     },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CryptoCurrency": {
+    "type": "string",
+    "description": "On-chain currencies only (subset of `Currency`), for requests where fiat makes no sense.",
+    "enum": [
+      "usdc",
+      "eurc"
+    ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "Currency": {
@@ -1335,7 +1422,6 @@
   },
   "DepositRequestBody": {
     "type": "object",
-    "description": "The legal name of the business",
     "required": [
       "accountId",
       "vaultAddr",
@@ -1824,13 +1910,13 @@
   "GetAccountBalanceQuery": {
     "type": "object",
     "required": [
-      "account_id"
+      "accountId"
     ],
     "properties": {
-      "account_id": {
+      "accountId": {
         "$ref": "#/components/schemas/Uuid"
       },
-      "chain_id": {
+      "chainId": {
         "type": [
           "integer",
           "null"
@@ -1840,7 +1926,7 @@
         "minimum": -2147483648,
         "maximum": 2147483647
       },
-      "include_test_vaults": {
+      "includeTestVaults": {
         "type": "boolean",
         "description": "Whether to include test vaults (optional, default = false)"
       }
@@ -1885,7 +1971,7 @@
       "accountId",
       "accountName",
       "accountType",
-      "rootUsers",
+      "users",
       "walletDetails",
       "createdAt"
     ],
@@ -1927,10 +2013,10 @@
           }
         ]
       },
-      "rootUsers": {
+      "users": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/UserSummary"
+          "$ref": "#/components/schemas/UserSummaryWithRole"
         }
       },
       "walletDetails": {
@@ -1966,6 +2052,7 @@
       "accountName",
       "accountType",
       "rootUsers",
+      "authenticators",
       "userRole",
       "walletAddress",
       "isSelfCustodial",
@@ -2013,6 +2100,12 @@
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/UserSummary"
+        }
+      },
+      "authenticators": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AuthenticatorView"
         }
       },
       "userRole": {
@@ -2170,10 +2263,10 @@
   "GetBankAccountsQuery": {
     "type": "object",
     "required": [
-      "account_id"
+      "accountId"
     ],
     "properties": {
-      "account_id": {
+      "accountId": {
         "$ref": "#/components/schemas/Uuid"
       },
       "currency": {
@@ -2441,10 +2534,10 @@
   "GetInvitationsByAccountIdQuery": {
     "type": "object",
     "required": [
-      "account_id"
+      "accountId"
     ],
     "properties": {
-      "account_id": {
+      "accountId": {
         "$ref": "#/components/schemas/Uuid"
       }
     },
@@ -2482,10 +2575,10 @@
   "GetTransactionQuery": {
     "type": "object",
     "required": [
-      "transaction_id"
+      "transactionId"
     ],
     "properties": {
-      "transaction_id": {
+      "transactionId": {
         "$ref": "#/components/schemas/Uuid"
       }
     },
@@ -2522,10 +2615,10 @@
   "GetTransactionsQuery": {
     "type": "object",
     "required": [
-      "account_id"
+      "accountId"
     ],
     "properties": {
-      "account_id": {
+      "accountId": {
         "$ref": "#/components/schemas/Uuid"
       }
     },
@@ -3254,10 +3347,132 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "ListWebhookDeliveriesQuery": {
+    "type": "object",
+    "description": "Delivery history filters accept documented camelCase query names plus snake_case aliases for operator ergonomics.",
+    "properties": {
+      "limit": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Page size for delivery history. Defaults to 100 and is capped at 250.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "offset": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Number of delivery records to skip. Defaults to 0.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "includeAttempts": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "Include delivery attempt records for each delivery. Defaults to true for backwards compatibility; set false for lighter list views."
+      },
+      "subscriptionId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "eventId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "eventType": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Restrict to one public event type, e.g. `customer.active` or `webhook.test`."
+      },
+      "status": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookDeliveryStatus"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "sourceType": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Restrict to source type. Known values include `bridge`, `sumsub`, and `customer_api`; future sources are exact-match strings."
+      },
+      "sourceId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Restrict to the durable event source id."
+      },
+      "accountId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "providerEventId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Restrict to lifecycle events with this provider event id in the webhook payload."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "ListWebhookDeliveriesResponse": {
     "type": "object",
     "required": [
-      "deliveries"
+      "deliveries",
+      "limit",
+      "offset",
+      "hasMore",
+      "attemptsIncluded"
     ],
     "properties": {
       "deliveries": {
@@ -3265,6 +3480,24 @@
         "items": {
           "$ref": "#/components/schemas/WebhookDeliveryWithAttempts"
         }
+      },
+      "limit": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "offset": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "hasMore": {
+        "type": "boolean"
+      },
+      "attemptsIncluded": {
+        "type": "boolean"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -4202,6 +4435,51 @@
             "type": "null"
           }
         ]
+      },
+      "destinationAddress": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "account": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AccountMinimalView"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "TransferRequestBody": {
+    "type": "object",
+    "required": [
+      "accountId",
+      "currency",
+      "amount",
+      "destinationAddress"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "currency": {
+        "$ref": "#/components/schemas/CryptoCurrency"
+      },
+      "amount": {
+        "$ref": "#/components/schemas/Decimal"
+      },
+      "destinationAddress": {
+        "type": "string",
+        "description": "The destination wallet address."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -4970,6 +5248,12 @@
           "null"
         ]
       },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "enabled": {
         "type": [
           "boolean",
@@ -5168,6 +5452,35 @@
       },
       "email": {
         "type": "string"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UserSummaryWithRole": {
+    "type": "object",
+    "description": "Minimal user information with the user's role in the account",
+    "required": [
+      "userId",
+      "firstName",
+      "lastName",
+      "email",
+      "role"
+    ],
+    "properties": {
+      "userId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string"
+      },
+      "role": {
+        "$ref": "#/components/schemas/AccountUserRole"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -5839,6 +6152,12 @@
       },
       "url": {
         "type": "string"
+      },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
       },
       "enabled": {
         "type": "boolean"

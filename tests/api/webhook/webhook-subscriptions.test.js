@@ -20,11 +20,22 @@ import {
   assertError,
   assertValidUuid,
 } from "../../../utils/api-assertions.js";
+import { getSchema } from "../../../utils/schemas.js";
 
 import createSubscriptionRequest from "../../../fixtures/test-data/webhooks/create-subscription-request.json" assert { type: "json" };
 
 // A well-formed UUID that should not correspond to any real subscription
 const NONEXISTENT_SUBSCRIPTION_ID = "00000000-0000-4000-8000-000000000000";
+
+// Every public event name, minus the two that cannot be subscribed to:
+//   · webhook.test      — manual delivery probe only
+//   · customer.deleted  — deliverable, but rejected on subscribe
+// Derived from the generated enum, so a new event type in the spec is picked up
+// here automatically (e.g. transaction.withdrawal_initiated).
+const NON_SUBSCRIBABLE_EVENT_TYPES = ["webhook.test", "customer.deleted"];
+const SUBSCRIBABLE_EVENT_TYPES = (getSchema("WebhookEventType")?.enum ?? []).filter(
+  (t) => !NON_SUBSCRIBABLE_EVENT_TYPES.includes(t),
+);
 
 const describeWebhooks = FEATURE_FLAGS.enableWebhookTests
   ? describe
@@ -289,13 +300,9 @@ describeWebhooks("Webhook Subscriptions API", () => {
         created.push(response.data.subscription.id);
 
         const persisted = response.data.subscription.eventTypes;
-        expect(persisted.length).toBeGreaterThan(0);
-        // The default expands to all subscribable events
-        expect(persisted).toContain("customer.created");
-        expect(persisted).toContain("transaction.created");
-        // webhook.test (manual-only) and customer.deleted (not subscribable) are excluded
-        expect(persisted).not.toContain("webhook.test");
-        expect(persisted).not.toContain("customer.deleted");
+        // The default expands to exactly the subscribable set — every event type
+        // in the spec except webhook.test and customer.deleted
+        expect([...persisted].sort()).toEqual([...SUBSCRIBABLE_EVENT_TYPES].sort());
       },
       getTimeout("api"),
     );
@@ -385,12 +392,8 @@ describeWebhooks("Webhook Subscriptions API", () => {
         const persisted = patchRes.data.subscription.eventTypes;
         // Expanded well beyond the original subset...
         expect(persisted.length).toBeGreaterThan(subset.length);
-        // ...to the full supported set (both families present)
-        expect(persisted).toContain("customer.created");
-        expect(persisted).toContain("transaction.created");
-        // ...still excluding the non-subscribable / manual-only types
-        expect(persisted).not.toContain("webhook.test");
-        expect(persisted).not.toContain("customer.deleted");
+        // ...to exactly the subscribable set
+        expect([...persisted].sort()).toEqual([...SUBSCRIBABLE_EVENT_TYPES].sort());
       },
       getTimeout("api"),
     );

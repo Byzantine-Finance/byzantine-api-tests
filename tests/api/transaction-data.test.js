@@ -15,22 +15,35 @@ import {
   assertError,
 } from "../../utils/api-assertions.js";
 import passkeyData from "../../fixtures/test-data/passkey-data.json";
+import { getSchema } from "../../utils/schemas.js";
 
 // Deposit/withdrawal variants of TransactionTypeView. An account may only ever
 // have on/off-ramp flavours, so the by-ID tests match on the whole family.
 const DEPOSIT_TYPES = new Set(["deposit", "onramp_deposit", "onramp"]);
 const WITHDRAW_TYPES = new Set(["withdraw", "withdraw_offramp", "offramp"]);
 
+// Sourced from the generated enums so they stay in lockstep with the spec.
+const TRANSACTION_STATUSES = new Set(getSchema("TransactionStatus")?.enum ?? []);
+const WITHDRAWAL_REQUEST_STATUSES = new Set(
+  getSchema("FxhWithdrawalStatus")?.enum ?? [],
+);
+
 /**
- * TransactionView gained `destinationAddress` and an embedded `account`
- * (AccountMinimalView). Both are optional/nullable, so only assert the shape
+ * TransactionView gained `destinationAddress`, an embedded `account`
+ * (AccountMinimalView) and, for queued FXH withdrawals, a `withdrawalRequest`
+ * (WithdrawalRequestView). All are optional/nullable, so only assert the shape
  * when the API actually populates them.
  */
 function assertNewTransactionViewFields(transactions) {
   let withAccount = 0;
   let withDestination = 0;
+  let withWithdrawalRequest = 0;
 
   for (const tx of transactions) {
+    // `status` must always be a known TransactionStatus — the enum gained
+    // `withdrawal_initiated` and `cancelled`.
+    expect(TRANSACTION_STATUSES.has(tx.status)).toBe(true);
+
     if (tx.destinationAddress != null) {
       expect(typeof tx.destinationAddress).toBe("string");
       withDestination++;
@@ -40,11 +53,21 @@ function assertNewTransactionViewFields(transactions) {
       expect(typeof tx.account.accountName).toBe("string");
       withAccount++;
     }
+    if (tx.withdrawalRequest != null) {
+      assertSchema(tx.withdrawalRequest, "WithdrawalRequestView");
+      expect(
+        WITHDRAWAL_REQUEST_STATUSES.has(tx.withdrawalRequest.status),
+      ).toBe(true);
+      withWithdrawalRequest++;
+      // A withdrawal request only exists once the withdrawal has been initiated
+      expect(tx.status).not.toBe("created");
+    }
   }
 
   console.log(
     `ℹ️  ${withAccount}/${transactions.length} transaction(s) carry an embedded account, ` +
-      `${withDestination} carry a destinationAddress`,
+      `${withDestination} carry a destinationAddress, ` +
+      `${withWithdrawalRequest} carry a withdrawalRequest`,
   );
 }
 
@@ -102,6 +125,7 @@ describeTransactionData("Transaction Data API", () => {
 
         assertSuccessWithSchema(response, "TransactionView");
         assertSuccessWithSchema(response, "GetTransactionResponse");
+        assertNewTransactionViewFields([response.data]);
       },
       getTimeout("api"),
     );
@@ -124,6 +148,7 @@ describeTransactionData("Transaction Data API", () => {
 
           assertSuccessWithSchema(response, "TransactionView");
           assertSuccessWithSchema(response, "GetTransactionResponse");
+          assertNewTransactionViewFields([response.data]);
         },
         getTimeout("api"),
       );

@@ -50,6 +50,11 @@ Each suite has its own assertion helpers (`utils/api-assertions.js`, `utils/sdk-
 ### Authentication
 All authenticated requests use ECDSA P-256 signatures (`utils/auth.js`). The API client injects `X-Pubkey`, `X-Timestamp`, and `X-Signature` headers. The SDK client uses middleware to do the same automatically. Private keys are loaded from `.env` (`DEV_INTEGRATOR_PRIVATE_KEY` / `PROD_INTEGRATOR_PRIVATE_KEY`).
 
+Each credential carries an `IntegratorAccessScope` (`read_write` / `read_only`); read-only credentials get 403 on every mutation route. `GET /v1/integrator/whoami` reports the signing credential's scope and `capabilities.canWrite`. To sign as a different credential, pass `privateKey` to `apiClient` (`makeRequest` options) or `createSdkClient({ privateKey })`.
+
+### SDK method coverage
+The bundled SDK `.tgz` lags the OpenAPI spec. When an endpoint has no named SDK method yet, SDK tests use the typed escape hatch `client.api.client.{GET,POST,PATCH,DELETE}(path, ...)` — the auth middleware still applies, but the path must be listed in `authenticatedPaths` in `utils/sdk-client.js`. Currently unwrapped: `/v1/query/events`, `/v1/integrator/*`.
+
 ### Schema validation
 Schemas are auto-generated from the Byzantine OpenAPI spec (`scripts/generate-schemas-from-openapi.js`) into `fixtures/__generated__/generated-schemas.json`. Tests validate responses against these schemas using Ajv (`utils/schemas.js`, `utils/ajv.js`).
 

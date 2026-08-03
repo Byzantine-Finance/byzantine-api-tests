@@ -77,10 +77,13 @@ export function createApiClient(options = {}) {
  * @param {object|string} body - Request body
  * @returns {object} Authentication headers
  */
-function generateRequestAuthHeaders(method, path, params, body) {
-  const key = isProduction()
-    ? process.env.PROD_INTEGRATOR_PRIVATE_KEY
-    : process.env.DEV_INTEGRATOR_PRIVATE_KEY || null;
+function generateRequestAuthHeaders(method, path, params, body, privateKey) {
+  const key =
+    privateKey ||
+    (isProduction()
+      ? process.env.PROD_INTEGRATOR_PRIVATE_KEY
+      : process.env.DEV_INTEGRATOR_PRIVATE_KEY) ||
+    null;
 
   if (!key) {
     throw new Error(
@@ -140,7 +143,9 @@ export function formatResponse(response) {
  * @param {object} options.query - Query parameters
  * @param {object} options.headers - Additional headers
  * @param {boolean} options.authenticated - Whether to add auth headers
- * @param {string} options.privateKey - Optional private key override
+ * @param {string} options.privateKey - Optional private key override. Signs with
+ *   this credential instead of the env one — used to exercise per-credential
+ *   access scopes (see tests/api/integrator-credentials.test.js).
  * @param {number} options.timeout - Optional timeout override (in milliseconds)
  * @returns {Promise<object>} Formatted response
  */
@@ -167,7 +172,8 @@ export async function makeRequest(method, path, options = {}) {
         method,
         path,
         options.query,
-        options.body || ""
+        options.body || "",
+        options.privateKey
       );
       config.headers = {
         ...config.headers,
