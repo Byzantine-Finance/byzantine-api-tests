@@ -130,5 +130,149 @@
     "chain_id": 1,
     "is_active": true,
     "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x716314d302f9e38d689a6cb286f62aebb553a3e0",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x8fdd499a96641f3dccada5a0db9c1b7d8472bba4",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x22617fddd6935250746f2d31a25e6d7ae13c94f0",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xa710a3821f2f2b0517a745f3c6a5e585a7621c00",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x1a26d7a0fc0a1bd07e544189fd0ba0b79ca84a33",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x61ac2168218737abad9345ce78e38f6114f5e2c6",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x5cf428471fa062fa4ab84f45e792418b7b275494",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xa5f8e8630a86a587e04a18b5a5e39d19b23b4867",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xc09fdbb00c59a08f7e64546336b481c0f82b7c4d",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xe5d16ddf5e4810b273249d9f9ed20f3563a2ec15",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xdcb9a6d103dae1ab571f746bb83ded53e665880a",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x184ad7447d04aa8ce6f75f781bd00e37421b6eaf",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x3ace737610da61d004c748275eafd2ecc99802be",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x6d6860afa39c595eba06ac641938ee75a3a6c5cb",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x9b2d94ae1e7fd720913f501a7c4a42fe7c66ad15",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x5ad0c35a34315f492b6d123de9b93600b82cd574",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x38895aa5973650fea8b2605f0755bc24a2471d45",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x63ba70671cb6c93f8f08917088667fd0a26e9407",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xc1dc4cd08725994ed50838c559063b39dcc38ceb",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x191c982b228651db69cea076a4ed65aaa373c410",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x869b3d7f9bae478260f455567b62c475b8437771",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xc87278bfe9e8d6e7930e61dfa4658cf2f8da1aaa",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xbab78f42dee94f1689f3121f9b698a1bbaf4448b",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x5fa9aa86993af4ee707137e6fb419dc8bcbc83dd",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
   }
 ]

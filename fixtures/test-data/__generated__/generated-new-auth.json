@@ -1,0 +1,19 @@
+{
+  "authenticators": [
+    {
+      "authenticatorName": "Passkey",
+      "challenge": "",
+      "attestation": {
+        "credentialId": "",
+        "clientDataJson": "",
+        "attestationObject": "",
+        "transports": [
+          "AUTHENTICATOR_TRANSPORT_HYBRID",
+          "AUTHENTICATOR_TRANSPORT_INTERNAL"
+        ]
+      }
+    }
+  ],
+  "credentialId": "",
+  "lastUpdated": "2026-07-09T12:56:29.664Z"
+}

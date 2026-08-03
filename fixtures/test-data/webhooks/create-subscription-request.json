@@ -1,0 +1,23 @@
+{
+  "url": "https://estate-deeply-ether.ngrok-free.dev",
+  "name": "Integration test subscription",
+  "enabled": true,
+  "eventTypes": [
+    "customer.created",
+    "customer.updated",
+    "customer.under_review",
+    "customer.awaiting_associated_person_information",
+    "customer.resubmission_requested",
+    "customer.active",
+    "customer.rejected",
+    "transaction.created",
+    "transaction.waiting_for_funds",
+    "transaction.payment_in_review",
+    "transaction.funds_in_transfer",
+    "transaction.funds_received",
+    "transaction.processing",
+    "transaction.completed",
+    "transaction.simulation_failed",
+    "transaction.reverted"
+  ]
+}

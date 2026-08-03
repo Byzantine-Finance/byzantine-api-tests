@@ -36,6 +36,9 @@ const describeInitDepositPasskey = FEATURE_FLAGS.enablePasskeyInitDepositTests
 const describeInitWithdrawPasskey = FEATURE_FLAGS.enablePasskeyInitWithdrawTests
   ? describe
   : describe.skip;
+const describeInitTransferPasskey = FEATURE_FLAGS.enablePasskeyInitTransferTests
+  ? describe
+  : describe.skip;
 
 describeInitPasskey("Initiate Passkey transactions API", () => {
   // Use a KYC/KYB-approved account for passkey operations
@@ -43,6 +46,7 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
   const testActivateAccountId = TEST_DATA.accounts.initActivateTargetAccountId;
   const testDepositAccountId = TEST_DATA.accounts.initDepositTargetAccountId;
   const testWithdrawAccountId = TEST_DATA.accounts.initWithdrawTargetAccountId;
+  const testTransferAccountId = TEST_DATA.accounts.initTransferTargetAccountId;
   const testVaultAddr = TEST_DATA.vaults.selected.address;
   const chainId = TEST_DATA.vaults.selected.chainId;
   // Amounts + currencies come from .env (DEPOSIT_AMOUNT, SOURCE_CURRENCY,
@@ -50,6 +54,11 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
   const depositAmount = process.env.DEPOSIT_AMOUNT;
   const sourceCurrency = process.env.SOURCE_CURRENCY;
   const withdrawAmount = process.env.WITHDRAW_AMOUNT;
+  // Wallet-to-wallet transfer config (TRANSFER_AMOUNT, TRANSFER_CURRENCY,
+  // TRANSFER_DESTINATION_ADDRESS). `currency` is a CryptoCurrency — usdc | eurc.
+  const transferAmount = process.env.TRANSFER_AMOUNT;
+  const transferCurrency = process.env.TRANSFER_CURRENCY;
+  const transferDestinationAddress = process.env.TRANSFER_DESTINATION_ADDRESS;
   // Get bank account ID — only needed for fiat off-ramp (usd/eur), not crypto (usdc/eurc)
   const destinationCurrency = process.env.DESTINATION_CURRENCY;
   const isCryptoWithdrawal = ["usdc", "eurc"].includes(destinationCurrency);
@@ -184,6 +193,45 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
           // Save withdraw bodyToSign and transactionId to generated-tx-passkey.json
           saveBodyToSign(
             "withdraw",
+            response.data.bodyToSign,
+            response.data.transactionId
+          );
+        },
+        getTimeout("api")
+      );
+    }
+  );
+
+  // Wallet-to-wallet transfer: move assets from the account's wallet to any
+  // destination address. Unlike withdraw there is no vault or bank account
+  // involved, and `currency` is restricted to CryptoCurrency (usdc | eurc).
+  describeInitTransferPasskey(
+    "POST /v1/query/get-transfer-payload-passkey",
+    () => {
+      it(
+        "should get transfer payload to sign",
+        async () => {
+          const requestBody = {
+            accountId: testTransferAccountId,
+            currency: transferCurrency,
+            amount: transferAmount,
+            destinationAddress: transferDestinationAddress,
+          };
+
+          assertSchema(requestBody, "TransferRequestBody");
+
+          const response = await apiClient.post(
+            endpoints.passkey.getTransferPayloadPasskey(chainId),
+            requestBody,
+            { authenticated: true }
+          );
+
+          assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
+          assertHasFields(response.data, ["bodyToSign", "transactionId"]);
+
+          // Save transfer bodyToSign and transactionId to generated-tx-passkey.json
+          saveBodyToSign(
+            "transfer",
             response.data.bodyToSign,
             response.data.transactionId
           );

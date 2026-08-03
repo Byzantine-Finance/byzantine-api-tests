@@ -19,6 +19,28 @@ import {
   assertArraySchema,
   assertValidUuid,
 } from "../../utils/api-assertions.js";
+import { getSchema } from "../../utils/schemas.js";
+
+// Roles a user can hold in an account, sourced from the generated enum so this
+// stays in lockstep with the OpenAPI spec.
+const ACCOUNT_USER_ROLES = new Set(getSchema("AccountUserRole")?.enum ?? []);
+
+/**
+ * get-account-details returns `users` (UserSummaryWithRole), which replaced the
+ * old `rootUsers` (UserSummary) and adds a `role` per user.
+ */
+function assertAccountDetailsUsers(data) {
+  expect(data.rootUsers).toBeUndefined();
+  expect(data.users).toBeInstanceOf(Array);
+  expect(data.users.length).toBeGreaterThan(0);
+  for (const user of data.users) {
+    assertValidUuid(user.userId);
+    expect(typeof user.firstName).toBe("string");
+    expect(typeof user.lastName).toBe("string");
+    expect(typeof user.email).toBe("string");
+    expect(ACCOUNT_USER_ROLES.has(user.role)).toBe(true);
+  }
+}
 
 describe("Account Data API", () => {
   const testAccountId = TEST_DATA.accounts.testAccountId;
@@ -54,7 +76,16 @@ describe("Account Data API", () => {
           expect(account.accountType).toMatch(/^(individual|company)$/);
           expect(account.walletAddress).toBeDefined();
           expect(typeof account.isSelfCustodial).toBe("boolean");
-          console.log(`✅ Found ${response.data.accounts.length} account(s)`);
+          // `authenticators` (AuthenticatorView[]) is now required on every account
+          expect(account.authenticators).toBeInstanceOf(Array);
+          for (const authenticator of account.authenticators) {
+            expect(typeof authenticator.credentialId).toBe("string");
+            expect(typeof authenticator.createdAt).toBe("string");
+          }
+          console.log(
+            `✅ Found ${response.data.accounts.length} account(s); ` +
+              `first has ${account.authenticators.length} authenticator(s)`,
+          );
         }
       },
       getTimeout("api"),
@@ -173,6 +204,8 @@ describe("Account Data API", () => {
         expect(typeof response.data.walletDetails.isTurnkeyWallet).toBe("boolean");
         expect(typeof response.data.walletDetails.isSmartAccount.ethereum).toBe("boolean");
         expect(typeof response.data.walletDetails.isSmartAccount.base).toBe("boolean");
+        // `users` replaced `rootUsers` and each entry now carries the user's role
+        assertAccountDetailsUsers(response.data);
       },
       getTimeout("api"),
     );
@@ -194,6 +227,7 @@ describe("Account Data API", () => {
         expect(typeof response.data.walletDetails.isTurnkeyWallet).toBe("boolean");
         expect(typeof response.data.walletDetails.isSmartAccount.ethereum).toBe("boolean");
         expect(typeof response.data.walletDetails.isSmartAccount.base).toBe("boolean");
+        assertAccountDetailsUsers(response.data);
       },
       getTimeout("api"),
     );
@@ -282,12 +316,12 @@ describe("Account Data API", () => {
     );
 
     it(
-      "should get account balances with optional chain_id and include_test_vaults",
+      "should get account balances with optional chainId and includeTestVaults",
       async () => {
         const response = await apiClient.get(
           endpoints.accounts.getAccountBalances(balancesAccountId, {
-            chain_id: 8453,
-            include_test_vaults: false,
+            chainId: 8453,
+            includeTestVaults: false,
           }),
           { authenticated: true },
         );

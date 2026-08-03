@@ -15,7 +15,10 @@ import {
   FEATURE_FLAGS,
   TEST_DATA,
 } from "../../config/test.config.js";
-import { saveBodyToSign } from "../../utils/test-data-persistence.js";
+import {
+  saveBodyToSign,
+  loadInvitedUserData,
+} from "../../utils/test-data-persistence.js";
 import {
   assertSuccessWithSchema,
   assertError,
@@ -41,10 +44,15 @@ const TEST_SUITE_FLAGS = {
 
 describeRoleManagement("Byzantine Role Management API", () => {
   // Use CI entity passkey account for role management (requires passkey signing)
-  const testAccountId = process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID || TEST_DATA.accounts.testEntityAccountId;
-  const role = "root";
-
-  const userToPromote = process.env.TEST_ROLE_TARGET_USER_ID || TEST_DATA.users.roleTargetUserId;
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const testAccountId = orchestrated
+    ? process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID
+    : process.env.CGP_ACCOUNT_ID || TEST_DATA.accounts.testEntityAccountId;
+  const role = "view";
+  const invitedUser = loadInvitedUserData();
+  const userToPromote = orchestrated
+    ? process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID
+    : invitedUser.userId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe

@@ -249,6 +249,8 @@
     <script type="module">
       // Import only the WebauthnStamper directly to avoid Node.js dependencies
       import { WebauthnStamper } from "./node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js";
+      // SDK 1.11.0 already returns the raw rawId (base64url, no CBOR wrapping)
+      // from createPasskey/getStamp, so no credential-ID conversion helpers are needed.
 
       // Load user data from JSON
       fetch("./fixtures/test-data/users/valid-user.json")
@@ -259,6 +261,15 @@
           document.getElementById("userName").value =
             d.userInfo.firstName || "";
           document.getElementById("userId").value = email.split("@")[0] || "";
+        })
+        .catch(() => {});
+
+      fetch("./fixtures/test-data/__generated__/generated-new-auth.json")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.credentialId) {
+            document.getElementById("credentialId").value = d.credentialId;
+          }
         })
         .catch(() => {});
 
@@ -356,10 +367,16 @@
           const { attestationData, challengeFromClientData } =
             await stamper.createPasskey(creationConfig);
 
+          // SDK 1.11.0's createPasskey already returns attestationData.credentialId
+          // as the raw WebAuthn rawId (base64url, no CBOR wrapping — see
+          // webauthn-stamper/passkey.js). Use it directly; the account-creation /
+          // create-authenticators API and signing assertions both expect this raw id.
+          const rawCredentialId = attestationData.credentialId;
+
           // Display success result
           const result = {
             success: true,
-            credentialId: attestationData.credentialId,
+            credentialId: rawCredentialId,
             attestationData: attestationData,
             challengeFromClientData: challengeFromClientData,
             timestamp: new Date().toISOString(),
@@ -383,43 +400,39 @@
       ${result.timestamp}
 
       <strong>⚠️ IMPORTANT:</strong>
-      Save this Credential ID! You'll need it to sign payloads.`;
+      This is the raw credential ID — store it in your DB / send it as
+      attestation.credentialId in rootUsers.authenticators. It's also been
+      auto-filled into the Sign tab.`;
 
-          // Auto-fill the credential ID in the sign tab
-          document.getElementById("credentialId").value =
-            attestationData.credentialId;
+          // Auto-fill the credential ID in the sign tab. It's the raw rawId —
+          // the same value stored in the DB and passed straight to getStamp().
+          document.getElementById("credentialId").value = rawCredentialId;
 
-          // Save to valid-user.json
+          // Save to generated-new-auth.json. attestation.credentialId is sent
+          // to the account-creation / create-authenticators API as the raw rawId.
           try {
-            const userDataResponse = await fetch(
-              "./fixtures/test-data/users/valid-user.json"
-            );
-            const userData = await userDataResponse.json();
-
-            // Initialize authenticators array if needed
-            if (!userData.authenticators) {
-              userData.authenticators = [];
-            }
-
-            // Always replace the first authenticator
-            userData.authenticators[0] = {
-              authenticatorName: "Passkey",
-              challenge: challengeFromClientData,
-              attestation: {
-                credentialId: attestationData.credentialId,
-                clientDataJson: attestationData.clientDataJson,
-                attestationObject: attestationData.attestationObject,
-                transports: attestationData.transports || [
-                  "AUTHENTICATOR_TRANSPORT_INTERNAL",
-                ],
-              },
+            const newAuthData = {
+              authenticators: [
+                {
+                  authenticatorName: "Passkey",
+                  challenge: challengeFromClientData,
+                  attestation: {
+                    credentialId: rawCredentialId,
+                    clientDataJson: attestationData.clientDataJson,
+                    attestationObject: attestationData.attestationObject,
+                    transports: attestationData.transports || [
+                      "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                    ],
+                  },
+                },
+              ],
+              credentialId: rawCredentialId,
             };
 
-            // Save to server
-            const saveResponse = await fetch("/save-user-data", {
+            const saveResponse = await fetch("/save-new-auth", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(userData),
+              body: JSON.stringify(newAuthData),
             });
 
             const responseText = await saveResponse.text();
@@ -428,8 +441,11 @@
 
             if (saveResponse.ok) {
               try {
-                const result = JSON.parse(responseText);
-                console.log("✅ Passkey data saved to valid-user.json", result);
+                const saveResult = JSON.parse(responseText);
+                console.log(
+                  "✅ Passkey data saved to generated-new-auth.json",
+                  saveResult,
+                );
               } catch (e) {
                 console.log("✅ Passkey data saved (non-JSON response)");
               }
@@ -531,7 +547,9 @@
           const payload = JSON.stringify(payloadObj);
           let stamp;
           if (credentialId) {
-            // Non-discoverable: specify the credential ID
+            // Non-discoverable: specify the credential ID. SDK 1.11.0's getStamp()
+            // expects the raw rawId (base64url) directly — it no longer CBOR-wraps
+            // (see webauthn-stamper/index.js). Pass the stored raw id straight through.
             stamp = await stamper.getStamp(payload, [credentialId]);
           } else {
             // Discoverable: let browser show all available passkeys

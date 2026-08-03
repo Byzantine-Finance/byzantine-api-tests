@@ -16,7 +16,7 @@
 import { describe, it, expect } from "vitest";
 import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
-import { generateUniqueEmail } from "../../utils/test-helpers.js";
+import { maybeUniqueEmail } from "../../utils/test-helpers.js";
 import {
   saveBodyToSign,
   saveInvitedUserData,
@@ -77,7 +77,7 @@ describeUserInvitation("Byzantine User Invitation SDK", () => {
             userEmail:
               ciInviteEmail && index === 0
                 ? ciInviteEmail
-                : generateUniqueEmail(user.userEmail),
+                : maybeUniqueEmail(user.userEmail),
           }),
         );
 

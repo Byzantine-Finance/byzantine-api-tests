@@ -32,6 +32,7 @@ import {
   saveOtpData,
   loadOtpData,
   loadInvitedUserData,
+  loadNewAuthData,
 } from "../../utils/test-data-persistence.js";
 
 // Individual test flags
@@ -49,8 +50,9 @@ const describeCreateAuthenticatorsOtp =
 describe("OTP Authentication API", () => {
   // Load invited user data (saved by user-invitation.test.js)
   const invitedUser = loadInvitedUserData();
-  const testAccountId =
-    process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID || invitedUser.accountId;
+  const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+  const testAccountId = orchestrated ? 
+    process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID : invitedUser.accountId;
   const testUserId = invitedUser.userId;
 
   // Load saved OTP data from previous test runs
@@ -170,42 +172,68 @@ describe("OTP Authentication API", () => {
             return;
           }
 
-          // Create a real virtual authenticator credential using Playwright + CDP
-          // so we can extract the private key and use it for signing later
-          const { createServer } = await import("http");
-          const { readFileSync, writeFileSync } = await import("fs");
-          const { join, dirname } = await import("path");
-          const { fileURLToPath } = await import("url");
+          let authenticators;
+          let credential;
+          let privateKeyBase64;
+          let cleanup = async () => {};
 
-          const __dir = dirname(fileURLToPath(import.meta.url));
-          const rootDir = join(__dir, "../..");
-          const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "0", 10);
-          const RP_ID = process.env.VIRTUAL_AUTH_RPID || "localhost";
+          if (orchestrated) {
+            // Create a real virtual authenticator credential using Playwright + CDP
+            // so we can extract the private key and use it for signing later
+            const { createServer } = await import("http");
+            const { readFileSync, writeFileSync } = await import("fs");
+            const { join, dirname } = await import("path");
+            const { fileURLToPath } = await import("url");
 
-          // Start minimal server for WebAuthn page context
-          const mimeTypes = { ".html": "text/html", ".js": "application/javascript", ".json": "application/json" };
-          const server = createServer((req, res) => {
-            try {
-              const urlPath = req.url === "/" ? "tests/web/api-testing.html" : req.url.substring(1);
-              const filePath = join(rootDir, urlPath.split("?")[0]);
-              const ext = filePath.substring(filePath.lastIndexOf("."));
-              const content = readFileSync(filePath);
-              res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
-              res.end(content);
-            } catch { res.writeHead(404); res.end("Not found"); }
-          });
-          const actualPort = await new Promise((resolve) => {
-            server.listen(PORT, () => resolve(server.address().port));
-          });
+            const __dir = dirname(fileURLToPath(import.meta.url));
+            const rootDir = join(__dir, "../..");
+            const PORT = parseInt(process.env.VIRTUAL_AUTH_PORT || "0", 10);
+            const RP_ID = process.env.VIRTUAL_AUTH_RPID || "localhost";
 
-          const { VirtualAuthenticator } = await import("../../utils/virtual-authenticator.js");
-          const auth = new VirtualAuthenticator({ rpId: RP_ID, port: actualPort });
-          await auth.setup();
+            const mimeTypes = {
+              ".html": "text/html",
+              ".js": "application/javascript",
+              ".json": "application/json",
+            };
+            const server = createServer((req, res) => {
+              try {
+                const urlPath =
+                  req.url === "/"
+                    ? "tests/web/api-testing.html"
+                    : req.url.substring(1);
+                const filePath = join(rootDir, urlPath.split("?")[0]);
+                const ext = filePath.substring(filePath.lastIndexOf("."));
+                const content = readFileSync(filePath);
+                res.writeHead(200, {
+                  "Content-Type": mimeTypes[ext] || "application/octet-stream",
+                });
+                res.end(content);
+              } catch {
+                res.writeHead(404);
+                res.end("Not found");
+              }
+            });
+            const actualPort = await new Promise((resolve) => {
+              server.listen(PORT, () => resolve(server.address().port));
+            });
 
-          try {
-            // Navigate and create credential
-            await auth.page.goto(`http://localhost:${actualPort}/tests/web/api-testing.html`);
-            const credential = await auth.page.evaluate(
+            const { VirtualAuthenticator } = await import(
+              "../../utils/virtual-authenticator.js"
+            );
+            const auth = new VirtualAuthenticator({
+              rpId: RP_ID,
+              port: actualPort,
+            });
+            await auth.setup();
+            cleanup = async () => {
+              await auth.teardown();
+              await new Promise((resolve) => server.close(resolve));
+            };
+
+            await auth.page.goto(
+              `http://localhost:${actualPort}/tests/web/api-testing.html`,
+            );
+            credential = await auth.page.evaluate(
               async ({ rpId, rpName }) => {
                 const challenge = crypto.getRandomValues(new Uint8Array(32));
                 const cred = await navigator.credentials.create({
@@ -233,31 +261,39 @@ describe("OTP Authentication API", () => {
                   const bytes = new Uint8Array(buffer);
                   let binary = "";
                   for (const byte of bytes) binary += String.fromCharCode(byte);
-                  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+                  return btoa(binary)
+                    .replace(/\+/g, "-")
+                    .replace(/\//g, "_")
+                    .replace(/=/g, "");
                 }
-                const clientDataStr = new TextDecoder().decode(cred.response.clientDataJSON);
+                const clientDataStr = new TextDecoder().decode(
+                  cred.response.clientDataJSON,
+                );
                 const clientData = JSON.parse(clientDataStr);
                 return {
                   credentialId: bufferToBase64url(cred.rawId),
                   clientDataJson: bufferToBase64url(cred.response.clientDataJSON),
-                  attestationObject: bufferToBase64url(cred.response.attestationObject),
+                  attestationObject: bufferToBase64url(
+                    cred.response.attestationObject,
+                  ),
                   challengeFromClientData: clientData.challenge,
                 };
               },
-              { rpId: RP_ID, rpName: "Byzantine Test" }
+              { rpId: RP_ID, rpName: "Byzantine Test" },
             );
 
-            // Extract private key via CDP
-            const { credentials } = await auth.cdpSession.send("WebAuthn.getCredentials", {
-              authenticatorId: auth.authenticatorId,
-            });
-            const privateKeyBase64 = credentials[credentials.length - 1].privateKey;
+            const { credentials } = await auth.cdpSession.send(
+              "WebAuthn.getCredentials",
+              { authenticatorId: auth.authenticatorId },
+            );
+            privateKeyBase64 = credentials[credentials.length - 1].privateKey;
 
             console.log(`  Virtual credential ID: ${credential.credentialId}`);
-            console.log(`  Private key extracted (${privateKeyBase64.length} chars)`);
+            console.log(
+              `  Private key extracted (${privateKeyBase64.length} chars)`,
+            );
 
-            // Register the authenticator with the API
-            const authenticators = [
+            authenticators = [
               {
                 authenticatorName: "CI Invited User Passkey",
                 challenge: credential.challengeFromClientData,
@@ -269,7 +305,21 @@ describe("OTP Authentication API", () => {
                 },
               },
             ];
+          } else {
+            const newAuthData = loadNewAuthData();
+            if (!newAuthData.authenticators?.length) {
+              console.warn(
+                "⚠️  Skipping — no authenticators in generated-new-auth.json. Run npm run serve and create a passkey first.",
+              );
+              return;
+            }
+            authenticators = newAuthData.authenticators;
+            console.log(
+              `📂 Using ${authenticators.length} authenticator(s) from generated-new-auth.json`,
+            );
+          }
 
+          try {
             const requestBody = {
               sessionId: sessionId,
               accountId: testAccountId,
@@ -294,24 +344,37 @@ describe("OTP Authentication API", () => {
               `✅ Created ${response.data.authenticatorIds.length} authenticator(s) for invited user`,
             );
 
-            // Save credentials to generated-invited-user.json for future signing
-            const INVITED_USER_FILE = join(
-              rootDir,
-              "fixtures/test-data/__generated__/generated-invited-user.json",
-            );
-            const existingData = JSON.parse(readFileSync(INVITED_USER_FILE, "utf-8"));
-            const updatedData = {
-              ...existingData,
-              credentialId: credential.credentialId,
-              privateKey: privateKeyBase64,
-              authenticatorIds: response.data.authenticatorIds,
-              lastUpdated: new Date().toISOString(),
-            };
-            writeFileSync(INVITED_USER_FILE, JSON.stringify(updatedData, null, 2), "utf-8");
-            console.log(`📝 Saved credential + private key to generated-invited-user.json`);
+            if (orchestrated && credential && privateKeyBase64) {
+              const { readFileSync, writeFileSync } = await import("fs");
+              const { join, dirname } = await import("path");
+              const { fileURLToPath } = await import("url");
+              const __dir = dirname(fileURLToPath(import.meta.url));
+              const rootDir = join(__dir, "../..");
+              const INVITED_USER_FILE = join(
+                rootDir,
+                "fixtures/test-data/__generated__/generated-invited-user.json",
+              );
+              const existingData = JSON.parse(
+                readFileSync(INVITED_USER_FILE, "utf-8"),
+              );
+              const updatedData = {
+                ...existingData,
+                credentialId: credential.credentialId,
+                privateKey: privateKeyBase64,
+                authenticatorIds: response.data.authenticatorIds,
+                lastUpdated: new Date().toISOString(),
+              };
+              writeFileSync(
+                INVITED_USER_FILE,
+                JSON.stringify(updatedData, null, 2),
+                "utf-8",
+              );
+              console.log(
+                `📝 Saved credential + private key to generated-invited-user.json`,
+              );
+            }
           } finally {
-            await auth.teardown();
-            await new Promise((resolve) => server.close(resolve));
+            await cleanup();
           }
         },
         getTimeout("passkey"),

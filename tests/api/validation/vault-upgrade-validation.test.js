@@ -129,8 +129,8 @@ async function fetchChainBalances(accountId, chainId, { retries = 5, backoffMs =
   for (let attempt = 1; attempt <= retries; attempt++) {
     const response = await apiClient.get(
       endpoints.accounts.getAccountBalances(accountId, {
-        chain_id: chainId,
-        include_test_vaults: false,
+        chainId,
+        includeTestVaults: false,
       }),
       { authenticated: true }
     );
@@ -460,8 +460,8 @@ describeValidation("Vault Upgrade Validation (Base -> Ethereum)", () => {
       logSub(`Re-fetching freshest destination vault balance...`);
       const freshBalances = await apiClient.get(
         endpoints.accounts.getAccountBalances(accountId, {
-          chain_id: DEST_CHAIN_ID,
-          include_test_vaults: false,
+          chainId: DEST_CHAIN_ID,
+          includeTestVaults: false,
         }),
         { authenticated: true }
       );

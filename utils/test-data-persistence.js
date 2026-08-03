@@ -275,6 +275,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
     "approve",
     "deposit",
     "withdraw",
+    "transfer",
     "activateAccount",
     "activateAccountEth",
     "inviteUsers",
@@ -490,4 +491,57 @@ export function loadInvitedUserData() {
   }
 
   return { accountId: null, userId: null, email: null };
+}
+
+const GENERATED_NEW_AUTH_FILE = join(
+  __dirname,
+  "../fixtures/test-data/__generated__/generated-new-auth.json",
+);
+
+const DEFAULT_NEW_AUTH_DATA = {
+  authenticators: [],
+  credentialId: null,
+  lastUpdated: null,
+};
+
+/**
+ * Load passkey attestation data from generated-new-auth.json
+ * (created via npm run serve + api-testing.html)
+ * @returns {object} Object containing authenticators array and optional credentialId
+ */
+export function loadNewAuthData() {
+  try {
+    if (existsSync(GENERATED_NEW_AUTH_FILE)) {
+      const content = readFileSync(GENERATED_NEW_AUTH_FILE, "utf-8").trim();
+      if (content) {
+        return { ...DEFAULT_NEW_AUTH_DATA, ...JSON.parse(content) };
+      }
+    }
+  } catch (error) {
+    console.error("❌ Error loading new auth data:", error);
+  }
+
+  return { ...DEFAULT_NEW_AUTH_DATA };
+}
+
+/**
+ * Save passkey attestation data to generated-new-auth.json
+ * @param {object} data - Passkey data to persist
+ */
+export function saveNewAuthData(data) {
+  try {
+    const dataToSave = {
+      ...data,
+      lastUpdated: new Date().toISOString(),
+    };
+    writeFileSync(
+      GENERATED_NEW_AUTH_FILE,
+      JSON.stringify(dataToSave, null, 2),
+      "utf-8",
+    );
+    console.log(`✅ Saved passkey data to ${GENERATED_NEW_AUTH_FILE}`);
+  } catch (error) {
+    console.error("❌ Error saving new auth data:", error);
+    throw error;
+  }
 }

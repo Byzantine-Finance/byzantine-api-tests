@@ -42,6 +42,8 @@
     "validate-schemas": "node scripts/validate-schemas.js",
     "sync-schemas": "npm run generate-schemas && npm run validate-schemas",
     "serve": "node scripts/serve.js",
+    "turnkey:get-user": "node scripts/turnkey-get-user.js",
+    "turnkey:delete-authenticators": "node scripts/turnkey-delete-authenticators.js",
     "test:generate-stamps": "node scripts/generate-webauthn-stamps.js",
     "test:generate-stamps:ci": "node scripts/generate-stamps-ci.js",
     "ci:one-time-setup": "node scripts/ci-one-time-setup.js",
@@ -56,7 +58,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@byzantine/integrator-sdk": "^1.8.0",
+    "@byzantine/integrator-sdk": "file:../../Projects/integrator-sdk/byzantine-integrator-sdk-1.11.0.tgz",
     "@openapi-contrib/openapi-schema-to-json-schema": "^5.1.0",
     "ajv": "^8.12.0",
     "ajv-formats": "^2.1.1",

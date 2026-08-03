@@ -13,7 +13,7 @@ import {
   FEATURE_FLAGS,
   TEST_DATA,
 } from "../../config/test.config.js";
-import { generateUniqueEmail } from "../../utils/test-helpers.js";
+import { maybeUniqueEmail } from "../../utils/test-helpers.js";
 import { saveBodyToSign, saveInvitedUserData } from "../../utils/test-data-persistence.js";
 import {
   assertSuccessWithSchema,
@@ -46,13 +46,11 @@ describeUserInvitation("Byzantine User Invitation API", () => {
   // TEST_DATA so local runs don't accidentally hit the CI account.
   const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
   const testAccountId = orchestrated
-    ? process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID ||
-      TEST_DATA.accounts.testEntityAccountId
-    : TEST_DATA.accounts.testEntityAccountId;
+    ? process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID
+    : process.env.CGP_ACCOUNT_ID || TEST_DATA.accounts.testEntityAccountId;
   const inviterUserId = orchestrated
-    ? process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID ||
-      TEST_DATA.accounts.entityRootUserId
-    : TEST_DATA.accounts.entityRootUserId;
+    ? process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID
+    :  process.env.CGP_ROOT_USER_ID || TEST_DATA.accounts.entityRootUserId;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
@@ -70,7 +68,7 @@ describeUserInvitation("Byzantine User Invitation API", () => {
             ...user,
             userEmail: (ciInviteEmail && index === 0)
               ? ciInviteEmail
-              : generateUniqueEmail(user.userEmail),
+              : maybeUniqueEmail(user.userEmail),
           }),
         );
 

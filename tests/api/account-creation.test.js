@@ -13,7 +13,7 @@ import { describe, it, beforeAll } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
-import { generateUniqueEmail } from "../../utils/test-helpers.js";
+import { maybeUniqueEmail } from "../../utils/test-helpers.js";
 import {
   assertSuccessWithSchema,
   assertValidUuid,
@@ -48,19 +48,25 @@ describeAccountCreation("Byzantine Account Creation API", () => {
     it(
       "should create user with valid data",
       async () => {
-        // Create a unique email for this test
-        const uniqueEmail = generateUniqueEmail(validUser.userInfo.email);
-        const userWithUniqueEmail = {
+        // Uniquify the owner + root user emails when UNIQUE_EMAILS=true.
+        // Preserve the owner==root relationship (same email -> same value) so
+        // owner anchoring still resolves to the intended user.
+        const ownerEmail = maybeUniqueEmail(validUser.userInfo.email);
+        const userWithUniqueEmails = {
           ...validUser,
-          userInfo: {
-            ...validUser.userInfo,
-            email: uniqueEmail,
-          },
+          userInfo: { ...validUser.userInfo, email: ownerEmail },
+          rootUsers: (validUser.rootUsers || []).map((r) => ({
+            ...r,
+            email:
+              r.email === validUser.userInfo.email
+                ? ownerEmail
+                : maybeUniqueEmail(r.email),
+          })),
         };
 
         const response = await apiClient.post(
           endpoints.create.user,
-          userWithUniqueEmail,
+          userWithUniqueEmails,
           { authenticated: true },
         );
 
@@ -69,7 +75,11 @@ describeAccountCreation("Byzantine Account Creation API", () => {
         assertValidUuid(response.data.accountId);
 
         // Save IDs and email for use in other tests (email reused in entity B)
-        saveUserIds(response.data.userId, response.data.accountId, uniqueEmail);
+        saveUserIds(
+          response.data.userId,
+          response.data.accountId,
+          ownerEmail,
+        );
       },
       getTimeout("integration"),
     );
@@ -80,24 +90,18 @@ describeAccountCreation("Byzantine Account Creation API", () => {
       "should create entity account with valid data",
       async () => {
         // Use emails directly from the fixture
-        const uniqueEmail = generateUniqueEmail(validEntity.entityInfo.email);
+        const uniqueEmail = maybeUniqueEmail(validEntity.entityInfo.email);
         const entityWithUniqueEmails = {
           ...validEntity,
           entityInfo: {
             ...validEntity.entityInfo,
             email: uniqueEmail,
           },
-          rootUsers: validEntity.rootUsers.map((rootUser) => ({
-            ...rootUser,
-            email: generateUniqueEmail(rootUser.email),
+          rootUsers: (validEntity.rootUsers || []).map((r) => ({
+            ...r,
+            email: maybeUniqueEmail(r.email),
           })),
-          associatedPersons: validEntity.associatedPersons?.map((person) => ({
-            ...person,
-            userInfo: {
-              ...person.userInfo,
-              email: generateUniqueEmail(person.userInfo.email),
-            },
-          })),
+          associatedPersons: validEntity.associatedPersons,
         };
 
         const response = await apiClient.post(

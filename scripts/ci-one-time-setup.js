@@ -199,7 +199,14 @@ async function main() {
       const resp = await apiCall("POST", "/v1/submit/create-individual-account", {
         ...validUser,
         userInfo: { ...validUser.userInfo, email },
-        authenticators: [buildAuthenticator(cred)],
+        // authenticators moved into rootUsers (schema change). The root user is
+        // the account owner, so keep its email in sync with userInfo and attach
+        // the minted authenticator to the first root user.
+        rootUsers: validUser.rootUsers.map((user, index) => ({
+          ...user,
+          email: index === 0 ? email : uniqueEmail(user.email),
+          ...(index === 0 && { authenticators: [buildAuthenticator(cred)] }),
+        })),
       });
 
       if (!resp.ok) {

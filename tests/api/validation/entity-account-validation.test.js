@@ -21,7 +21,7 @@ import { describe, it, expect } from "vitest";
 import { apiClient } from "../../../utils/api-client.js";
 import { endpoints } from "../../../config/endpoints.js";
 import { getTimeout, FEATURE_FLAGS } from "../../../config/test.config.js";
-import { generateUniqueEmail } from "../../../utils/test-helpers.js";
+import { maybeUniqueEmail } from "../../../utils/test-helpers.js";
 import {
   assertError,
   assertSuccess,
@@ -48,19 +48,10 @@ function buildEntityRequest(overrides = {}) {
     ...validEntity,
     entityInfo: {
       ...validEntity.entityInfo,
-      email: generateUniqueEmail(validEntity.entityInfo.email),
+      email: maybeUniqueEmail(validEntity.entityInfo.email),
     },
-    rootUsers: validEntity.rootUsers.map((rootUser) => ({
-      ...rootUser,
-      email: generateUniqueEmail(rootUser.email),
-    })),
-    associatedPersons: validEntity.associatedPersons?.map((person) => ({
-      ...person,
-      userInfo: {
-        ...person.userInfo,
-        email: generateUniqueEmail(person.userInfo.email),
-      },
-    })),
+    rootUsers: validEntity.rootUsers,
+    associatedPersons: validEntity.associatedPersons,
   };
   return { ...base, ...overrides };
 }
@@ -111,12 +102,12 @@ describeValidation("Entity Account Validation API", () => {
             {
               firstName: "Alice",
               lastName: "Root",
-              email: generateUniqueEmail("alice@example.com"),
+              email: maybeUniqueEmail("alice@example.com"),
             },
             {
               firstName: "Bob",
               lastName: "Root",
-              email: generateUniqueEmail("bob@example.com"),
+              email: maybeUniqueEmail("bob@example.com"),
             },
           ],
         });
@@ -193,7 +184,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Jane",
                 lastName: "UBO",
-                email: generateUniqueEmail("jane.ubo@example.com"),
+                email: maybeUniqueEmail("jane.ubo@example.com"),
                 birthDate: "1985-06-15",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -226,7 +217,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Jane",
                 lastName: "UBO",
-                email: generateUniqueEmail("jane.ubo@example.com"),
+                email: maybeUniqueEmail("jane.ubo@example.com"),
                 birthDate: "1985-06-15",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -264,7 +255,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Mark",
                 lastName: "Rep",
-                email: generateUniqueEmail("mark.rep@example.com"),
+                email: maybeUniqueEmail("mark.rep@example.com"),
                 birthDate: "1980-03-20",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -297,7 +288,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Mark",
                 lastName: "Rep",
-                email: generateUniqueEmail("mark.rep@example.com"),
+                email: maybeUniqueEmail("mark.rep@example.com"),
                 birthDate: "1980-03-20",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -335,7 +326,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Sarah",
                 lastName: "Dual",
-                email: generateUniqueEmail("sarah.dual@example.com"),
+                email: maybeUniqueEmail("sarah.dual@example.com"),
                 birthDate: "1988-12-01",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -369,7 +360,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Sarah",
                 lastName: "Dual",
-                email: generateUniqueEmail("sarah.dual@example.com"),
+                email: maybeUniqueEmail("sarah.dual@example.com"),
                 birthDate: "1988-12-01",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -403,7 +394,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Sarah",
                 lastName: "Dual",
-                email: generateUniqueEmail("sarah.dual@example.com"),
+                email: maybeUniqueEmail("sarah.dual@example.com"),
                 birthDate: "1988-12-01",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -442,7 +433,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Tom",
                 lastName: "DocTest",
-                email: generateUniqueEmail("tom.doc@example.com"),
+                email: maybeUniqueEmail("tom.doc@example.com"),
                 birthDate: "1990-01-01",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -482,7 +473,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Tom",
                 lastName: "DocTest",
-                email: generateUniqueEmail("tom.doc@example.com"),
+                email: maybeUniqueEmail("tom.doc@example.com"),
                 birthDate: "1990-01-01",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -533,7 +524,7 @@ describeValidation("Entity Account Validation API", () => {
             {
               firstName: "Min",
               lastName: "Entity",
-              email: generateUniqueEmail("min.entity@example.com"),
+              email: maybeUniqueEmail("min.entity@example.com"),
             },
           ],
           byzantineTermsSignedAt: validEntity.byzantineTermsSignedAt,
@@ -601,7 +592,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Alice",
                 lastName: "UBO",
-                email: generateUniqueEmail("alice.ubo@example.com"),
+                email: maybeUniqueEmail("alice.ubo@example.com"),
                 birthDate: "1985-06-15",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -615,7 +606,7 @@ describeValidation("Entity Account Validation API", () => {
               userInfo: {
                 firstName: "Bob",
                 lastName: "Rep",
-                email: generateUniqueEmail("bob.rep@example.com"),
+                email: maybeUniqueEmail("bob.rep@example.com"),
                 birthDate: "1980-03-20",
                 nationality: "FRA",
                 residentialAddress: validEntity.associatedPersons[0].userInfo.residentialAddress,
@@ -672,7 +663,7 @@ describeValidation("Entity Account Validation API", () => {
     it(
       "should reject request with duplicate root user emails",
       async () => {
-        const duplicateEmail = generateUniqueEmail("duplicate@example.com");
+        const duplicateEmail = maybeUniqueEmail("duplicate@example.com");
         const request = buildEntityRequest({
           rootUsers: [
             {

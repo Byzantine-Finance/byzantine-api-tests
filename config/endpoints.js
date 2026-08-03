@@ -78,7 +78,7 @@ export const endpoints = {
      * @param {string} currency - Optional: usd, eur, usdc, eurc
      */
     getBankAccounts: (accountId, currency = null) => {
-      const path = `/v1/query/get-bank-accounts?account_id=${accountId}`;
+      const path = `/v1/query/get-bank-accounts?accountId=${accountId}`;
       return currency ? `${path}&currency=${currency}` : path;
     },
 
@@ -101,14 +101,13 @@ export const endpoints = {
     /**
      * Get account balances (positions and idle) for an account
      * @param {string} accountId - UUID
-     * @param {object} params - Optional: chain_id (int32), include_test_vaults (boolean)
+     * @param {object} params - Optional: chainId (int32), includeTestVaults (boolean)
      */
     getAccountBalances: (accountId, params = {}) => {
-      const queryParams = new URLSearchParams({ account_id: accountId });
-      if (params.chain_id != null)
-        queryParams.append("chain_id", params.chain_id);
-      if (params.include_test_vaults != null)
-        queryParams.append("include_test_vaults", params.include_test_vaults);
+      const queryParams = new URLSearchParams({ accountId });
+      if (params.chainId != null) queryParams.append("chainId", params.chainId);
+      if (params.includeTestVaults != null)
+        queryParams.append("includeTestVaults", params.includeTestVaults);
       return `/v1/query/get-account-balances?${queryParams.toString()}`;
     },
   },
@@ -122,14 +121,14 @@ export const endpoints = {
      * @param {string} transactionId - UUID
      */
     getById: (transactionId) =>
-      `/v1/query/get-transaction?transaction_id=${transactionId}`,
+      `/v1/query/get-transaction?transactionId=${transactionId}`,
 
     /**
      * Get all transactions for an account
      * @param {string} accountId - UUID
      */
     getByAccountId: (accountId) =>
-      `/v1/query/get-transactions?account_id=${accountId}`,
+      `/v1/query/get-transactions?accountId=${accountId}`,
   },
 
   // ============================================
@@ -156,6 +155,15 @@ export const endpoints = {
      */
     getWithdrawPayloadPasskey: (chainId) =>
       `/v1/query/get-withdraw-payload-passkey?chain_id=${chainId}`,
+
+    /**
+     * Get transfer payload to sign (passkey auth)
+     * Body is a TransferRequestBody: { accountId, currency (CryptoCurrency:
+     * usdc | eurc), amount, destinationAddress }
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    getTransferPayloadPasskey: (chainId) =>
+      `/v1/query/get-transfer-payload-passkey?chain_id=${chainId}`,
 
     /**
      * Get vault upgrade payload to sign (passkey auth)
@@ -286,7 +294,7 @@ export const endpoints = {
      * @param {string} accountId - UUID
      */
     getByAccountId: (accountId) =>
-      `/v1/query/get-invitations-by-account-id?account_id=${accountId}`,
+      `/v1/query/get-invitations-by-account-id?accountId=${accountId}`,
 
     /**
      * Get invitations by email
@@ -329,6 +337,39 @@ export const endpoints = {
      * GET to list deliveries (ListWebhookDeliveriesResponse)
      */
     deliveries: "/v1/webhooks/deliveries",
+
+    /**
+     * Webhook delivery history, filtered/paginated.
+     * The response is a page: { deliveries, limit, offset, hasMore, attemptsIncluded }.
+     * `limit` defaults to 100 server-side and is capped at 250, so callers looking
+     * for a specific delivery should filter rather than scan page one.
+     * @param {object} params - Optional: limit, offset, includeAttempts,
+     *   subscriptionId, eventId, eventType, status, sourceType, sourceId,
+     *   accountId, providerEventId
+     */
+    deliveriesQuery: (params = {}) => {
+      const allowed = [
+        "limit",
+        "offset",
+        "includeAttempts",
+        "subscriptionId",
+        "eventId",
+        "eventType",
+        "status",
+        "sourceType",
+        "sourceId",
+        "accountId",
+        "providerEventId",
+      ];
+      const queryParams = new URLSearchParams();
+      for (const key of allowed) {
+        if (params[key] != null) queryParams.append(key, params[key]);
+      }
+      const query = queryParams.toString();
+      return query
+        ? `/v1/webhooks/deliveries?${query}`
+        : "/v1/webhooks/deliveries";
+    },
 
     /**
      * Retry a webhook delivery

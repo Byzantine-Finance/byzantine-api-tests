@@ -113,6 +113,8 @@ export const FEATURE_FLAGS = {
     process.env.ENABLE_PASSKEY_INIT_DEPOSIT_TESTS === "true",
   enablePasskeyInitWithdrawTests:
     process.env.ENABLE_PASSKEY_INIT_WITHDRAW_TESTS === "true",
+  enablePasskeyInitTransferTests:
+    process.env.ENABLE_PASSKEY_INIT_TRANSFER_TESTS === "true",
   enablePasskeyInitVaultUpgradeTests:
     process.env.ENABLE_PASSKEY_INIT_VAULT_UPGRADE_TESTS === "true",
   enablePasskeyActivateTxTests:
@@ -137,6 +139,11 @@ export const FEATURE_FLAGS = {
   createEntityMinimal: process.env.CREATE_ENTITY_MINIMAL === "true", // Test minimal required fields
   entityValidation: process.env.ENABLE_ENTITY_VALIDATION_TESTS === "true", // Entity validation edge cases
 
+  // Email uniqueness: when true, test emails get a timestamp suffix to avoid
+  // "already exists" conflicts on repeated runs. Default false so fixtures use
+  // their exact emails (e.g. to receive OTP at a known inbox). See maybeUniqueEmail().
+  uniqueEmails: process.env.UNIQUE_EMAILS === "true", // Disabled by default
+
   // User invitation tests
   invitePayload: process.env.INVITE_PAYLOAD !== "false", // Enabled by default
   inviteUsers: process.env.INVITE_USERS !== "false", // Enabled by default
@@ -155,6 +162,16 @@ export const FEATURE_FLAGS = {
   // Read-only webhook queries (list subscriptions, list deliveries) - enabled by default.
   // The create/update/delete/test/retry lifecycle is additionally gated by enableWriteTests.
   enableWebhookTests: process.env.ENABLE_WEBHOOK_TESTS !== "false", // Enabled by default
+  // Opt-in E2E: drive a real customer.* lifecycle event through Sumsub (via
+  // scripts/simulate-sumsub-review.js) and assert it gets delivered. Disabled by
+  // default — requires SUMSUB_WEBHOOK_SECRET (matching the target API), a GREEN
+  // sandbox applicant, and a live subscription. See webhook-lifecycle-events.test.js.
+  enableWebhookLifecycleTests: process.env.ENABLE_WEBHOOK_LIFECYCLE_TESTS === "true",
+  // Opt-in fan-out concurrency test: create N subscriptions → one event →
+  // assert N simultaneous deliveries all drain. The worker's in-flight cap (4)
+  // is observed at the receiver (scripts/webhook-receiver-slow.js), not asserted
+  // here. Needs ENABLE_WRITE_TESTS + TEST_WEBHOOK_URL. See webhook-concurrency.test.js.
+  enableWebhookConcurrencyTests: process.env.ENABLE_WEBHOOK_CONCURRENCY_TESTS === "true",
 
   // Associated persons tests
   addAssociatedPerson: process.env.ADD_ASSOCIATED_PERSON !== "false", // Enabled by default
@@ -223,6 +240,7 @@ export const TEST_DATA = {
     initActivateTargetAccountId: process.env.TEST_INIT_ACTIVATE_TARGET_ACCOUNT_ID || null,
     initDepositTargetAccountId: process.env.TEST_INIT_DEPOSIT_TARGET_ACCOUNT_ID || null,
     initWithdrawTargetAccountId: process.env.TEST_INIT_WITHDRAW_TARGET_ACCOUNT_ID || null,
+    initTransferTargetAccountId: process.env.TEST_INIT_TRANSFER_TARGET_ACCOUNT_ID || null,
     initVaultUpgradeTargetAccountId: process.env.TEST_INIT_VAULT_UPGRADE_TARGET_ACCOUNT_ID || null,
   },
 

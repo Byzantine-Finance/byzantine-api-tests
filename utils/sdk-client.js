@@ -130,6 +130,7 @@ function setupAutoAuth(client) {
         "/v1/query/get-activate-account-payload-passkey",
         "/v1/query/get-deposit-payload-passkey",
         "/v1/query/get-withdraw-payload-passkey",
+        "/v1/query/get-transfer-payload-passkey",
         "/v1/query/get-vault-upgrade-payload-passkey",
         "/v1/submit/sign-payload-passkey",
         // OTP transactions
@@ -158,6 +159,9 @@ function setupAutoAuth(client) {
         // Transaction data
         "/v1/query/get-transaction",
         "/v1/query/get-transactions",
+        // Webhooks (covers subscriptions, /{id}, /{id}/test, deliveries, /{id}/retry)
+        "/v1/webhooks/subscriptions",
+        "/v1/webhooks/deliveries",
         // Vault data
         "/v1/query/top-vaults",
         "/v1/query/apy/",

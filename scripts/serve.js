@@ -36,9 +36,43 @@ function startServer(port) {
       return;
     }
 
-    // Handle POST request to save user data
+    // Handle POST request to save passkey attestation data
     const urlPath = req.url.split("?")[0]; // Remove query string
     console.log(`Checking route: method=${req.method}, urlPath=${urlPath}`);
+    if (req.method === "POST" && urlPath === "/save-new-auth") {
+      console.log("📝 Received POST request to save passkey data");
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      req.on("end", () => {
+        try {
+          const authData = JSON.parse(body);
+          const filePath = join(
+            __dirname,
+            "fixtures/test-data/__generated__/generated-new-auth.json",
+          );
+          writeFileSync(
+            filePath,
+            JSON.stringify(
+              { ...authData, lastUpdated: new Date().toISOString() },
+              null,
+              2,
+            ),
+          );
+          console.log("✅ Saved passkey data to:", filePath);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          console.error("❌ Error saving passkey data:", error);
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: error.message }));
+        }
+      });
+      return;
+    }
+
+    // Handle POST request to save user data
     if (req.method === "POST" && urlPath === "/save-user-data") {
       console.log("📝 Received POST request to save user data");
       let body = "";
