@@ -4,6 +4,23 @@
  * API version: 0.2.0
  */
 
+/**
+ * Append the shared offset-pagination params (limit/offset/order) to a path,
+ * skipping any the caller left out so the server applies its own defaults.
+ * Used by the integrator-wide `get-all-*` listings.
+ *
+ * @param {string} path - Base path, no query string
+ * @param {object} params - Optional: limit, offset, order ("asc" | "desc")
+ */
+function buildPagedQuery(path, params = {}) {
+  const queryParams = new URLSearchParams();
+  for (const key of ["limit", "offset", "order"]) {
+    if (params[key] != null) queryParams.append(key, params[key]);
+  }
+  const query = queryParams.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 export const endpoints = {
   // ============================================
   // API Health
@@ -73,6 +90,18 @@ export const endpoints = {
       `/v1/query/get-entity-details?entityId=${entityId}`,
 
     /**
+     * Get the full record of one associated person (beneficiary or
+     * representative) of an entity — personal info, beneficiary details,
+     * verification status and outstanding documents.
+     * Returns GetAssociatedPersonResponse.
+     * A person owned by another integrator 404s exactly like a missing one.
+     * @param {string} beneficiaryId - UUID, as returned by get-entity-details
+     *   and by the add/update associated person endpoints
+     */
+    getAssociatedPersonDetails: (beneficiaryId) =>
+      `/v1/query/get-associated-person-details?beneficiaryId=${beneficiaryId}`,
+
+    /**
      * Get bank accounts for an account
      * @param {string} accountId - UUID
      * @param {string} currency - Optional: usd, eur, usdc, eurc
@@ -129,6 +158,15 @@ export const endpoints = {
      */
     getByAccountId: (accountId) =>
       `/v1/query/get-transactions?accountId=${accountId}`,
+
+    /**
+     * Every transaction the integrator can see, across all accounts
+     * (GetAllTransactionsResponse: { transactions, total, limit, offset }).
+     * Offset-paginated — `limit` is clamped to 1..100 (default 20) and `order`
+     * sorts on `updatedAt`, newest first by default.
+     * @param {object} params - Optional: limit, offset, order ("asc" | "desc")
+     */
+    getAll: (params = {}) => buildPagedQuery("/v1/query/get-all-transactions", params),
   },
 
   // ============================================
@@ -170,6 +208,17 @@ export const endpoints = {
      * Returns two raw payloads (withdraw from Base, deposit on Ethereum) to sign in one prompt
      */
     getVaultUpgradePayloadPasskey: "/v1/query/get-vault-upgrade-payload-passkey",
+
+    /**
+     * Get the payload to sign to cancel a queued withdrawal (passkey auth).
+     * Body is a CancelWithdrawalRequestBody: { transactionId } — the id of the
+     * withdrawal to cancel, i.e. the transactionId the withdraw payload returned.
+     * Answers 400 when the transaction is unknown, on another chain, or no longer
+     * cancellable (only a queued withdrawal can be cancelled).
+     * @param {number} chainId - 1 for Ethereum, 8453 for Base
+     */
+    getCancelWithdrawalPayloadPasskey: (chainId) =>
+      `/v1/query/get-cancel-withdrawal-payload-passkey?chain_id=${chainId}`,
 
     /**
      * Submit signed raw payload (passkey auth)
@@ -302,6 +351,15 @@ export const endpoints = {
      */
     getByEmail: (email) =>
       `/v1/query/get-invitations-by-email?email=${encodeURIComponent(email)}`,
+
+    /**
+     * Every invitation the integrator has issued, across all accounts
+     * (GetAllInvitationsResponse: { invitations, total, limit, offset }).
+     * Offset-paginated — `limit` is clamped to 1..100 (default 20) and `order`
+     * sorts on `updated_at`, newest first by default.
+     * @param {object} params - Optional: limit, offset, order ("asc" | "desc")
+     */
+    getAll: (params = {}) => buildPagedQuery("/v1/query/get-all-invitations", params),
   },
 
   // ============================================
@@ -345,7 +403,7 @@ export const endpoints = {
      * for a specific delivery should filter rather than scan page one.
      * @param {object} params - Optional: limit, offset, includeAttempts,
      *   subscriptionId, eventId, eventType, status, sourceType, sourceId,
-     *   accountId, providerEventId
+     *   accountId
      */
     deliveriesQuery: (params = {}) => {
       const allowed = [
@@ -359,7 +417,6 @@ export const endpoints = {
         "sourceType",
         "sourceId",
         "accountId",
-        "providerEventId",
       ];
       const queryParams = new URLSearchParams();
       for (const key of allowed) {
@@ -423,15 +480,19 @@ export const endpoints = {
   integrator: {
     /**
      * Current credential's identity and capabilities (CurrentIntegratorResponse:
-     * { integratorId, accessScope, capabilities: { canWrite } })
+     * { integratorId, accessScope, label, capabilities: { canWrite } })
      */
     whoami: "/v1/integrator/whoami",
 
     /**
-     * Issue a new credential for the authenticated integrator.
-     * POST body is a CreateCredentialPayload ({ accessScope?, label? });
-     * responds 201 with CreateCredentialResponse — the only time `privateKey`
-     * is ever returned.
+     * Credentials collection.
+     * POST issues a new credential — body is a CreateCredentialPayload
+     * ({ accessScope?, label? }), responds 201 with CreateCredentialResponse,
+     * the only time `privateKey` is ever returned.
+     * GET lists every credential owned by the authenticated integrator, oldest
+     * first (ListCredentialsResponse: { credentials: CredentialSummaryResponse[] }).
+     * Listing is a read: a read_only credential may call it, and private keys
+     * never appear in it.
      */
     credentials: "/v1/integrator/credentials",
 

@@ -131,7 +131,7 @@ Files run (vitest-internal order, each completes before the next):
 
 1. `user-invitation` -t `"should generate payload"`
 2. `generate-stamps-ci.js` (sign invite)
-3. `user-invitation` (full file with `INVITE_PAYLOAD=false`, `INVITE_USERS=true`) — runs the invite submission and then the `Invitation queries` describe (`getInvitationsByAccountId` + `getInvitationsByEmail`) against the freshly-created invitation.
+3. `user-invitation` (full file with `INVITE_PAYLOAD=false`, `INVITE_USERS=true`) — runs the invite submission and then the `Byzantine Invitation Queries` suite (by-account-id, by-email, and the integrator-wide `get-all-invitations` listing) against the freshly-created invitation. That suite is a sibling of the write suite in the same file, gated by `ENABLE_INVITATION_QUERIES` rather than `ENABLE_WRITE_TESTS`, so it still runs if the invite steps are switched off.
 4. `otp-authentication` -t `"should initialize OTP"`
 5. Retrieve OTP (Mailslurp auto or `TEST_OTP_CODE`)
 6. `otp-authentication` -t `"should authenticate"`

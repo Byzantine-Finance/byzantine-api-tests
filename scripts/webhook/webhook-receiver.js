@@ -6,9 +6,9 @@
  * x-byzantine-webhook-* signature headers, and the pretty-printed JSON body.
  *
  * Usage:
- *   node scripts/webhook-receiver.js            # listens on :3000
- *   PORT=80 sudo node scripts/webhook-receiver.js
- *   node scripts/webhook-receiver.js 4000       # listens on :4000
+ *   node scripts/webhook/webhook-receiver.js            # listens on :3000
+ *   PORT=80 sudo node scripts/webhook/webhook-receiver.js
+ *   node scripts/webhook/webhook-receiver.js 4000       # listens on :4000
  *
  * Point ngrok at the SAME port, e.g.:
  *   ngrok http --url=estate-deeply-ether.ngrok-free.dev 3000

@@ -67,6 +67,16 @@ describeTransactionPasskey("Send Passkey Transactions API", () => {
       flag: "enablePasskeyVaultUpgradeTxTests",
       chainId: 8453,
     },
+    {
+      // Cancellation of a queued withdrawal — the payload comes from
+      // get-cancel-withdrawal-payload-passkey, signed like any other raw payload
+      type: "CancelWithdrawal",
+      bodyToSign: txRequest.cancelWithdrawal?.bodyToSign,
+      transactionId: txRequest.cancelWithdrawal?.transactionId,
+      webAuthnStamp: txRequest.cancelWithdrawal?.webAuthnStamp,
+      flag: "enablePasskeyCancelWithdrawTxTests",
+      chainId,
+    },
   ];
 
   // Filter tests based on feature flags in test.config.js

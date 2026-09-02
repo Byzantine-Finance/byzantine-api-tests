@@ -5,8 +5,34 @@
 
 import { createHash } from "crypto";
 import elliptic from "elliptic";
+import { isProduction } from "../config/environments.js";
 
 const ec = new elliptic.ec("p256");
+
+/**
+ * The private key the API and SDK clients sign with by default, picked for the
+ * current environment. Same resolution as utils/api-client.js and
+ * utils/sdk-client.js use.
+ *
+ * @returns {string|undefined} Private key, or undefined when unset
+ */
+export function getIntegratorPrivateKey() {
+  return isProduction()
+    ? process.env.PROD_INTEGRATOR_PRIVATE_KEY
+    : process.env.DEV_INTEGRATOR_PRIVATE_KEY;
+}
+
+/**
+ * Public key of the credential the clients sign with by default — the identity
+ * a request arrives under, so it is what /v1/integrator/whoami reports and what
+ * a credential listing must contain.
+ *
+ * @returns {string|null} Compressed public key, or null when no key is configured
+ */
+export function getIntegratorPubkey() {
+  const privateKey = getIntegratorPrivateKey();
+  return privateKey ? derivePublicKey(privateKey) : null;
+}
 
 /**
  * Derive the compressed SEC1 public key (0x-prefixed hex) for a private key.

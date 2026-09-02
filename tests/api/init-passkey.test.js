@@ -3,10 +3,11 @@
  * - query/get-activate-account-payload-passkey
  * - query/get-deposit-payload-passkey
  * - query/get-withdraw-payload-passkey
+ * - query/get-cancel-withdrawal-payload-passkey
  *
  */
 
-import { describe, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import { apiClient } from "../../utils/api-client.js";
 import { endpoints } from "../../config/endpoints.js";
 import {
@@ -39,6 +40,11 @@ const describeInitWithdrawPasskey = FEATURE_FLAGS.enablePasskeyInitWithdrawTests
 const describeInitTransferPasskey = FEATURE_FLAGS.enablePasskeyInitTransferTests
   ? describe
   : describe.skip;
+const describeInitCancelWithdrawPasskey =
+  FEATURE_FLAGS.enablePasskeyInitCancelWithdrawTests ? describe : describe.skip;
+
+// A well-formed UUID that should not correspond to any transaction
+const NONEXISTENT_TRANSACTION_ID = "00000000-0000-4000-8000-000000000000";
 
 describeInitPasskey("Initiate Passkey transactions API", () => {
   // Use a KYC/KYB-approved account for passkey operations
@@ -235,6 +241,87 @@ describeInitPasskey("Initiate Passkey transactions API", () => {
             response.data.bodyToSign,
             response.data.transactionId
           );
+        },
+        getTimeout("api")
+      );
+    }
+  );
+
+  // Cancel a queued withdrawal. What makes a withdrawal cancellable is its
+  // status, not the vault type — a `withdrawal_initiated` transaction is
+  // cancellable, and that happens on vaults reported as `is_async_vault: false`
+  // too. So the happy path needs a live queued withdrawal: set
+  // TEST_CANCEL_WITHDRAWAL_TRANSACTION_ID to the transactionId the withdraw
+  // payload returned. The 400 cases need no state.
+  describeInitCancelWithdrawPasskey(
+    "POST /v1/query/get-cancel-withdrawal-payload-passkey",
+    () => {
+      // Explicit config only: falling back to a stale persisted withdrawal would
+      // turn "no queued withdrawal right now" into a test failure.
+      const cancelTransactionId =
+        TEST_DATA.transactions.cancelWithdrawalTransactionId;
+      const itCancellable = cancelTransactionId ? it : it.skip;
+
+      itCancellable(
+        "should get cancel withdrawal payload to sign",
+        async () => {
+          const requestBody = { transactionId: cancelTransactionId };
+
+          assertSchema(requestBody, "CancelWithdrawalRequestBody");
+
+          const response = await apiClient.post(
+            endpoints.passkey.getCancelWithdrawalPayloadPasskey(chainId),
+            requestBody,
+            { authenticated: true }
+          );
+
+          // A withdrawal that has already settled, or was never queued, answers
+          // 400 — say so plainly rather than failing on a schema mismatch.
+          expect(
+            response.status,
+            `transaction ${cancelTransactionId} is not a cancellable queued withdrawal on chain ${chainId}: ${JSON.stringify(response.error)}`
+          ).toBe(200);
+
+          assertSuccessWithSchema(response, "PasskeyPayloadRequestResponse");
+          assertHasFields(response.data, ["bodyToSign", "transactionId"]);
+
+          // Save cancellation bodyToSign for the sign-payload-passkey step
+          saveBodyToSign(
+            "cancelWithdrawal",
+            response.data.bodyToSign,
+            response.data.transactionId
+          );
+        },
+        getTimeout("api")
+      );
+
+      it(
+        "should reject a transaction that does not exist",
+        async () => {
+          const response = await apiClient.post(
+            endpoints.passkey.getCancelWithdrawalPayloadPasskey(chainId),
+            { transactionId: NONEXISTENT_TRANSACTION_ID },
+            { authenticated: true }
+          );
+
+          assertError(response, 400);
+          expect(response.status).toBe(400);
+        },
+        getTimeout("api")
+      );
+
+      it(
+        "should reject a request with no transactionId",
+        async () => {
+          const response = await apiClient.post(
+            endpoints.passkey.getCancelWithdrawalPayloadPasskey(chainId),
+            {},
+            { authenticated: true }
+          );
+
+          // transactionId is required by CancelWithdrawalRequestBody
+          expect(response.status).toBeGreaterThanOrEqual(400);
+          expect(response.status).toBeLessThan(500);
         },
         getTimeout("api")
       );

@@ -3,28 +3,28 @@
  * and leave it alive, so you can trigger real lifecycle events and watch them arrive.
  *
  * Unlike the test suite, this does NOT delete the subscription afterwards.
- * Clean it up later with: node scripts/webhook-cleanup.js <subscriptionId>
+ * Clean it up later with: node scripts/webhook/webhook-cleanup.js <subscriptionId>
  *
  * Event types default to the `eventTypes` in
  * fixtures/test-data/webhooks/create-subscription-request.json
  * (override with the WEBHOOK_EVENT_TYPES env var).
  *
  * Usage:
- *   node scripts/webhook-subscribe.js https://your-ngrok-url
- *   TEST_WEBHOOK_URL=https://your-ngrok-url node scripts/webhook-subscribe.js
- *   WEBHOOK_EVENT_TYPES="customer.created,customer.active" node scripts/webhook-subscribe.js <url>
+ *   node scripts/webhook/webhook-subscribe.js https://your-ngrok-url
+ *   TEST_WEBHOOK_URL=https://your-ngrok-url node scripts/webhook/webhook-subscribe.js
+ *   WEBHOOK_EVENT_TYPES="customer.created,customer.active" node scripts/webhook/webhook-subscribe.js <url>
  */
 
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { apiClient } from "../utils/api-client.js";
-import { endpoints } from "../config/endpoints.js";
+import { apiClient } from "../../utils/api-client.js";
+import { endpoints } from "../../config/endpoints.js";
 
 const fixture = JSON.parse(
   fs.readFileSync(
     fileURLToPath(
       new URL(
-        "../fixtures/test-data/webhooks/create-subscription-request.json",
+        "../../fixtures/test-data/webhooks/create-subscription-request.json",
         import.meta.url,
       ),
     ),
@@ -36,7 +36,7 @@ const url = process.argv[2] || process.env.TEST_WEBHOOK_URL || fixture.url;
 
 if (!url) {
   console.error(
-    "Missing URL.\nUsage: node scripts/webhook-subscribe.js <https-url>  (or set TEST_WEBHOOK_URL)",
+    "Missing URL.\nUsage: node scripts/webhook/webhook-subscribe.js <https-url>  (or set TEST_WEBHOOK_URL)",
   );
   process.exit(1);
 }
@@ -68,4 +68,4 @@ console.log("   eventTypes:", subscription.eventTypes);
 console.log("   publicKey: ", publicKey, `(${algorithm})`);
 console.log("");
 console.log("Now trigger an event (e.g. create an account) and watch your receiver.");
-console.log(`Clean up later with: node scripts/webhook-cleanup.js ${subscription.id}`);
+console.log(`Clean up later with: node scripts/webhook/webhook-cleanup.js ${subscription.id}`);

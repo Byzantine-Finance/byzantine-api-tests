@@ -27,12 +27,13 @@ import createSubscriptionRequest from "../../../fixtures/test-data/webhooks/crea
 // A well-formed UUID that should not correspond to any real subscription
 const NONEXISTENT_SUBSCRIPTION_ID = "00000000-0000-4000-8000-000000000000";
 
-// Every public event name, minus the two that cannot be subscribed to:
-//   · webhook.test      — manual delivery probe only
-//   · customer.deleted  — deliverable, but rejected on subscribe
+// Every public event name, minus the one that cannot be subscribed to:
+//   · webhook.test — manual delivery probe only ("Unsupported webhook event type")
+// customer.deleted used to be rejected here too; as of the 2026-09-01 API it is
+// subscribable like any other lifecycle event (re-probed against dev).
 // Derived from the generated enum, so a new event type in the spec is picked up
-// here automatically (e.g. transaction.withdrawal_initiated).
-const NON_SUBSCRIBABLE_EVENT_TYPES = ["webhook.test", "customer.deleted"];
+// here automatically (e.g. customer.deactivated).
+const NON_SUBSCRIBABLE_EVENT_TYPES = ["webhook.test"];
 const SUBSCRIBABLE_EVENT_TYPES = (getSchema("WebhookEventType")?.enum ?? []).filter(
   (t) => !NON_SUBSCRIBABLE_EVENT_TYPES.includes(t),
 );
@@ -73,7 +74,7 @@ describeWebhooks("Webhook Subscriptions API", () => {
 
       // Unique per run so the create never collides with an existing
       // subscription — dev enforces a unique (integrator, url) constraint, and a
-      // persistent subscription (e.g. from scripts/webhook-subscribe.js) may
+      // persistent subscription (e.g. from scripts/webhook/webhook-subscribe.js) may
       // already use the base URL.
       const baseWebhookUrl =
         process.env.TEST_WEBHOOK_URL || createSubscriptionRequest.url;
@@ -181,7 +182,7 @@ describeWebhooks("Webhook Subscriptions API", () => {
             endpoints.webhooks.subscription(subscriptionId),
             {
               enabled: false,
-              eventTypes: ["transaction.created"],
+              eventTypes: ["transaction.withdrawal_initiated"],
               name: renamed,
             },
             { authenticated: true },
@@ -301,7 +302,7 @@ describeWebhooks("Webhook Subscriptions API", () => {
 
         const persisted = response.data.subscription.eventTypes;
         // The default expands to exactly the subscribable set — every event type
-        // in the spec except webhook.test and customer.deleted
+        // in the spec except webhook.test
         expect([...persisted].sort()).toEqual([...SUBSCRIBABLE_EVENT_TYPES].sort());
       },
       getTimeout("api"),
@@ -329,16 +330,18 @@ describeWebhooks("Webhook Subscriptions API", () => {
     );
 
     it(
-      "should reject customer.deleted as an unsupported subscription event type",
+      "should reject webhook.test as an unsupported subscription event type",
       async () => {
-        // customer.deleted is a valid WebhookEventType (it can be delivered) but is
-        // NOT subscribable — the API rejects it on subscription create.
+        // webhook.test is a valid WebhookEventType (it is delivered by the manual
+        // test probe) but is NOT subscribable — the API rejects it on create with
+        // "Unsupported webhook event type", distinct from the "Unknown webhook
+        // event type" it returns for a name that isn't in the enum at all.
         const response = await apiClient.post(
           endpoints.webhooks.subscriptions,
           {
-            url: uniqueUrl("deleted"),
+            url: uniqueUrl("webhook-test"),
             enabled: true,
-            eventTypes: ["customer.created", "customer.deleted"],
+            eventTypes: ["customer.created", "webhook.test"],
           },
           { authenticated: true },
         );
@@ -346,6 +349,27 @@ describeWebhooks("Webhook Subscriptions API", () => {
           created.push(response.data.subscription.id);
         }
         assertError(response, 400);
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should accept customer.deleted, which used to be rejected on subscribe",
+      async () => {
+        // Regression guard for the 2026-09-01 API change: customer.deleted is now
+        // subscribable, and is part of the default set.
+        const eventTypes = ["customer.created", "customer.deleted"];
+        const response = await apiClient.post(
+          endpoints.webhooks.subscriptions,
+          { url: uniqueUrl("deleted"), enabled: true, eventTypes },
+          { authenticated: true },
+        );
+        assertSuccessWithSchema(response, "WebhookSubscriptionResponse", 201);
+        created.push(response.data.subscription.id);
+
+        expect([...response.data.subscription.eventTypes].sort()).toEqual(
+          [...eventTypes].sort(),
+        );
       },
       getTimeout("api"),
     );

@@ -1,5 +1,5 @@
 {
-  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-07-27T08:38:15.814Z\nSpec SHA-256: 7ee58804f080d0db7c7238728f63c79add53ddce4694dcd4d53e7d6a836ff5ac",
+  "_comment": "This file is auto-generated. Do not modify by hand.\nGenerated from: https://dev.api.byzantine.fi/api-docs/openapi-integrator.json\nGenerated at: 2026-09-01T10:41:08.099Z\nSpec SHA-256: db00a30907cb404509ceb2a41e1109f0b7082c851baf37590aefde6a2d39498e",
   "AccountMinimalView": {
     "type": "object",
     "description": "Minimal data of an account",
@@ -489,6 +489,19 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "AssociatedPersonDetailsQuery": {
+    "type": "object",
+    "description": "Query parameters for getting a single associated person",
+    "required": [
+      "beneficiaryId"
+    ],
+    "properties": {
+      "beneficiaryId": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "AssociatedPersonResponse": {
     "type": "object",
     "description": "Response body for an associated person",
@@ -675,6 +688,31 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "BeneficiarySummary": {
+    "type": "object",
+    "description": "`data.beneficiary`: the UBO a beneficiary-scoped `customer.*` event is about.",
+    "required": [
+      "beneficiaryId",
+      "firstName",
+      "lastName",
+      "verificationStatus"
+    ],
+    "properties": {
+      "beneficiaryId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "BeneficiaryType": {
     "type": "string",
     "description": "Beneficiary type.\n\nUBOs are any individuals who, directly or inderectly, own more than 25% of the business.\n\nRepresentatives are individuals who have direct control over daily operations.",
@@ -804,6 +842,18 @@
       "sole_prop",
       "trust"
     ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CancelWithdrawalRequestBody": {
+    "type": "object",
+    "required": [
+      "transactionId"
+    ],
+    "properties": {
+      "transactionId": {
+        "$ref": "#/components/schemas/Uuid"
+      }
+    },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "CheckingOrSavings": {
@@ -1003,6 +1053,60 @@
           "type": "string"
         },
         "description": "List of created authenticator IDs"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateCredentialPayload": {
+    "type": "object",
+    "properties": {
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Optional label for the new credential."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CreateCredentialResponse": {
+    "type": "object",
+    "required": [
+      "pubkey",
+      "privateKey",
+      "integratorId",
+      "accessScope",
+      "active"
+    ],
+    "properties": {
+      "pubkey": {
+        "type": "string",
+        "description": "Public key identifying the newly issued credential."
+      },
+      "privateKey": {
+        "type": "string",
+        "description": "Private key for the newly issued credential. Returned only at creation time."
+      },
+      "integratorId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "active": {
+        "type": "boolean",
+        "description": "Whether the credential is active immediately after creation."
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Label of the credential."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -1386,6 +1490,45 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "CredentialSummaryResponse": {
+    "type": "object",
+    "required": [
+      "pubkey",
+      "integratorId",
+      "accessScope",
+      "active",
+      "createdAt"
+    ],
+    "properties": {
+      "pubkey": {
+        "type": "string",
+        "description": "Public key identifying the credential."
+      },
+      "integratorId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "active": {
+        "type": "boolean",
+        "description": "Whether the credential is active."
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Label of the credential."
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Creation time of the credential."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "CryptoCurrency": {
     "type": "string",
     "description": "On-chain currencies only (subset of `Currency`), for requests where fiat makes no sense.",
@@ -1405,6 +1548,82 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "CurrentIntegratorCapabilities": {
+    "type": "object",
+    "required": [
+      "canWrite"
+    ],
+    "properties": {
+      "canWrite": {
+        "type": "boolean",
+        "description": "Whether the current credential may call mutation-capable routes."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CurrentIntegratorResponse": {
+    "type": "object",
+    "required": [
+      "integratorId",
+      "accessScope",
+      "capabilities"
+    ],
+    "properties": {
+      "integratorId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "accessScope": {
+        "$ref": "#/components/schemas/IntegratorAccessScope"
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Label of the credential used for the current request."
+      },
+      "capabilities": {
+        "$ref": "#/components/schemas/CurrentIntegratorCapabilities"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CustomerEventData": {
+    "type": "object",
+    "description": "`data` of every `customer.*` event. `customer` is always the main customer (entity or\nindividual); `beneficiary` is set on UBO-scoped events and then carries the status the event\nis about; `reasonCodes` is set on `resubmission_requested` and `rejected`. Every key is\nalways emitted (`null` when not applicable): strict schema validators must not see keys\nappear and disappear with the event type.",
+    "required": [
+      "customer"
+    ],
+    "properties": {
+      "customer": {
+        "$ref": "#/components/schemas/CustomerSummary"
+      },
+      "beneficiary": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BeneficiarySummary"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "reasonCodes": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "CustomerQueryType": {
     "type": "string",
     "description": "Filter type for the get-customers endpoint",
@@ -1412,6 +1631,80 @@
       "business",
       "individual",
       "all"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CustomerSummary": {
+    "type": "object",
+    "description": "`data.customer`: canonical summary of the KYC/KYB subject (individual user or entity).",
+    "required": [
+      "accountId",
+      "customerType",
+      "name",
+      "verificationStatus",
+      "createdAt"
+    ],
+    "properties": {
+      "accountId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "customerType": {
+        "$ref": "#/components/schemas/CustomerType"
+      },
+      "userId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "entityId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "name": {
+        "type": "string",
+        "description": "\"FirstName LastName\" for an individual, the company name for an entity."
+      },
+      "email": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The user's email for an individual, the company email declared at KYB for an entity\n(`null` when the entity declared none)."
+      },
+      "verificationStatus": {
+        "$ref": "#/components/schemas/VerificationStatus"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "CustomerType": {
+    "type": "string",
+    "enum": [
+      "individual",
+      "entity"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -1856,6 +2149,27 @@
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "EventHistoryItem": {
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/WebhookLifecycleEventPayload"
+      },
+      {
+        "type": "object",
+        "required": [
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    ],
+    "description": "Canonical lifecycle event payload plus its database creation time.",
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "ExpectedMonthlyPayments": {
     "type": "string",
     "description": "Expected monthly payments in USD. Required for high risk users.",
@@ -1905,6 +2219,16 @@
         "type": "boolean"
       }
     },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "FxhWithdrawalStatus": {
+    "type": "string",
+    "description": "Lifecycle status of a queued FXH withdrawal request.",
+    "enum": [
+      "pending",
+      "cancelled",
+      "settled"
+    ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "GetAccountBalanceQuery": {
@@ -2136,6 +2460,74 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "GetAllInvitationsQuery": {
+    "type": "object",
+    "properties": {
+      "limit": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Page size (max 100). Defaults to 20.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "offset": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Number of records to skip. Defaults to 0.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "order": {
+        "$ref": "#/components/schemas/SortOrder"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "GetAllInvitationsResponse": {
+    "type": "object",
+    "required": [
+      "invitations",
+      "total",
+      "limit",
+      "offset"
+    ],
+    "properties": {
+      "invitations": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/GetInvitationResponse"
+        }
+      },
+      "total": {
+        "type": "integer",
+        "format": "int64",
+        "description": "Total number of invitations for this integrator across all accounts.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "limit": {
+        "type": "integer",
+        "format": "int64",
+        "description": "Page size (max 100). Defaults to 20.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      },
+      "offset": {
+        "type": "integer",
+        "format": "int64",
+        "description": "Number of records to skip. Defaults to 0.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "GetAllTransactionsQuery": {
     "type": "object",
     "properties": {
@@ -2214,6 +2606,34 @@
       "beneficiaryType"
     ],
     "properties": {
+      "beneficiaryId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "userId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "firstName": {
         "type": "string"
       },
@@ -3119,6 +3539,14 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "IntegratorAccessScope": {
+    "type": "string",
+    "enum": [
+      "read_write",
+      "read_only"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "InvitationStatus": {
     "type": "string",
     "description": "Status of an invitation.",
@@ -3347,6 +3775,132 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "ListCredentialsResponse": {
+    "type": "object",
+    "required": [
+      "credentials"
+    ],
+    "properties": {
+      "credentials": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CredentialSummaryResponse"
+        },
+        "description": "Credentials owned by the authenticated integrator, oldest first."
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ListEventsQuery": {
+    "type": "object",
+    "properties": {
+      "accountId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "userId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "transactionId": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "eventType": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Filter by a lifecycle event type. `webhook.test` is not a lifecycle event."
+      },
+      "createdAfter": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": "Exclusive lower bound on database creation time."
+      },
+      "createdBefore": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time",
+        "description": "Exclusive upper bound on database creation time."
+      },
+      "cursor": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Opaque page cursor. Keep filters unchanged while paging."
+      },
+      "limit": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "int64",
+        "description": "Page size from 1 to 250. Defaults to 100.",
+        "minimum": -9223372036854776000,
+        "maximum": 9223372036854776000
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "ListEventsResponse": {
+    "type": "object",
+    "description": "One page of events with an opaque cursor for the next page, if any.",
+    "required": [
+      "events"
+    ],
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EventHistoryItem"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "ListWebhookDeliveriesQuery": {
     "type": "object",
     "description": "Delivery history filters accept documented camelCase query names plus snake_case aliases for operator ergonomics.",
@@ -3454,13 +4008,6 @@
             "type": "null"
           }
         ]
-      },
-      "providerEventId": {
-        "type": [
-          "string",
-          "null"
-        ],
-        "description": "Restrict to lifecycle events with this provider event id in the webhook payload."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -3703,6 +4250,22 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
+  "PendingWithdrawals": {
+    "type": "object",
+    "required": [
+      "balance",
+      "shares"
+    ],
+    "properties": {
+      "balance": {
+        "$ref": "#/components/schemas/Decimal"
+      },
+      "shares": {
+        "$ref": "#/components/schemas/Decimal"
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
   "SendTransactionResponseBody": {
     "type": "object",
     "required": [
@@ -3714,7 +4277,7 @@
         "$ref": "#/components/schemas/Uuid"
       },
       "status": {
-        "$ref": "#/components/schemas/TransactionStatus"
+        "$ref": "#/components/schemas/TransactionStatusView"
       },
       "broadcastedAt": {
         "type": [
@@ -3751,6 +4314,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/BankAccount"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "withdrawalRequest": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawalRequestView"
               }
             ]
           },
@@ -4191,6 +4768,18 @@
       },
       "is_asynchronous": {
         "type": "boolean"
+      },
+      "strategy_vault_address": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "fallback_adapter": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -4256,11 +4845,11 @@
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "TransactionStatus": {
+  "TransactionStatusView": {
     "type": "string",
-    "description": "The current status of the transaction.",
+    "description": "The current status of the transaction, as returned by the API.",
     "enum": [
-      "created",
+      "withdrawal_initiated",
       "waiting_for_funds",
       "funds_in_transfer",
       "funds_received",
@@ -4268,7 +4857,8 @@
       "completed",
       "simulation_failed",
       "reverted",
-      "refunded"
+      "refunded",
+      "cancelled"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -4357,7 +4947,7 @@
         "$ref": "#/components/schemas/TransactionTypeView"
       },
       "status": {
-        "$ref": "#/components/schemas/TransactionStatus"
+        "$ref": "#/components/schemas/TransactionStatusView"
       },
       "transactionHash": {
         "type": [
@@ -4448,6 +5038,20 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/AccountMinimalView"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "withdrawalRequest": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawalRequestView"
               }
             ]
           },
@@ -4650,6 +5254,40 @@
         "description": "Required for UBOs. The % of direct or indirect business ownership.",
         "minimum": -1.7976931348623157e+308,
         "maximum": 1.7976931348623157e+308
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "UpdateCredentialPayload": {
+    "type": "object",
+    "properties": {
+      "accessScope": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntegratorAccessScope"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "active": {
+        "type": [
+          "boolean",
+          "null"
+        ],
+        "description": "New active status for the credential. Left untouched when omitted."
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "New label for the credential. Left untouched when omitted."
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -5571,6 +6209,20 @@
       },
       "price_per_share": {
         "$ref": "#/components/schemas/Decimal"
+      },
+      "pending_withdrawals": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PendingWithdrawals"
+              }
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
@@ -5879,115 +6531,58 @@
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
   "WebhookEvent": {
-    "type": "object",
-    "required": [
-      "id",
-      "eventType",
-      "sourceType",
-      "sourceId",
-      "payload",
-      "payloadVersion",
-      "sourceTransitionMetadata",
-      "createdAt"
-    ],
-    "properties": {
-      "id": {
-        "$ref": "#/components/schemas/Uuid"
+    "allOf": [
+      {
+        "$ref": "#/components/schemas/WebhookEventRelated"
       },
-      "eventType": {
-        "type": "string"
-      },
-      "sourceType": {
-        "type": "string"
-      },
-      "sourceId": {
-        "type": "string"
-      },
-      "payload": {},
-      "payloadVersion": {
-        "type": "integer",
-        "format": "int32",
-        "minimum": -2147483648,
-        "maximum": 2147483647
-      },
-      "sourceTransitionMetadata": {},
-      "createdAt": {
-        "type": "string",
-        "format": "date-time"
+      {
+        "type": "object",
+        "required": [
+          "id",
+          "eventType",
+          "sourceType",
+          "sourceId",
+          "payload",
+          "payloadVersion",
+          "createdAt",
+          "integratorId"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "payload": {},
+          "payloadVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "integratorId": {
+            "$ref": "#/components/schemas/Uuid"
+          }
+        }
       }
-    },
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "WebhookEventProvider": {
-    "type": "string",
-    "description": "Provider/source that caused a public lifecycle webhook event.",
-    "enum": [
-      "byzantine",
-      "sumsub",
-      "bridge",
-      "onchain"
     ],
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
-  "WebhookEventType": {
-    "type": "string",
-    "description": "Public outbound webhook event names. Stored as TEXT in Postgres.",
-    "enum": [
-      "webhook.test",
-      "customer.created",
-      "customer.updated",
-      "customer.under_review",
-      "customer.awaiting_associated_person_information",
-      "customer.resubmission_requested",
-      "customer.active",
-      "customer.rejected",
-      "customer.deleted",
-      "transaction.created",
-      "transaction.waiting_for_funds",
-      "transaction.payment_in_review",
-      "transaction.funds_in_transfer",
-      "transaction.funds_received",
-      "transaction.processing",
-      "transaction.completed",
-      "transaction.simulation_failed",
-      "transaction.reverted"
-    ],
-    "$schema": "http://json-schema.org/draft-04/schema#"
-  },
-  "WebhookLifecycleEventPayload": {
+  "WebhookEventRelated": {
     "type": "object",
-    "description": "Stable public webhook payload shared by customer and transaction lifecycle events.",
-    "required": [
-      "id",
-      "eventType",
-      "occurredAt",
-      "livemode",
-      "payloadVersion",
-      "integratorId"
-    ],
+    "description": "Routing block of the public envelope: only the ids relevant to the event are set, the others\nare `null`. Also persisted as typed columns on `webhook_events` for history filters.",
     "properties": {
-      "id": {
-        "$ref": "#/components/schemas/Uuid"
-      },
-      "eventType": {
-        "$ref": "#/components/schemas/WebhookEventType"
-      },
-      "occurredAt": {
-        "type": "string",
-        "format": "date-time"
-      },
-      "livemode": {
-        "type": "boolean"
-      },
-      "payloadVersion": {
-        "type": "integer",
-        "format": "int32",
-        "minimum": -2147483648,
-        "maximum": 2147483647
-      },
-      "integratorId": {
-        "$ref": "#/components/schemas/Uuid"
-      },
       "accountId": {
         "anyOf": [
           {
@@ -6057,28 +6652,72 @@
             "type": "null"
           }
         ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "WebhookEventType": {
+    "type": "string",
+    "description": "Public outbound webhook event names (`domain.action`). Stored as TEXT in Postgres.",
+    "enum": [
+      "WebhookTest",
+      "CustomerCreated",
+      "CustomerUnderReview",
+      "CustomerAwaitingAssociatedPersonInformation",
+      "CustomerResubmissionRequested",
+      "CustomerActive",
+      "CustomerRejected",
+      "CustomerDeactivated",
+      "CustomerDeleted",
+      "TransactionWithdrawalInitiated",
+      "TransactionWaitingForFunds",
+      "TransactionPaymentInReview",
+      "TransactionFundsInTransfer",
+      "TransactionFundsReceived",
+      "TransactionProcessing",
+      "TransactionCompleted",
+      "TransactionSimulationFailed",
+      "TransactionReverted"
+    ],
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "WebhookLifecycleEventPayload": {
+    "type": "object",
+    "description": "Public envelope shared by every lifecycle event: the signed webhook body and the\n`GET /v1/query/events` item (which adds `createdAt`).",
+    "required": [
+      "id",
+      "type",
+      "occurredAt",
+      "livemode",
+      "payloadVersion",
+      "related"
+    ],
+    "properties": {
+      "id": {
+        "$ref": "#/components/schemas/Uuid"
       },
-      "provider": {
-        "anyOf": [
-          {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/WebhookEventProvider"
-              }
-            ]
-          },
-          {
-            "type": "null"
-          }
-        ]
+      "type": {
+        "$ref": "#/components/schemas/WebhookEventType"
       },
-      "providerEventId": {
-        "type": [
-          "string",
-          "null"
-        ]
+      "occurredAt": {
+        "type": "string",
+        "format": "date-time"
       },
-      "data": {}
+      "livemode": {
+        "type": "boolean"
+      },
+      "payloadVersion": {
+        "type": "integer",
+        "format": "int32",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "related": {
+        "$ref": "#/components/schemas/WebhookEventRelated"
+      },
+      "data": {
+        "description": "Event-type specific resource, named per domain (`customer`, `transaction`, ...)."
+      }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"
   },
@@ -6244,6 +6883,22 @@
             "type": "null"
           }
         ]
+      }
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#"
+  },
+  "WithdrawalRequestView": {
+    "type": "object",
+    "required": [
+      "requestId",
+      "status"
+    ],
+    "properties": {
+      "requestId": {
+        "$ref": "#/components/schemas/Uuid"
+      },
+      "status": {
+        "$ref": "#/components/schemas/FxhWithdrawalStatus"
       }
     },
     "$schema": "http://json-schema.org/draft-04/schema#"

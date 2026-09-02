@@ -1,12 +1,23 @@
 {
   "associatedPerson": {
     "userInfo": {
-      "firstName": "Alice",
-      "lastName": "Dupont",
-      "birthDate": "1985-06-01"
+      "countryOfBirth": "FRA",
+      "residentialAddress": {
+        "streetLine1": "12 Rue de Rivoli",
+        "streetLine2": "Batiment B",
+        "city": "Paris",
+        "state": "IDF",
+        "postalCode": "75001",
+        "country": "FRA"
+      },
+      "socialSecurityNumber": null,
+      "profilePictureUrl": "https://example.com/avatars/alice-dupont.png"
     },
     "beneficiaryDetails": {
+      "beneficiaryType": ["ubo", "representative"],
+      "title": "CTO",
       "ownershipPercentage": 35
-    }
+    },
+    "verificationDocuments": null
   }
 }

@@ -35,6 +35,11 @@ const MAX_LIMIT = 250;
 
 // Public event names, sourced from the generated enum so this stays in lockstep
 // with the OpenAPI spec.
+//
+// NOTE: the spec currently emits Rust variant names (`CustomerCreated`) rather
+// than the dotted wire names the API sends (`customer.created`), so this set does
+// not match live data and the schema checks below fail. Red until the API ships
+// the spec fix.
 const WEBHOOK_EVENT_TYPES = new Set(getSchema("WebhookEventType")?.enum ?? []);
 
 /**
@@ -54,13 +59,19 @@ function assertEventPage(response, { limit } = {}) {
     // EventHistoryItem = WebhookLifecycleEventPayload + createdAt
     assertSchema(event, "EventHistoryItem");
     assertValidUuid(event.id);
-    assertValidUuid(event.integratorId);
     assertValidDateTime(event.createdAt);
     assertValidDateTime(event.occurredAt);
-    expect(WEBHOOK_EVENT_TYPES.has(event.eventType)).toBe(true);
+    expect(WEBHOOK_EVENT_TYPES.has(event.type)).toBe(true);
     // webhook.test is a manual delivery probe, not a lifecycle event — it is
     // never persisted here (and is rejected as an eventType filter).
-    expect(event.eventType).not.toBe("webhook.test");
+    expect(event.type).not.toBe("webhook.test");
+    // Routing ids are nested; only the ones relevant to the event are set
+    expect(event.related).toBeTypeOf("object");
+    // Every customer.* event carries the KYC/KYB subject it is about
+    if (event.type.startsWith("customer.")) {
+      assertSchema(event.data, "CustomerEventData");
+      expect(event.data.customer.accountId).toBe(event.related.accountId);
+    }
   }
 
   // Newest first, ordered by database creation time
@@ -159,31 +170,32 @@ describeEvents("Event History API", () => {
         );
         assertSuccessWithSchema(all, "ListEventsResponse");
 
-        const sample = all.data.events.find((e) => e.accountId);
+        // The ids live under `related`, but the filters are sent flat
+        const sample = all.data.events.find((e) => e.related?.accountId);
         if (!sample) {
           console.log("ℹ️  No event carries an accountId — skipping");
           return;
         }
 
         const byAccount = await apiClient.get(
-          endpoints.events.list({ accountId: sample.accountId }),
+          endpoints.events.list({ accountId: sample.related.accountId }),
           { authenticated: true },
         );
         const accountPage = assertEventPage(byAccount);
         expect(accountPage.events.length).toBeGreaterThan(0);
         for (const event of accountPage.events) {
-          expect(event.accountId).toBe(sample.accountId);
+          expect(event.related.accountId).toBe(sample.related.accountId);
         }
 
-        if (sample.userId) {
+        if (sample.related.userId) {
           const byUser = await apiClient.get(
-            endpoints.events.list({ userId: sample.userId }),
+            endpoints.events.list({ userId: sample.related.userId }),
             { authenticated: true },
           );
           const userPage = assertEventPage(byUser);
           expect(userPage.events.length).toBeGreaterThan(0);
           for (const event of userPage.events) {
-            expect(event.userId).toBe(sample.userId);
+            expect(event.related.userId).toBe(sample.related.userId);
           }
         }
         console.log(
@@ -209,16 +221,16 @@ describeEvents("Event History API", () => {
         }
 
         const filtered = await apiClient.get(
-          endpoints.events.list({ eventType: sample.eventType, limit: MAX_LIMIT }),
+          endpoints.events.list({ eventType: sample.type, limit: MAX_LIMIT }),
           { authenticated: true },
         );
         const page = assertEventPage(filtered, { limit: MAX_LIMIT });
         expect(page.events.length).toBeGreaterThan(0);
         for (const event of page.events) {
-          expect(event.eventType).toBe(sample.eventType);
+          expect(event.type).toBe(sample.type);
         }
         console.log(
-          `✅ eventType=${sample.eventType} filter returned ${page.events.length} matching event(s)`,
+          `✅ eventType=${sample.type} filter returned ${page.events.length} matching event(s)`,
         );
       },
       getTimeout("api"),

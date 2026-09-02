@@ -195,7 +195,9 @@ describeLifecycle("Webhook Lifecycle Events (E2E)", () => {
       assertValidUuid(match.delivery.id);
       expect(match.delivery.subscriptionId).toBe(subscriptionId);
       assertSchema(match.event.payload, "WebhookLifecycleEventPayload");
-      expect(match.event.payload.eventType).toBe(match.event.eventType);
+      // The signed envelope names the event `type`; the delivery record wrapping
+      // it still exposes the same value as `eventType`.
+      expect(match.event.payload.type).toBe(match.event.eventType);
 
       if (EXPECTED_EVENT) {
         // Soft assert: surface a clear message if a different lifecycle event arrived

@@ -260,7 +260,7 @@ export function loadOtpData() {
 
 /**
  * Save bodyToSign and transactionId to generated-tx-passkey.json
- * @param {string} transactionType - Type of transaction: "approve", "deposit", "withdraw", "activateAccount", "inviteUsers", or "promoteUser"
+ * @param {string} transactionType - Type of transaction: "approve", "deposit", "withdraw", "cancelWithdrawal", "activateAccount", "inviteUsers", or "promoteUser"
  * @param {object} bodyToSign - The bodyToSign object from the API response
  * @param {string} transactionId - The transaction ID from the API response (optional for some transaction types)
  */
@@ -281,6 +281,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
     "inviteUsers",
     "promoteUser",
     "vaultUpgrade",
+    "cancelWithdrawal",
   ];
   if (!validTypes.includes(transactionType)) {
     throw new Error(

@@ -117,6 +117,8 @@ export const FEATURE_FLAGS = {
     process.env.ENABLE_PASSKEY_INIT_TRANSFER_TESTS === "true",
   enablePasskeyInitVaultUpgradeTests:
     process.env.ENABLE_PASSKEY_INIT_VAULT_UPGRADE_TESTS === "true",
+  enablePasskeyInitCancelWithdrawTests:
+    process.env.ENABLE_PASSKEY_INIT_CANCEL_WITHDRAW_TESTS === "true",
   enablePasskeyActivateTxTests:
     process.env.ENABLE_PASSKEY_ACTIVATE_TX_TESTS === "true",
   enablePasskeyActivateETHTxTests:
@@ -127,6 +129,8 @@ export const FEATURE_FLAGS = {
     process.env.ENABLE_PASSKEY_WITHDRAW_TX_TESTS === "true",
   enablePasskeyVaultUpgradeTxTests:
     process.env.ENABLE_PASSKEY_VAULT_UPGRADE_TX_TESTS === "true",
+  enablePasskeyCancelWithdrawTxTests:
+    process.env.ENABLE_PASSKEY_CANCEL_WITHDRAW_TX_TESTS === "true",
   enableVaultUpgradeValidationTests:
     process.env.ENABLE_VAULT_UPGRADE_VALIDATION_TESTS === "true",
   enableFasterTransactionValidationTests:
@@ -169,7 +173,7 @@ export const FEATURE_FLAGS = {
   enableWebhookLifecycleTests: process.env.ENABLE_WEBHOOK_LIFECYCLE_TESTS === "true",
   // Opt-in fan-out concurrency test: create N subscriptions → one event →
   // assert N simultaneous deliveries all drain. The worker's in-flight cap (4)
-  // is observed at the receiver (scripts/webhook-receiver-slow.js), not asserted
+  // is observed at the receiver (scripts/webhook/webhook-receiver-slow.js), not asserted
   // here. Needs ENABLE_WRITE_TESTS + TEST_WEBHOOK_URL. See webhook-concurrency.test.js.
   enableWebhookConcurrencyTests: process.env.ENABLE_WEBHOOK_CONCURRENCY_TESTS === "true",
 
@@ -265,6 +269,11 @@ export const TEST_DATA = {
 
   transactions: {
     testTransactionId: process.env.TEST_TRANSACTION_ID || null,
+    // Queued withdrawal to cancel. Only a withdrawal still waiting in an async
+    // vault's queue is cancellable, so this has to be set per run — there is no
+    // fallback, and the cancel-payload test skips without it.
+    cancelWithdrawalTransactionId:
+      process.env.TEST_CANCEL_WITHDRAWAL_TRANSACTION_ID || null,
   },
 };
 

@@ -5,17 +5,19 @@
  * Mirrors tests/api/events.test.js but drives the request through the SDK
  * (response shape: { data, error, response }) instead of raw HTTP.
  *
- * NOTE: the bundled SDK (1.11.0) has no `listEvents()` method yet, so this uses
- * the SDK's typed escape hatch `client.api.client.GET(path, ...)`. That still
- * exercises everything the SDK owns for this endpoint — request building, query
- * serialization, the ECDSA auth middleware and response unwrapping. Swap the
- * calls for the named method once the SDK ships one.
+ * Driven through the SDK's named `listEvents()` method (added in 1.13.0), so this
+ * exercises the surface an integrator actually calls — argument mapping, query
+ * serialization, the ECDSA auth middleware and response unwrapping.
+ *
+ * Envelope shape (as of the 2026-09-01 spec): the event name is `type` and the
+ * ids it routes on live in a nested `related` block. The filter query params are
+ * still flat, so a filter reads `related.accountId` but sends `accountId`.
  *
  * Read-only, so gated only by enableEventsTests (on by default).
  */
 
 import { describe, it, expect } from "vitest";
-import { getSdkClient } from "../../utils/sdk-client.js";
+import { getSdkClient, DUMMY_AUTH } from "../../utils/sdk-client.js";
 import { getTimeout, FEATURE_FLAGS } from "../../config/test.config.js";
 import {
   assertSchema,
@@ -25,12 +27,13 @@ import {
 } from "../../utils/sdk-assertions.js";
 import { getSchema } from "../../utils/schemas.js";
 
-const EVENTS_PATH = "/v1/query/events";
-
 // A well-formed UUID that should not match any real transaction
 const NONEXISTENT_ID = "00000000-0000-4000-8000-000000000000";
 const MAX_LIMIT = 250;
 
+// Sourced from the generated enum. NOTE: the spec currently emits Rust variant
+// names (`CustomerCreated`) rather than the dotted wire names the API sends, so
+// this set does not match live data. Red until the API ships the spec fix.
 const WEBHOOK_EVENT_TYPES = new Set(getSchema("WebhookEventType")?.enum ?? []);
 
 const describeEvents = FEATURE_FLAGS.enableEventsTests ? describe : describe.skip;
@@ -38,9 +41,8 @@ const describeEvents = FEATURE_FLAGS.enableEventsTests ? describe : describe.ski
 describeEvents("Event History SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
 
-  /** GET /v1/query/events with query params, via the SDK client. */
-  const listEvents = (query = {}) =>
-    client.api.client.GET(EVENTS_PATH, { params: { query } });
+  /** GET /v1/query/events with query params, via the named SDK method. */
+  const listEvents = (query = {}) => client.api.listEvents(DUMMY_AUTH, query);
 
   /** Shared page assertions: envelope, per-item schema, newest-first ordering. */
   function assertEventPage(sdkResponse, { limit } = {}) {
@@ -53,7 +55,11 @@ describeEvents("Event History SDK - Using Integrator SDK", () => {
     for (const event of page.events) {
       assertSchema(event, "EventHistoryItem");
       assertValidUuid(event.id);
-      expect(WEBHOOK_EVENT_TYPES.has(event.eventType)).toBe(true);
+      expect(WEBHOOK_EVENT_TYPES.has(event.type)).toBe(true);
+      expect(event.related).toBeTypeOf("object");
+      if (event.type.startsWith("customer.")) {
+        assertSchema(event.data, "CustomerEventData");
+      }
     }
 
     const createdAts = page.events.map((e) => Date.parse(e.createdAt));
@@ -118,24 +124,27 @@ describeEvents("Event History SDK - Using Integrator SDK", () => {
         }
 
         const byType = await listEvents({
-          eventType: sample.eventType,
+          eventType: sample.type,
           limit: MAX_LIMIT,
         });
         const typePage = assertEventPage(byType, { limit: MAX_LIMIT });
         expect(typePage.events.length).toBeGreaterThan(0);
         for (const event of typePage.events) {
-          expect(event.eventType).toBe(sample.eventType);
+          expect(event.type).toBe(sample.type);
         }
 
-        if (sample.accountId) {
-          const byAccount = await listEvents({ accountId: sample.accountId });
+        // Ids are read from `related` but sent flat as query params
+        if (sample.related?.accountId) {
+          const byAccount = await listEvents({
+            accountId: sample.related.accountId,
+          });
           const accountPage = assertEventPage(byAccount);
           for (const event of accountPage.events) {
-            expect(event.accountId).toBe(sample.accountId);
+            expect(event.related.accountId).toBe(sample.related.accountId);
           }
         }
         console.log(
-          `✅ eventType=${sample.eventType} filter returned ${typePage.events.length} matching event(s)`,
+          `✅ eventType=${sample.type} filter returned ${typePage.events.length} matching event(s)`,
         );
       },
       getTimeout("api"),

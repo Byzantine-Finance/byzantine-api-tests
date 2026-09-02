@@ -1,11 +1,5 @@
 [
   {
-    "vault_address": "0x30cacd22f178c9e57b0b010e1f9432881aa530c4",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
     "vault_address": "0x052a6bec56da1cf326a7753ab81687c61046aa9c",
     "chain_id": 8453,
     "is_active": true,
@@ -54,44 +48,8 @@
     "is_asynchronous": false
   },
   {
-    "vault_address": "0x3d6a627d992f717e11353f275a7970ad4af073ac",
-    "chain_id": 8453,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x4f8372b6f05d787d44e4523595430f76c81d6c15",
-    "chain_id": 8453,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x550101d2be9ede413d4d320e42b331f9b2688fd6",
-    "chain_id": 8453,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x885984bd7a15aded423096fa1b82c556e8bb30fd",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0xd827f29506a10a64c5cc75993d8ef58daaf7746a",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
     "vault_address": "0x0863cf361ea7f92fd53223a2fa1e58f799544e82",
     "chain_id": 8453,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x7c51228c60fe580249f0bd99f61740c0594b23b3",
-    "chain_id": 1,
     "is_active": true,
     "is_asynchronous": false
   },
@@ -108,6 +66,30 @@
     "is_asynchronous": false
   },
   {
+    "vault_address": "0x30cacd22f178c9e57b0b010e1f9432881aa530c4",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x885984bd7a15aded423096fa1b82c556e8bb30fd",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xd827f29506a10a64c5cc75993d8ef58daaf7746a",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x7c51228c60fe580249f0bd99f61740c0594b23b3",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
     "vault_address": "0xe44b314e95a40a590975fc878dabd0c76c25a366",
     "chain_id": 1,
     "is_active": true,
@@ -120,14 +102,44 @@
     "is_asynchronous": false
   },
   {
-    "vault_address": "0x2f99e35ea811f3cc230b26dff817604b5d4b6e38",
+    "vault_address": "0x61ac2168218737abad9345ce78e38f6114f5e2c6",
     "chain_id": 1,
     "is_active": true,
     "is_asynchronous": false
   },
   {
-    "vault_address": "0xed7603df0d6d7387d42d05fac92cb42c4a275744",
+    "vault_address": "0x5cf428471fa062fa4ab84f45e792418b7b275494",
     "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x869b3d7f9bae478260f455567b62c475b8437771",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xc87278bfe9e8d6e7930e61dfa4658cf2f8da1aaa",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x3d6a627d992f717e11353f275a7970ad4af073ac",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x4f8372b6f05d787d44e4523595430f76c81d6c15",
+    "chain_id": 8453,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x550101d2be9ede413d4d320e42b331f9b2688fd6",
+    "chain_id": 8453,
     "is_active": true,
     "is_asynchronous": false
   },
@@ -162,26 +174,14 @@
     "is_asynchronous": false
   },
   {
-    "vault_address": "0x61ac2168218737abad9345ce78e38f6114f5e2c6",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x5cf428471fa062fa4ab84f45e792418b7b275494",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
     "vault_address": "0xa5f8e8630a86a587e04a18b5a5e39d19b23b4867",
     "chain_id": 8453,
     "is_active": true,
     "is_asynchronous": false
   },
   {
-    "vault_address": "0xc09fdbb00c59a08f7e64546336b481c0f82b7c4d",
-    "chain_id": 1,
+    "vault_address": "0x7aa6b0aff73e3e0416cdfcd64f51e5cfa910ad01",
+    "chain_id": 8453,
     "is_active": true,
     "is_asynchronous": false
   },
@@ -222,7 +222,25 @@
     "is_asynchronous": false
   },
   {
+    "vault_address": "0x2f99e35ea811f3cc230b26dff817604b5d4b6e38",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
     "vault_address": "0x5ad0c35a34315f492b6d123de9b93600b82cd574",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xed7603df0d6d7387d42d05fac92cb42c4a275744",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xc09fdbb00c59a08f7e64546336b481c0f82b7c4d",
     "chain_id": 1,
     "is_active": true,
     "is_asynchronous": false
@@ -240,30 +258,6 @@
     "is_asynchronous": false
   },
   {
-    "vault_address": "0xc1dc4cd08725994ed50838c559063b39dcc38ceb",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x191c982b228651db69cea076a4ed65aaa373c410",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0x869b3d7f9bae478260f455567b62c475b8437771",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
-    "vault_address": "0xc87278bfe9e8d6e7930e61dfa4658cf2f8da1aaa",
-    "chain_id": 1,
-    "is_active": true,
-    "is_asynchronous": false
-  },
-  {
     "vault_address": "0xbab78f42dee94f1689f3121f9b698a1bbaf4448b",
     "chain_id": 1,
     "is_active": true,
@@ -271,6 +265,18 @@
   },
   {
     "vault_address": "0x5fa9aa86993af4ee707137e6fb419dc8bcbc83dd",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0xc1dc4cd08725994ed50838c559063b39dcc38ceb",
+    "chain_id": 1,
+    "is_active": true,
+    "is_asynchronous": false
+  },
+  {
+    "vault_address": "0x191c982b228651db69cea076a4ed65aaa373c410",
     "chain_id": 1,
     "is_active": true,
     "is_asynchronous": false

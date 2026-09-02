@@ -3,40 +3,45 @@
     {
       "userInfo": {
         "firstName": "Alice",
+        "middleName": "Marie",
         "lastName": "Martin",
         "email": "lin+for-alice-ci-test@example.com",
+        "phone": "+33 123 456 789",
         "birthDate": "1990-01-01",
         "nationality": "FRA",
+        "countryOfBirth": "FRA",
         "residentialAddress": {
           "streetLine1": "1 Rue La Fayette",
-          "city": "Paris",
-          "postalCode": "75009",
-          "country": "FRA",
           "streetLine2": "WeWork",
-          "state": "IDF"
+          "city": "Paris",
+          "state": "IDF",
+          "postalCode": "75009",
+          "country": "FRA"
         },
-        "middleName": "William",
-        "phone": "+33 123 456 789",
-        "socialSecurityNumber": "123-45-6789"
+        "socialSecurityNumber": null,
+        "profilePictureUrl": "https://example.com/avatars/alice-martin.png"
       },
       "beneficiaryDetails": {
-        "beneficiaryType": [
-          "ubo",
-          "representative"
-        ],
+        "beneficiaryType": ["ubo", "representative"],
         "title": "CEO",
         "ownershipPercentage": 100
       },
       "verificationDocuments": [
         {
           "documentType": "passport",
-          "issuingCountry": "ITA",
-          "document": "data:image/jpeg;base64,VGhpcyBpcyBhIHBsYWNlaG9sZGVyIGJhc2U2NCBkb2N1bWVudA==",
           "documentNumber": "YB6159495",
-          "description": null
+          "description": null,
+          "issuingCountry": "FRA",
+          "document": "data:image/jpeg;base64,VGhpcyBpcyBhIHBsYWNlaG9sZGVyIGJhc2U2NCBkb2N1bWVudA=="
+        },
+        {
+          "documentType": "proof_of_address",
+          "documentNumber": null,
+          "description": null,
+          "issuingCountry": "FRA",
+          "document": "data:application/pdf;base64,VGhpcyBpcyBhIHBsYWNlaG9sZGVyIGJhc2U2NCBkb2N1bWVudA=="
         }
-      ],
-      "authenticators": null
+      ]
     }
   ]
 }

@@ -1,6 +1,7 @@
 /**
  * Integrator Key Management SDK Tests, what are tested (via @byzantine/integrator-sdk):
  * - GET    /v1/integrator/whoami                (current credential + capabilities)
+ * - GET    /v1/integrator/credentials           (list credentials, oldest first)
  * - POST   /v1/integrator/credentials           (issue a credential)
  * - PATCH  /v1/integrator/credentials/{pubkey}  (label / active / accessScope)
  * - DELETE /v1/integrator/credentials/{pubkey}  (revoke)
@@ -9,14 +10,13 @@
  * the SDK (response shape: { data, error, response }) instead of raw HTTP. Keep the
  * two files in step: when a case is added or dropped there, do the same here.
  *
- * NOTE: the bundled SDK (1.11.0) has no credential methods yet, so the credential
- * routes use the SDK's typed escape hatch
- * `client.api.client.{GET,POST,PATCH,DELETE}`. Doing so still exercises what the
- * SDK owns here — notably signing a request *with a body*, which is where the auth
- * middleware does the most work. The read sweep does use the SDK's named methods
- * where they exist. Swap in named credential methods once the SDK ships them.
+ * Every route here goes through a named SDK method (`getCurrentIntegrator`,
+ * `listCredentials`, `createCredential`, `updateCredential`, `deleteCredential`),
+ * so this exercises the surface an integrator actually calls — including signing a
+ * request *with a body*, which is where the auth middleware does the most work.
  *
- * whoami is read-only and runs by default (enableIntegratorTests). The credential
+ * whoami and the credential listing are read-only and run by default
+ * (enableIntegratorTests). The credential
  * lifecycle issues REAL credentials, so it is opt-in via
  * ENABLE_INTEGRATOR_CREDENTIAL_TESTS=true and additionally gated by
  * enableWriteTests — it never runs against production.
@@ -33,16 +33,11 @@ import {
   assertError,
   assertValidUuid,
 } from "../../utils/sdk-assertions.js";
-import { derivePublicKey } from "../../utils/auth.js";
+import { derivePublicKey, getIntegratorPubkey } from "../../utils/auth.js";
 import { isProduction, getEnvironmentBaseURL } from "../../config/environments.js";
 import { maybeUniqueEmail } from "../../utils/test-helpers.js";
 
 import validUser from "../../fixtures/test-data/users/valid-user.json" assert { type: "json" };
-
-const WHOAMI_PATH = "/v1/integrator/whoami";
-const CREDENTIALS_PATH = "/v1/integrator/credentials";
-const CREDENTIAL_PATH = "/v1/integrator/credentials/{pubkey}";
-const EVENTS_PATH = "/v1/query/events";
 
 // A syntactically valid compressed SEC1 key that belongs to no credential
 const UNKNOWN_PUBKEY = `0x03${"a".repeat(64)}`;
@@ -92,7 +87,7 @@ const describeCredentials =
 describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () => {
   const client = getSdkClient();
 
-  const whoami = (c = client) => c.api.client.GET(WHOAMI_PATH);
+  const whoami = (c = client) => c.api.getCurrentIntegrator(DUMMY_AUTH);
 
   describe("GET /v1/integrator/whoami", () => {
     it(
@@ -101,14 +96,19 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         const sdkResponse = await whoami();
 
         assertSuccessWithSchema(sdkResponse, "CurrentIntegratorResponse");
-        const { integratorId, accessScope, capabilities } = sdkResponse.data;
+        const { integratorId, accessScope, label, capabilities } = sdkResponse.data;
 
         assertValidUuid(integratorId);
         expect(ACCESS_SCOPES).toContain(accessScope);
         // canWrite is derived from the scope — it is the flag a frontend gates UI on
         expect(capabilities.canWrite).toBe(accessScope === "read_write");
+        // The label of the *signing* credential, so a dashboard can name the key a
+        // request came in under. Optional, and null for an unlabelled credential.
+        expect(label === null || label === undefined || typeof label === "string").toBe(
+          true,
+        );
         console.log(
-          `✅ whoami: integrator ${integratorId}, scope ${accessScope}, canWrite=${capabilities.canWrite}`,
+          `✅ whoami: integrator ${integratorId}, scope ${accessScope}, label ${JSON.stringify(label ?? null)}, canWrite=${capabilities.canWrite}`,
         );
       },
       getTimeout("api"),
@@ -147,21 +147,119 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
     );
   });
 
+  describe("GET /v1/integrator/credentials", () => {
+    it(
+      "should list every credential the integrator owns, oldest first",
+      async () => {
+        const sdkResponse = await client.api.listCredentials(DUMMY_AUTH);
+
+        assertSuccessWithSchema(sdkResponse, "ListCredentialsResponse");
+        const { credentials } = sdkResponse.data;
+        expect(Array.isArray(credentials)).toBe(true);
+        // The credential signing this request is itself a credential, so an empty
+        // listing is impossible
+        expect(credentials.length).toBeGreaterThan(0);
+
+        const identity = await whoami();
+        assertSuccessWithSchema(identity, "CurrentIntegratorResponse");
+
+        const createdAts = [];
+        for (const credential of credentials) {
+          assertSchema(credential, "CredentialSummaryResponse");
+          // Scoped to the caller — another integrator's keys must never show up
+          expect(credential.integratorId).toBe(identity.data.integratorId);
+          expect(credential.pubkey).toMatch(/^0x0[23][0-9a-f]{64}$/);
+          expect(typeof credential.active).toBe("boolean");
+          expect(ACCESS_SCOPES).toContain(credential.accessScope);
+          expect(Number.isNaN(Date.parse(credential.createdAt))).toBe(false);
+          // Listing is a read: private keys exist only in the creation response
+          expect(credential.privateKey).toBeUndefined();
+          createdAts.push(Date.parse(credential.createdAt));
+        }
+
+        // "oldest first" is the documented order, and an unpaginated listing is
+        // only usable if it holds
+        expect(createdAts).toEqual([...createdAts].sort((a, b) => a - b));
+
+        // The pubkey is the identity and the {pubkey} path segment — a duplicate
+        // would make a credential unaddressable
+        expect(new Set(credentials.map((c) => c.pubkey)).size).toBe(
+          credentials.length,
+        );
+
+        // The signing credential appears in its own listing, active, and described
+        // exactly as whoami describes it
+        const signing = credentials.find((c) => c.pubkey === getIntegratorPubkey());
+        expect(
+          signing,
+          "the signing credential should appear in its own listing",
+        ).toBeDefined();
+        expect(signing.active).toBe(true);
+        expect(signing.accessScope).toBe(identity.data.accessScope);
+        expect(signing.label ?? null).toBe(identity.data.label ?? null);
+
+        console.log(
+          `✅ Listed ${credentials.length} credential(s); signing key ${signing.pubkey} (${signing.accessScope}, created ${signing.createdAt})`,
+        );
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should reject a credential that is not registered",
+      async () => {
+        const strangerClient = createSdkClient({
+          privateKey: UNREGISTERED_PRIVATE_KEY,
+        });
+        const sdkResponse = await strangerClient.api.listCredentials(DUMMY_AUTH);
+
+        assertError(sdkResponse);
+        expect(sdkResponse.response.status).toBe(401);
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should require integrator authentication",
+      async () => {
+        // A bare SDK client, built without utils/sdk-client's auth middleware, so
+        // the request goes out unsigned.
+        const unsignedClient = new ByzantineClient({
+          integratorPrivateKey: UNREGISTERED_PRIVATE_KEY, // never used — nothing signs
+          api: { baseUrl: getEnvironmentBaseURL() },
+        });
+        const sdkResponse = await unsignedClient.api.listCredentials(DUMMY_AUTH);
+
+        // Missing X-Pubkey is a malformed request, not an auth failure
+        assertError(sdkResponse);
+        expect(sdkResponse.response.status).toBe(400);
+      },
+      getTimeout("api"),
+    );
+  });
+
   describeCredentials("Credential lifecycle", () => {
     // Every pubkey created here, removed in afterAll
     const created = [];
 
     const issueCredential = async (body, c = client) => {
-      const sdkResponse = await c.api.client.POST(CREDENTIALS_PATH, { body });
+      const sdkResponse = await c.api.createCredential(body, DUMMY_AUTH);
       if (!sdkResponse.error) created.push(sdkResponse.data.pubkey);
       return sdkResponse;
     };
 
     const updateCredential = (pubkey, body, c = client) =>
-      c.api.client.PATCH(CREDENTIAL_PATH, { params: { path: { pubkey } }, body });
+      c.api.updateCredential(pubkey, body, DUMMY_AUTH);
 
     const deleteCredential = (pubkey, c = client) =>
-      c.api.client.DELETE(CREDENTIAL_PATH, { params: { path: { pubkey } } });
+      c.api.deleteCredential(pubkey, DUMMY_AUTH);
+
+    /** The integrator's credential listing, validated, as an array. */
+    const listCredentials = async (c = client) => {
+      const sdkResponse = await c.api.listCredentials(DUMMY_AUTH);
+      assertSuccessWithSchema(sdkResponse, "ListCredentialsResponse");
+      return sdkResponse.data.credentials;
+    };
 
     afterAll(async () => {
       for (const pubkey of created) {
@@ -222,6 +320,47 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         expect(sdkResponse.data.label).toBe(label);
         expect(derivePublicKey(sdkResponse.data.privateKey)).toBe(
           sdkResponse.data.pubkey,
+        );
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should show a newly issued credential in the listing",
+      async () => {
+        expect(readOnly).not.toBeNull();
+        const issuedAt = Date.now();
+
+        const credentials = await listCredentials();
+        const listed = credentials.find((c) => c.pubkey === readOnly.pubkey);
+
+        expect(
+          listed,
+          `credential ${readOnly.pubkey} should appear in the listing`,
+        ).toBeDefined();
+        expect(listed.integratorId).toBe(readOnly.integratorId);
+        expect(listed.accessScope).toBe("read_only");
+        expect(listed.active).toBe(true);
+        expect(listed.label).toBe(readOnly.label);
+        // createdAt is the only field the creation response does not return, so
+        // this is where it gets checked: a real timestamp, from this test run.
+        expect(Number.isNaN(Date.parse(listed.createdAt))).toBe(false);
+        // Generous window — the credential was issued a few tests ago, and server
+        // and runner clocks are not the same clock
+        expect(Math.abs(Date.parse(listed.createdAt) - issuedAt)).toBeLessThan(
+          10 * 60 * 1000,
+        );
+        // The listing never re-exposes the private key that creation returned
+        expect(listed.privateKey).toBeUndefined();
+
+        // The read_write credential issued right after it is there too, with its
+        // own scope — the listing is a full inventory, not just the newest key
+        expect(
+          credentials.filter((c) => c.accessScope === "read_write" && c.active)
+            .length,
+        ).toBeGreaterThan(0);
+        console.log(
+          `✅ Issued credential listed with createdAt ${listed.createdAt}`,
         );
       },
       getTimeout("api"),
@@ -301,20 +440,33 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
 
         // One authenticated GET per domain the integrator can read: `read_only`
         // is a *write* restriction, so all of these must behave exactly as they
-        // do for the read_write credential. Named SDK methods where 1.11.0 has
-        // them, the escape hatch for events. `array: true` validates each item
-        // instead of the envelope.
+        // do for the read_write credential. All named SDK methods as of 1.14.0.
+        // `array: true` validates each item instead of the envelope.
         const queries = [
           { name: "top-vaults", call: (c) => c.api.getTopVaults(DUMMY_AUTH), schema: "TopVault", array: true },
           { name: "assets", call: (c) => c.api.getAssets(DUMMY_AUTH), schema: "get_assets_200" },
           { name: "get-customers", call: (c) => c.api.getCustomers(DUMMY_AUTH), schema: "GetCustomersResponse" },
           {
             name: "events",
-            call: (c) => c.api.client.GET(EVENTS_PATH, { params: { query: { limit: 1 } } }),
+            call: (c) => c.api.listEvents(DUMMY_AUTH, { limit: 1 }),
             schema: "ListEventsResponse",
+          },
+          // Integrator-wide listings: read-only must see the same collections.
+          {
+            name: "get-all-invitations",
+            call: (c) => c.api.getAllInvitations(DUMMY_AUTH, { limit: 1 }),
+            schema: "GetAllInvitationsResponse",
+          },
+          {
+            name: "get-all-transactions",
+            call: (c) => c.api.getAllTransactions(DUMMY_AUTH, { limit: 1 }),
+            schema: "GetAllTransactionsResponse",
           },
           { name: "webhook subscriptions", call: (c) => c.api.listWebhookSubscriptions(DUMMY_AUTH), schema: "ListWebhookSubscriptionsResponse" },
           { name: "webhook deliveries", call: (c) => c.api.listWebhookDeliveries(DUMMY_AUTH), schema: "ListWebhookDeliveriesResponse" },
+          // Listing credentials is a read, so read_only may do it — only issuing,
+          // editing and revoking them need write access
+          { name: "credentials", call: (c) => c.api.listCredentials(DUMMY_AUTH), schema: "ListCredentialsResponse" },
         ];
 
         // An account-scoped read too, when the suite has an account to point at —
@@ -443,6 +595,15 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
             // Payload preparation — POST routes that live under /v1/query
             { name: "getDepositPayloadPasskey", call: () => ro.api.getDepositPayloadPasskey(8453, {}, DUMMY_AUTH) },
             { name: "getWithdrawPayloadPasskey", call: () => ro.api.getWithdrawPayloadPasskey(8453, {}, DUMMY_AUTH) },
+            {
+              name: "getCancelWithdrawalPayloadPasskey",
+              call: () =>
+                ro.api.getCancelWithdrawalPayloadPasskey(
+                  8453,
+                  { transactionId: NONEXISTENT_ID },
+                  DUMMY_AUTH,
+                ),
+            },
             { name: "getInviteUsersPayloadPasskey", call: () => ro.api.getInviteUsersPayloadPasskey({}, DUMMY_AUTH) },
             // Webhook control
             { name: "createWebhookSubscription", call: () => ro.api.createWebhookSubscription({ url: "https://example.com/nope", enabled: true, eventTypes: [] }, DUMMY_AUTH) },
@@ -451,7 +612,7 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
             { name: "deleteWebhookSubscription", call: () => ro.api.deleteWebhookSubscription(subscriptionId, DUMMY_AUTH) },
             { name: "retryWebhookDelivery", call: () => ro.api.retryWebhookDelivery(NONEXISTENT_ID, DUMMY_AUTH) },
             // Key management
-            { name: "POST credentials", call: () => ro.api.client.POST(CREDENTIALS_PATH, { body: { label: "nope" } }) },
+            { name: "createCredential", call: () => ro.api.createCredential({ label: "nope" }, DUMMY_AUTH) },
             { name: "PATCH credentials", call: () => updateCredential(readOnly.pubkey, { label: "nope" }, ro) },
             { name: "DELETE credentials", call: () => deleteCredential(readOnly.pubkey, ro) },
           ];
@@ -522,6 +683,10 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         expect(relabelled.data.label).toBe("sdk-test-partial-renamed");
         expect(relabelled.data.accessScope).toBe("read_write");
         expect(relabelled.data.active).toBe(true);
+        // createdAt is the credential's issuance time — an update is not a re-issue,
+        // so every later response must repeat this exact value
+        expect(Number.isNaN(Date.parse(relabelled.data.createdAt))).toBe(false);
+        const createdAt = relabelled.data.createdAt;
 
         // active only → label and scope survive
         const deactivated = await updateCredential(pubkey, { active: false });
@@ -529,6 +694,7 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         expect(deactivated.data.active).toBe(false);
         expect(deactivated.data.label).toBe("sdk-test-partial-renamed");
         expect(deactivated.data.accessScope).toBe("read_write");
+        expect(deactivated.data.createdAt).toBe(createdAt);
 
         // accessScope (downgrade) → label survives, and the key loses write access
         const demoted = await updateCredential(pubkey, {
@@ -538,6 +704,7 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         assertSuccessWithSchema(demoted, "CredentialSummaryResponse");
         expect(demoted.data.accessScope).toBe("read_only");
         expect(demoted.data.label).toBe("sdk-test-partial-renamed");
+        expect(demoted.data.createdAt).toBe(createdAt);
 
         const demotedClient = createSdkClient({
           privateKey: issued.data.privateKey,
@@ -583,6 +750,13 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         const blocked = await whoami(readOnlyClient);
         assertError(blocked);
         expect(blocked.response.status).toBe(401);
+
+        // Deactivated is not deleted: the credential is still listed, as inactive
+        const listedWhileOff = (await listCredentials()).find(
+          (c) => c.pubkey === readOnly.pubkey,
+        );
+        expect(listedWhileOff).toBeDefined();
+        expect(listedWhileOff.active).toBe(false);
 
         const reactivated = await updateCredential(readOnly.pubkey, {
           active: true,
@@ -738,6 +912,11 @@ describeIntegrator("Integrator Key Management SDK - Using Integrator SDK", () =>
         const again = await deleteCredential(readOnly.pubkey);
         assertError(again);
         expect(again.response.status).toBe(404);
+
+        // Gone from the inventory too — a revoked credential leaves no inactive
+        // row behind, which is what makes the listing safe to show as "your keys"
+        const remaining = await listCredentials();
+        expect(remaining.some((c) => c.pubkey === readOnly.pubkey)).toBe(false);
 
         created.splice(created.indexOf(readOnly.pubkey), 1);
         console.log(`✅ Revoked credential ${readOnly.pubkey}`);

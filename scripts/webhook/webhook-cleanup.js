@@ -2,13 +2,13 @@
  * List or delete webhook subscriptions on the current environment.
  *
  * Usage:
- *   node scripts/webhook-cleanup.js                  # list all subscriptions
- *   node scripts/webhook-cleanup.js <subscriptionId> # delete that subscription
- *   node scripts/webhook-cleanup.js --all            # delete ALL subscriptions
+ *   node scripts/webhook/webhook-cleanup.js                  # list all subscriptions
+ *   node scripts/webhook/webhook-cleanup.js <subscriptionId> # delete that subscription
+ *   node scripts/webhook/webhook-cleanup.js --all            # delete ALL subscriptions
  */
 
-import { apiClient } from "../utils/api-client.js";
-import { endpoints } from "../config/endpoints.js";
+import { apiClient } from "../../utils/api-client.js";
+import { endpoints } from "../../config/endpoints.js";
 
 const arg = process.argv[2];
 
@@ -47,7 +47,7 @@ if (!arg) {
         `  events=[${s.subscription.eventTypes}]`,
       );
     }
-    console.log("\nDelete one with: node scripts/webhook-cleanup.js <id>");
+    console.log("\nDelete one with: node scripts/webhook/webhook-cleanup.js <id>");
   }
 } else if (arg === "--all") {
   const subs = await listSubscriptions();

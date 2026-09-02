@@ -45,6 +45,7 @@ const SIGNABLE_TYPES = [
   "approve",
   "deposit",
   "withdraw",
+  "cancelWithdrawal",
   "activateAccount",
   "activateAccountEth",
   "inviteUsers",

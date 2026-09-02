@@ -4,7 +4,7 @@
  * Validates the LOAD-GENERATION half of the outbound-worker in-flight-cap
  * experiment: one event fanned out to N subscriptions produces N deliveries
  * that all get delivered. It does NOT assert the cap value (4) itself — the cap
- * is observed at the receiver, where scripts/webhook-receiver-slow.js prints the
+ * is observed at the receiver, where scripts/webhook/webhook-receiver-slow.js prints the
  * live in-flight plateau. This test asserts the burst is generated and drains.
  *
  * Flow:
@@ -15,7 +15,7 @@
  *   5. always clean up the N subscriptions
  *
  * Disabled by default — it writes an account on dev and needs a reachable
- * receiver (ideally scripts/webhook-receiver-slow.js behind ngrok, so the burst
+ * receiver (ideally scripts/webhook/webhook-receiver-slow.js behind ngrok, so the burst
  * stays in flight long enough to watch). Never runs against production.
  *
  * Requirements (see .env.example):

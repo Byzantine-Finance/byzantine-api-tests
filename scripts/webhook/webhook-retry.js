@@ -4,12 +4,12 @@
  * previously-failed delivery once your receiver is finally up.
  *
  * Usage:
- *   node scripts/webhook-retry.js              # retry the most recent delivery
- *   node scripts/webhook-retry.js <deliveryId> # retry a specific delivery
+ *   node scripts/webhook/webhook-retry.js              # retry the most recent delivery
+ *   node scripts/webhook/webhook-retry.js <deliveryId> # retry a specific delivery
  */
 
-import { apiClient } from "../utils/api-client.js";
-import { endpoints } from "../config/endpoints.js";
+import { apiClient } from "../../utils/api-client.js";
+import { endpoints } from "../../config/endpoints.js";
 
 let deliveryId = process.argv[2];
 

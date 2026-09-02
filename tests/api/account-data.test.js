@@ -2,6 +2,7 @@
  * Account Data API Tests, what are tested:
  * - query/get-user-details
  * - query/get-entity-details
+ * - query/get-associated-person-details
  * - query/get-account-details
  * - query/get-customers
  * - query/get-bank-accounts
@@ -17,6 +18,7 @@ import {
   assertError,
   assertSuccess,
   assertArraySchema,
+  assertSchema,
   assertValidUuid,
 } from "../../utils/api-assertions.js";
 import { getSchema } from "../../utils/schemas.js";
@@ -24,6 +26,31 @@ import { getSchema } from "../../utils/schemas.js";
 // Roles a user can hold in an account, sourced from the generated enum so this
 // stays in lockstep with the OpenAPI spec.
 const ACCOUNT_USER_ROLES = new Set(getSchema("AccountUserRole")?.enum ?? []);
+
+/**
+ * `userInfo` on get-user-details is a `GetUserInfo`, which now echoes back three
+ * fields the API already accepted at account creation but used to drop from the
+ * read path: `middleName`, `phone` and `birthDate`. All three are optional and
+ * are **omitted entirely** when unset rather than returned as `null`, so assert
+ * the type only when the key is present.
+ */
+function assertGetUserInfo(userInfo) {
+  expect(typeof userInfo.firstName).toBe("string");
+  expect(typeof userInfo.lastName).toBe("string");
+  expect(typeof userInfo.email).toBe("string");
+
+  const echoed = [];
+  for (const field of ["middleName", "phone", "birthDate"]) {
+    if (userInfo[field] == null) continue;
+    expect(typeof userInfo[field]).toBe("string");
+    echoed.push(field);
+  }
+  // Date-only, as in the spec's `1990-01-01` example — not a full timestamp
+  if (userInfo.birthDate != null) {
+    expect(userInfo.birthDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  }
+  return echoed;
+}
 
 /**
  * get-account-details returns `users` (UserSummaryWithRole), which replaced the
@@ -40,6 +67,32 @@ function assertAccountDetailsUsers(data) {
     expect(typeof user.email).toBe("string");
     expect(ACCOUNT_USER_ROLES.has(user.role)).toBe(true);
   }
+}
+
+/**
+ * Every vault position across an account's sub-accounts, with the shape of the
+ * nullable `pending_withdrawals` field checked on each.
+ *
+ * A position reports `pending_withdrawals` (balance + shares awaiting redemption)
+ * while a withdrawal is in flight, and null the rest of the time. `is_async_vault`
+ * does NOT predict it: observed on dev, a vault reported as `is_async_vault: false`
+ * carried pending withdrawals for a `withdrawal_initiated` transaction, so this
+ * asserts the field's shape only and leaves the queueing semantics to the API.
+ */
+function assertVaultPositions(data) {
+  const positions = (data.sub_accounts || []).flatMap((s) => s.positions || []);
+
+  for (const position of positions) {
+    const pending = position.pending_withdrawals;
+    if (pending === null || pending === undefined) continue;
+
+    assertSchema(pending, "PendingWithdrawals");
+    // Decimals travel as strings — money is never a float here
+    expect(typeof pending.balance).toBe("string");
+    expect(typeof pending.shares).toBe("string");
+  }
+
+  return positions;
 }
 
 describe("Account Data API", () => {
@@ -67,6 +120,12 @@ describe("Account Data API", () => {
 
         // Verify accounts is now an array of GetAccountResponse objects
         assertSuccess(response);
+
+        const echoed = assertGetUserInfo(response.data.userInfo);
+        console.log(
+          `✅ userInfo echoed back: ${echoed.join(", ") || "none of middleName/phone/birthDate"}`,
+        );
+
         expect(response.data.accounts).toBeInstanceOf(Array);
 
         if (response.data.accounts.length > 0) {
@@ -164,6 +223,28 @@ describe("Account Data API", () => {
           console.log("ℹ️  pendingInvitations is null or undefined");
         }
 
+        // GetAssociatedPersonResponse gained `beneficiaryId` and `userId`, so an
+        // entity's associated persons can now be looked up individually via
+        // get-associated-person-details. Both are nullable in the spec.
+        const { associatedPersons } = response.data;
+        if (associatedPersons?.length > 0) {
+          for (const person of associatedPersons) {
+            if (person.beneficiaryId != null) {
+              assertValidUuid(person.beneficiaryId);
+            }
+            if (person.userId != null) {
+              assertValidUuid(person.userId);
+            }
+            expect(person.beneficiaryType).toBeInstanceOf(Array);
+          }
+          console.log(
+            `✅ ${associatedPersons.length} associated person(s), ` +
+              `${associatedPersons.filter((p) => p.beneficiaryId != null).length} with a beneficiaryId`,
+          );
+        } else {
+          console.log("ℹ️  No associated persons on entity");
+        }
+
         if (response.data.teamMembers.length > 0) {
           const validRoles = [
             "root",
@@ -181,6 +262,62 @@ describe("Account Data API", () => {
             `✅ Verified roles for ${response.data.teamMembers.length} team member(s)`,
           );
         }
+      },
+      getTimeout("api"),
+    );
+  });
+
+  describe("GET /v1/query/get-associated-person-details", () => {
+    /**
+     * The beneficiary to look up: `TEST_BENEFICIARY_ID` when set (same override
+     * the associated-persons suite uses), otherwise the test entity's first
+     * associated person that carries a beneficiaryId. Discovering it from
+     * get-entity-details keeps this working when saved fixture ids go stale.
+     */
+    async function findBeneficiaryId() {
+      if (process.env.TEST_BENEFICIARY_ID) return process.env.TEST_BENEFICIARY_ID;
+
+      const entity = await apiClient.get(
+        endpoints.accounts.getEntityDetails(testEntityId),
+        { authenticated: true },
+      );
+      assertSuccess(entity);
+      return (entity.data.associatedPersons ?? []).find(
+        (p) => p.beneficiaryId != null,
+      )?.beneficiaryId;
+    }
+
+    it(
+      "should get an associated person by beneficiary ID",
+      async () => {
+        const beneficiaryId = await findBeneficiaryId();
+        if (!beneficiaryId) {
+          console.log(
+            "ℹ️  Test entity has no associated person with a beneficiaryId — skipping",
+          );
+          return;
+        }
+
+        const response = await apiClient.get(
+          endpoints.accounts.getAssociatedPersonDetails(beneficiaryId),
+          { authenticated: true },
+        );
+        assertSuccessWithSchema(response, "AssociatedPersonResponse");
+
+        const person = response.data;
+        expect(person.beneficiaryId).toBe(beneficiaryId);
+        expect(typeof person.verificationStatus).toBe("string");
+        expect(typeof person.userInfo.firstName).toBe("string");
+        expect(typeof person.userInfo.lastName).toBe("string");
+        expect(person.beneficiaryDetails.beneficiaryType).toBeInstanceOf(Array);
+        // Only present while required documents are still outstanding
+        if (person.missingDocuments != null) {
+          expect(person.missingDocuments).toBeInstanceOf(Array);
+        }
+        console.log(
+          `✅ ${person.userInfo.firstName} ${person.userInfo.lastName} ` +
+            `(${person.verificationStatus}, ${person.beneficiaryDetails.beneficiaryType.join("/")})`,
+        );
       },
       getTimeout("api"),
     );
@@ -311,6 +448,7 @@ describe("Account Data API", () => {
         assertSuccessWithSchema(response, "GetAccountBalancesResponse");
         expect(response.data.account_id).toBeDefined();
         expect(response.data.sub_accounts).toBeInstanceOf(Array);
+        assertVaultPositions(response.data);
       },
       getTimeout("api"),
     );
@@ -327,6 +465,48 @@ describe("Account Data API", () => {
         );
         assertSuccess(response);
         assertSuccessWithSchema(response, "GetAccountBalancesResponse");
+        assertVaultPositions(response.data);
+      },
+      getTimeout("api"),
+    );
+
+    // `pending_withdrawals` can only be checked against positions that exist, and
+    // the default test account usually holds none. This runs against the funded
+    // account the withdraw tests point at, when one is configured.
+    const fundedAccountId = TEST_DATA.accounts.initWithdrawTargetAccountId;
+    const itFunded = fundedAccountId ? it : it.skip;
+
+    itFunded(
+      "should report pending_withdrawals per position on a funded account",
+      async () => {
+        const response = await apiClient.get(
+          endpoints.accounts.getAccountBalances(fundedAccountId, {
+            includeTestVaults: true,
+          }),
+          { authenticated: true },
+        );
+        assertSuccess(response);
+        assertSuccessWithSchema(response, "GetAccountBalancesResponse");
+
+        const positions = assertVaultPositions(response.data);
+        expect(
+          positions.length,
+          `account ${fundedAccountId} should hold at least one vault position`,
+        ).toBeGreaterThan(0);
+
+        const pending = positions.filter((p) => p.pending_withdrawals);
+        console.log(
+          `✅ ${positions.length} position(s), ${pending.length} with pending withdrawals${
+            pending.length
+              ? `: ${pending
+                  .map(
+                    (p) =>
+                      `${p.vault_address} ${p.pending_withdrawals.balance} (${p.pending_withdrawals.shares} shares)`,
+                  )
+                  .join(", ")}`
+              : ""
+          }`,
+        );
       },
       getTimeout("api"),
     );

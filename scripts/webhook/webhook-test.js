@@ -3,12 +3,12 @@
  * delivery pipeline (subscription → ngrok → your receiver) works end to end.
  *
  * Usage:
- *   node scripts/webhook-test.js                  # test the only subscription (errors if 0 or >1)
- *   node scripts/webhook-test.js <subscriptionId> # test a specific subscription
+ *   node scripts/webhook/webhook-test.js                  # test the only subscription (errors if 0 or >1)
+ *   node scripts/webhook/webhook-test.js <subscriptionId> # test a specific subscription
  */
 
-import { apiClient } from "../utils/api-client.js";
-import { endpoints } from "../config/endpoints.js";
+import { apiClient } from "../../utils/api-client.js";
+import { endpoints } from "../../config/endpoints.js";
 
 let id = process.argv[2];
 
@@ -22,7 +22,7 @@ if (!id) {
   }
   const subs = list.data.subscriptions;
   if (subs.length === 0) {
-    console.error("No subscriptions exist. Run scripts/webhook-subscribe.js first.");
+    console.error("No subscriptions exist. Run scripts/webhook/webhook-subscribe.js first.");
     process.exit(1);
   }
   if (subs.length > 1) {

@@ -64,7 +64,7 @@ describeWebhooks("Webhook Subscriptions SDK - Using Integrator SDK", () => {
 
       // Unique per run so the create never collides with an existing subscription —
       // dev enforces a unique (integrator, url) constraint, and a persistent
-      // subscription (e.g. from scripts/webhook-subscribe.js) may already use the base URL.
+      // subscription (e.g. from scripts/webhook/webhook-subscribe.js) may already use the base URL.
       const baseWebhookUrl =
         process.env.TEST_WEBHOOK_URL || createSubscriptionRequest.url;
       const subscriptionUrl = `${baseWebhookUrl.replace(/\/$/, "")}/sdk-test-${Date.now()}`;
@@ -159,7 +159,7 @@ describeWebhooks("Webhook Subscriptions SDK - Using Integrator SDK", () => {
             subscriptionId,
             {
               enabled: false,
-              eventTypes: ["transaction.created"],
+              eventTypes: ["transaction.withdrawal_initiated"],
               name: renamed,
             },
             DUMMY_AUTH,
@@ -284,13 +284,14 @@ describeWebhooks("Webhook Subscriptions SDK - Using Integrator SDK", () => {
     );
 
     it(
-      "should reject customer.deleted as an unsupported subscription event type",
+      "should reject webhook.test as an unsupported subscription event type",
       async () => {
+        // webhook.test is deliverable (manual test probe) but not subscribable.
         const sdkResponse = await client.api.createWebhookSubscription(
           {
-            url: uniqueUrl("deleted"),
+            url: uniqueUrl("webhook-test"),
             enabled: true,
-            eventTypes: ["customer.created", "customer.deleted"],
+            eventTypes: ["customer.created", "webhook.test"],
           },
           DUMMY_AUTH,
         );
@@ -299,6 +300,25 @@ describeWebhooks("Webhook Subscriptions SDK - Using Integrator SDK", () => {
         }
         assertError(sdkResponse);
         expect(sdkResponse.response.status).toBe(400);
+      },
+      getTimeout("api"),
+    );
+
+    it(
+      "should accept customer.deleted, which used to be rejected on subscribe",
+      async () => {
+        // Regression guard for the 2026-09-01 API change (mirrors the API suite).
+        const eventTypes = ["customer.created", "customer.deleted"];
+        const sdkResponse = await client.api.createWebhookSubscription(
+          { url: uniqueUrl("deleted"), enabled: true, eventTypes },
+          DUMMY_AUTH,
+        );
+        assertSuccessWithSchema(sdkResponse, "WebhookSubscriptionResponse");
+        created.push(sdkResponse.data.subscription.id);
+
+        expect([...sdkResponse.data.subscription.eventTypes].sort()).toEqual(
+          [...eventTypes].sort(),
+        );
       },
       getTimeout("api"),
     );

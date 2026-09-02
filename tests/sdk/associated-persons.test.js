@@ -189,10 +189,27 @@ describeFlow("Associated Persons SDK - Using Integrator SDK", () => {
           assertValidUuid(sdkResponse.data.beneficiaryId);
           assertDataHasFields(sdkResponse, ["verificationStatus"]);
 
-          if (sdkResponse.data.beneficiaryDetails) {
-            expect(
-              sdkResponse.data.beneficiaryDetails.ownershipPercentage,
-            ).toBe(35);
+          // The update is a partial PATCH: only the fields the fixture sends are
+          // changed, and the response echoes back only those. So the expected
+          // values come from the fixture rather than being hardcoded here —
+          // editing update-associated-person.json no longer breaks this test.
+          const sentDetails =
+            updateAssociatedPersonData.associatedPerson?.beneficiaryDetails;
+          if (sdkResponse.data.beneficiaryDetails && sentDetails) {
+            const got = sdkResponse.data.beneficiaryDetails;
+            if (sentDetails.ownershipPercentage != null) {
+              expect(got.ownershipPercentage).toBe(
+                sentDetails.ownershipPercentage,
+              );
+            }
+            if (sentDetails.title != null) {
+              expect(got.title).toBe(sentDetails.title);
+            }
+            if (sentDetails.beneficiaryType != null) {
+              expect([...got.beneficiaryType].sort()).toEqual(
+                [...sentDetails.beneficiaryType].sort(),
+              );
+            }
           }
 
           console.log(

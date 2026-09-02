@@ -132,6 +132,7 @@ function setupAutoAuth(client) {
         "/v1/query/get-withdraw-payload-passkey",
         "/v1/query/get-transfer-payload-passkey",
         "/v1/query/get-vault-upgrade-payload-passkey",
+        "/v1/query/get-cancel-withdrawal-payload-passkey",
         "/v1/submit/sign-payload-passkey",
         // OTP transactions
         "/v1/query/init-deposit-otp",
@@ -145,6 +146,7 @@ function setupAutoAuth(client) {
         // Invitation queries
         "/v1/query/get-invitations-by-account-id",
         "/v1/query/get-invitations-by-email",
+        "/v1/query/get-all-invitations",
         // OTP authentication
         "/v1/submit/init-otp",
         "/v1/submit/otp-auth",
@@ -155,10 +157,12 @@ function setupAutoAuth(client) {
         "/v1/query/get-customers",
         "/v1/query/get-user-details",
         "/v1/query/get-entity-details",
+        "/v1/query/get-associated-person-details",
         "/v1/query/get-bank-accounts",
         // Transaction data
         "/v1/query/get-transaction",
         "/v1/query/get-transactions",
+        "/v1/query/get-all-transactions",
         // Webhooks (covers subscriptions, /{id}, /{id}/test, deliveries, /{id}/retry)
         "/v1/webhooks/subscriptions",
         "/v1/webhooks/deliveries",
