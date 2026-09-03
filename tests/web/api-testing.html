@@ -126,6 +126,13 @@
       .tab-content.active {
         display: block;
       }
+
+      .hint {
+        margin-top: 6px;
+        font-size: 12px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
     </style>
   </head>
   <body>
@@ -215,15 +222,10 @@
           </div>
           <div class="input-group">
             <label for="txType">Transaction Type</label>
-            <select id="txType">
-              <option value="approve">Approve</option>
-              <option value="deposit">Deposit</option>
-              <option value="withdraw">Withdraw</option>
-              <option value="activateAccount">Activate Account</option>
-              <option value="inviteUsers">Invite Users</option>
-              <option value="promoteUser">Promote User</option>
-              <option value="vaultUpgrade">Vault Upgrade</option>
-            </select>
+            <!-- Options are filled from GET /tx-types (TX_PASSKEY_TYPES in
+                 utils/test-data-persistence.js) so this list always matches
+                 what the server and saveBodyToSign() accept. -->
+            <select id="txType"></select>
           </div>
         </div>
 
@@ -236,6 +238,7 @@
               id="payload"
               placeholder="Loaded from generated-tx-passkey.json"
             ></textarea>
+            <div id="payloadHint" class="hint"></div>
           </div>
         </div>
 
@@ -248,12 +251,15 @@
 
     <script type="module">
       // Import only the WebauthnStamper directly to avoid Node.js dependencies
-      import { WebauthnStamper } from "./node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js";
-      // SDK 1.11.0 already returns the raw rawId (base64url, no CBOR wrapping)
+      // Root-absolute so the page works both at / and at
+      // /tests/web/api-testing.html (a relative "./node_modules" resolves to
+      // /tests/web/node_modules and 404s).
+      import { WebauthnStamper } from "/node_modules/@byzantine/integrator-sdk/dist/esm/webauthn-stamper/index.js";
+      // SDK 1.15.0 still returns the raw rawId (base64url, no CBOR wrapping)
       // from createPasskey/getStamp, so no credential-ID conversion helpers are needed.
 
       // Load user data from JSON
-      fetch("./fixtures/test-data/users/valid-user.json")
+      fetch("/fixtures/test-data/users/valid-user.json")
         .then((r) => r.json())
         .then((d) => {
           const email = d.userInfo.email || "";
@@ -264,7 +270,7 @@
         })
         .catch(() => {});
 
-      fetch("./fixtures/test-data/__generated__/generated-new-auth.json")
+      fetch("/fixtures/test-data/__generated__/generated-new-auth.json")
         .then((r) => r.json())
         .then((d) => {
           if (d.credentialId) {
@@ -273,30 +279,91 @@
         })
         .catch(() => {});
 
-      // Load default transaction payload from generated fixtures
-      function loadPayloadForCurrentType() {
-        const txTypeSelect = document.getElementById("txType");
-        const txType = txTypeSelect ? txTypeSelect.value : "approve";
+      const txTypeSelect = document.getElementById("txType");
 
-        fetch("./fixtures/test-data/__generated__/generated-tx-passkey.json")
-          .then((r) => r.json())
-          .then((data) => {
-            const bodyToSign = data?.[txType]?.bodyToSign;
-            if (!bodyToSign) return;
+      // Fill the dropdown from the server's canonical list. Falls back to the
+      // keys already present in the fixture if /tx-types is unreachable (e.g.
+      // the file opened straight off disk instead of through serve.js).
+      async function loadTxTypes() {
+        let types;
+        try {
+          const r = await fetch("/tx-types");
+          if (!r.ok) throw new Error(r.status);
+          types = await r.json();
+        } catch (e) {
+          const r = await fetch(
+            "/fixtures/test-data/__generated__/generated-tx-passkey.json",
+          ).catch(() => null);
+          const data = r && r.ok ? await r.json() : {};
+          types = Object.keys(data).map((type) => ({ type, label: type }));
+        }
 
-            const payloadTextarea = document.getElementById("payload");
-            if (!payloadTextarea) return;
-
-            payloadTextarea.value = JSON.stringify(bodyToSign, null, 2);
-          })
-          .catch(() => {});
+        txTypeSelect.innerHTML = "";
+        for (const { type, label } of types) {
+          const option = document.createElement("option");
+          option.value = type;
+          option.textContent = label || type;
+          txTypeSelect.appendChild(option);
+        }
       }
 
-      const txTypeSelect = document.getElementById("txType");
+      // Load default transaction payload from generated fixtures
+      function loadPayloadForCurrentType() {
+        const txType = txTypeSelect ? txTypeSelect.value : "deposit";
+        const payloadTextarea = document.getElementById("payload");
+        const hint = document.getElementById("payloadHint");
+        if (!payloadTextarea) return;
+
+        // Cache-bust: the fixture is rewritten by the init-* tests while this
+        // page stays open, and a 304 would hand back the previous payload.
+        fetch(
+          `/fixtures/test-data/__generated__/generated-tx-passkey.json?t=${Date.now()}`,
+        )
+          .then((r) => r.json())
+          .then((data) => {
+            const entry = data?.[txType];
+            const bodyToSign = entry?.bodyToSign;
+
+            // A `_note` marks a placeholder entry the init test has never
+            // overwritten. Signing it would stamp a fake payload and only fail
+            // later at submit, so treat it as "nothing to sign yet".
+            if (!bodyToSign || entry._note) {
+              payloadTextarea.value = "";
+              hint.textContent = entry?._note
+                ? `⚠️ No real "${txType}" payload yet.\n${entry._note}`
+                : `⚠️ No "${txType}" payload saved yet — run the matching init-passkey test first, then reselect this type.`;
+              return;
+            }
+
+            payloadTextarea.value = JSON.stringify(bodyToSign, null, 2);
+
+            // Turnkey rejects a stamp over a stale payload, so surface the age
+            // of what is about to be signed.
+            const ageMs = Date.now() - Number(bodyToSign.timestampMs);
+            const ageMin = Math.round(ageMs / 60000);
+            const stale = Number.isFinite(ageMin) && ageMin > 10;
+            hint.textContent = [
+              entry.transactionId
+                ? `transactionId: ${entry.transactionId}`
+                : "no transactionId (invite-users and role-update payloads don't get one)",
+              Number.isFinite(ageMin)
+                ? `payload age: ${ageMin} min${stale ? " ⚠️ likely stale — re-run the init test" : ""}`
+                : "",
+              entry.webAuthnStamp ? "already signed once (will overwrite)" : "",
+            ]
+              .filter(Boolean)
+              .join("\n");
+          })
+          .catch(() => {
+            hint.textContent =
+              "⚠️ Could not read generated-tx-passkey.json — is serve.js running?";
+          });
+      }
+
       if (txTypeSelect) {
         txTypeSelect.addEventListener("change", loadPayloadForCurrentType);
       }
-      loadPayloadForCurrentType();
+      loadTxTypes().then(loadPayloadForCurrentType);
 
       // Tab switching functionality
       document.querySelectorAll(".tab").forEach((tab) => {
@@ -367,7 +434,7 @@
           const { attestationData, challengeFromClientData } =
             await stamper.createPasskey(creationConfig);
 
-          // SDK 1.11.0's createPasskey already returns attestationData.credentialId
+          // SDK 1.15.0's createPasskey already returns attestationData.credentialId
           // as the raw WebAuthn rawId (base64url, no CBOR wrapping — see
           // webauthn-stamper/passkey.js). Use it directly; the account-creation /
           // create-authenticators API and signing assertions both expect this raw id.
@@ -547,7 +614,7 @@
           const payload = JSON.stringify(payloadObj);
           let stamp;
           if (credentialId) {
-            // Non-discoverable: specify the credential ID. SDK 1.11.0's getStamp()
+            // Non-discoverable: specify the credential ID. SDK 1.15.0's getStamp()
             // expects the raw rawId (base64url) directly — it no longer CBOR-wraps
             // (see webauthn-stamper/index.js). Pass the stored raw id straight through.
             stamp = await stamper.getStamp(payload, [credentialId]);
@@ -557,8 +624,9 @@
           }
 
           // Persist the WebAuthn stamp header value for reuse in API tests
+          let saveNote = `Saved to generated-tx-passkey.json → ${txType}.webAuthnStamp`;
           try {
-            await fetch("/save-passkey-stamp", {
+            const saveRes = await fetch("/save-passkey-stamp", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -566,8 +634,13 @@
                 webAuthnStamp: stamp.stampHeaderValue,
               }),
             });
+            if (!saveRes.ok) {
+              const body = await saveRes.text();
+              saveNote = `⚠️ NOT saved (${saveRes.status}): ${body}`;
+            }
           } catch (e) {
             console.error("Failed to save WebAuthn stamp:", e);
+            saveNote = `⚠️ NOT saved: ${e.message}`;
           }
 
           // Display success result
@@ -591,6 +664,9 @@
 
       <strong>Stamp Header Value:</strong>
       ${stamp.stampHeaderValue}
+
+      <strong>Transaction Type:</strong>
+      ${txType} — ${saveNote}
 
       ${credentialInfo}
 

@@ -24,7 +24,9 @@
  *
  * Required environment variables:
  *   DEV_INTEGRATOR_PRIVATE_KEY   - ECDSA P-256 private key for API auth
- *   ENABLE_PASSKEY_TESTS=true    - Enable passkey test flow
+ *   ENABLE_PASSKEY_TESTS=true    - Enable passkey test flow (required here:
+ *                                  ci-test.js does not use the flag's
+ *                                  on-by-default behaviour)
  *   CI_PASSKEY_CREDENTIAL_ID     - Passkey credential ID (from ci-one-time-setup.js)
  *   CI_PASSKEY_PRIVATE_KEY       - Passkey PKCS#8 private key (from ci-one-time-setup.js)
  *
@@ -164,12 +166,11 @@ function runPasskeyCycle(name, { initFlag, initTest, txFlag, txTest, extraInitEn
     `npx vitest run ${testFile("init-passkey")} -t "${initTest}"`,
     {
       ENABLE_PASSKEY_TESTS: "true",
-      [initFlag]: "true",
-      // Disable other init tests
+      // Disable other init tests, then override the specific one we want.
+      // (Order matters: [initFlag] must come last to win.)
       ENABLE_PASSKEY_INIT_ACTIVATE_TESTS: "false",
       ENABLE_PASSKEY_INIT_DEPOSIT_TESTS: "false",
       ENABLE_PASSKEY_INIT_WITHDRAW_TESTS: "false",
-      // Override the specific one we want
       [initFlag]: "true",
       CI: "true",
       ...ciAccountOverrides,
@@ -233,7 +234,7 @@ function generateReport(overallSuccess, startTime = null) {
 
     for (const r of reportResults) {
       for (const suite of r.data.testResults || []) {
-        const filePath = suite.testFilePath || "";
+        const filePath = suite.testFilePath || suite.name || "";
         const fileName = filePath.split("/").pop().replace(".test.js", "");
         for (const t of suite.assertionResults || []) {
           const key = `${filePath}::${fullName(t)}`;
@@ -377,8 +378,16 @@ const DISABLED_OTP_ENV = {
   ENABLE_OTP_CREATE_AUTHENTICATORS_TESTS: "false",
 };
 
+// Declared outside the try so the catch handler can still report elapsed time.
+let scriptStartTime = Date.now();
+
 try {
-  const scriptStartTime = Date.now();
+  // Deliberately stricter than FEATURE_FLAGS.enablePasskeyTests (which is
+  // `!== "false"`, i.e. on by default): Phase 2/3 submit real activate /
+  // deposit / withdraw transactions, so the orchestrator requires an explicit
+  // ENABLE_PASSKEY_TESTS=true and never infers it from the default. Do not
+  // "align" this with the feature flag — the divergence is the point. The
+  // child vitest runs get ENABLE_PASSKEY_TESTS=true injected explicitly.
   const isPasskeyEnabled = process.env.ENABLE_PASSKEY_TESTS === "true";
   const hasCiPasskeySecrets =
     process.env.CI_PASSKEY_CREDENTIAL_ID && process.env.CI_PASSKEY_PRIVATE_KEY;
@@ -437,6 +446,17 @@ try {
     // vitest's in-file source order guarantees add-before-update.
     ADD_ASSOCIATED_PERSONS: "true",
     UPDATE_BENEFICIARY: "true",
+    // Step 2 resolves `TEST_BENEFICIARY_ID || <saved ubo from Step 1>`. Blanking
+    // it forces the update to target the person Step 1 just created, instead of
+    // a hardcoded .env beneficiary whose upstream applicant may be long gone
+    // (that shows up as a 500 "Applicant was deleted").
+    TEST_BENEFICIARY_ID: "",
+    // The user/entity fixtures carry static emails, so a re-run would 400 with
+    // "already has an individual account". Uniquify them for CI only — direct
+    // `npx vitest` runs keep .env's UNIQUE_EMAILS so you can still invite/OTP a
+    // known fixed address. Each CI run therefore creates a fresh user + entity
+    // and repoints generated-accounts.json at them.
+    UNIQUE_EMAILS: "true",
     ...DISABLED_OTP_ENV,
     CI: "true",
   };
@@ -480,20 +500,17 @@ try {
   // get-account-balances is excluded here and runs after Deposit submit (Phase 2)
   // so it uses CI_PASSKEY_ACCOUNT_ID as the account that just received a deposit.
   const nonBalancesFilter = TEST_SUITE === "sdk"
-    ? "getUserDetails|getEntityDetails|getAccountDetails|getCustomers|getBankAccounts"
-    : "get-user-details|get-entity-details|get-account-details|get-customers|get-bank-accounts";
+    ? "getUserDetails|getEntityDetails|getAssociatedPersonDetails|getAccountDetails|getCustomers|getBankAccounts"
+    : "get-user-details|get-entity-details|get-associated-person-details|get-account-details|get-customers|get-bank-accounts";
   console.log(`\n  ── account-data (excl. balances) ──`);
   run(`npx vitest run ${testFile("account-data")} -t "${nonBalancesFilter}"`, phase1Env, "account-data (excl. balances)");
 
-  // Transaction data: get-transactions + deposit (right after get-account-balances)
-  console.log("\n  ── Transaction data: get-transactions + deposit (post-account-balances) ──");
-  const txFilter = TEST_SUITE === "sdk"
-    ? "getTransactions|should get deposit transaction"
-    : "GET /v1/query/get-transactions|should get deposit transaction";
+  // Transaction data: full file, ordered right after the account-data step.
+  console.log("\n  ── Transaction data (post-account-balances) ──");
   run(
-    `npx vitest run ${testFile("transaction-data")} -t "${txFilter}"`,
+    `npx vitest run ${testFile("transaction-data")}`,
     phase1Env,
-    "transaction-data — get-transactions + deposit (post-account-balances)",
+    "transaction-data (post-account-balances)",
   );
 
   // ──────────────────────────────────────────────────────────
@@ -573,21 +590,44 @@ try {
     _currentPhase = "Phase 3 — Invite + OTP";
 
     // Determine OTP retrieval method
-    const hasMailslurp = !!process.env.MAILSLURP_API_KEY;
-    const hasManualOtp = !!process.env.TEST_OTP_CODE;
+    // An empty (or whitespace-only) MAILSLURP_API_KEY means "no Mailslurp", so
+    // the steps that can only work with an auto-retrieved code are skipped
+    // rather than attempted and failed. Same for a blank TEST_OTP_CODE.
+    const mailslurpKey = (process.env.MAILSLURP_API_KEY || "").trim();
+    const manualOtpCode = (process.env.TEST_OTP_CODE || "").trim();
+    let hasMailslurp = !!mailslurpKey;
+    const hasManualOtp = !!manualOtpCode;
     const otpMode = hasMailslurp ? "mailslurp" : hasManualOtp ? "manual" : "none";
     console.log(`  OTP mode: ${otpMode}`);
+    if (!hasMailslurp && !hasManualOtp) {
+      console.log(
+        "  ℹ️  No OTP source (MAILSLURP_API_KEY and TEST_OTP_CODE both empty) —\n" +
+        "     the OTP-dependent steps (authenticate, create authenticator, role\n" +
+        "     promotion) will be skipped, not run and failed."
+      );
+    }
 
     // Step 0: Create Mailslurp inbox (if available)
     let mailslurpInbox = null;
     let inviteEmailEnv = {};
     if (hasMailslurp) {
       console.log("\n  ── Step 0: Create disposable email inbox ──");
-      const { MailslurpClient } = await import("../utils/mailslurp.js");
-      const mailslurp = new MailslurpClient();
-      mailslurpInbox = { client: mailslurp, ...(await mailslurp.createInbox()) };
-      inviteEmailEnv = { CI_INVITE_EMAIL: mailslurpInbox.emailAddress };
-      console.log(`  📬 Inbox ready: ${mailslurpInbox.emailAddress}\n`);
+      try {
+        const { MailslurpClient } = await import("../utils/mailslurp.js");
+        const mailslurp = new MailslurpClient();
+        mailslurpInbox = { client: mailslurp, ...(await mailslurp.createInbox()) };
+        inviteEmailEnv = { CI_INVITE_EMAIL: mailslurpInbox.emailAddress };
+        console.log(`  📬 Inbox ready: ${mailslurpInbox.emailAddress}\n`);
+      } catch (err) {
+        // Mailslurp being unavailable (expired plan, quota, outage) is not an
+        // infrastructure failure for this script: the invite steps still run and
+        // OTP retrieval falls back to TEST_OTP_CODE, or is reported as skipped.
+        console.warn(`  ⚠️  Mailslurp inbox creation failed — continuing without auto-OTP.`);
+        console.warn(`     ${err?.message || err}\n`);
+        hasMailslurp = false;
+        mailslurpInbox = null;
+        inviteEmailEnv = {};
+      }
     }
 
     try {
@@ -595,7 +635,10 @@ try {
       console.log("\n  ── Step 1: Get invite payload ──");
       run(
         `npx vitest run ${testFile("user-invitation")} -t "should generate payload"`,
-        { ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "true", INVITE_USERS: "false", CI: "true", ...inviteEmailEnv },
+        // UNIQUE_EMAILS keeps run N+1 from re-inviting the same address. When a
+        // Mailslurp inbox exists, CI_INVITE_EMAIL takes precedence for the first
+        // user anyway, so this is a no-op in that mode.
+        { ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "true", INVITE_USERS: "false", UNIQUE_EMAILS: "true", CI: "true", ...inviteEmailEnv },
         "user-invitation — get payload",
       );
 
@@ -610,7 +653,7 @@ try {
       console.log("  ── Step 3: Submit invitation + query ──");
       run(
         `npx vitest run ${testFile("user-invitation")}`,
-        { ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "false", INVITE_USERS: "true", CI: "true", ...inviteEmailEnv },
+        { ENABLE_WRITE_TESTS: "true", INVITE_PAYLOAD: "false", INVITE_USERS: "true", UNIQUE_EMAILS: "true", CI: "true", ...inviteEmailEnv },
         "user-invitation — submit + queries",
       );
       console.log("  ✅ User invited + queried\n");
@@ -638,7 +681,7 @@ try {
       console.log("  ✅ OTP sent to invited user's email\n");
 
       // Step 5: Get OTP code (Mailslurp auto-retrieval or manual)
-      let otpCode = process.env.TEST_OTP_CODE;
+      let otpCode = manualOtpCode || null;
 
       if (hasMailslurp) {
         console.log("  ── Step 5a: Retrieve OTP code from Mailslurp ──");
@@ -722,7 +765,11 @@ try {
           }
         }
       } else {
-        console.log("  ⚠️  No OTP code available. Steps 5b-7 skipped.");
+        console.log("  ⏭  No OTP code available — skipping the OTP-dependent steps:");
+        console.log("     - Step 5b: otp-auth (authenticate)");
+        console.log("     - Step 6:  create-authenticators-otp");
+        console.log("     - Step 7:  role-management (promote invited user to root)");
+        console.log("     These are skipped, not failed — the run's status is unaffected.");
         console.log("  📧 Check the invited user's email for the OTP code.");
         console.log("  💡 Options to automate:");
         console.log("     - Set MAILSLURP_API_KEY for automatic OTP retrieval");
@@ -756,6 +803,8 @@ try {
   generateReport(false, scriptStartTime);
   console.error(`\n${DIVIDER}`);
   console.error("  ❌ CI script error (infrastructure failure)");
+  console.error(`  ${err?.message || err}`);
+  if (err?.stack) console.error(`\n${err.stack}`);
   console.error(`${DIVIDER}\n`);
   process.exit(err.status || 1);
 }

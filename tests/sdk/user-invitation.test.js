@@ -7,7 +7,8 @@
  * - getAllInvitations() (integrator-wide, offset-paginated)
  *
  * Note: the invite flow uses authenticated endpoints and modifies data.
- * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
+ * Enable with: ENABLE_AUTH_TESTS=true (write tests are on by default;
+ * disable with ENABLE_WRITE_TESTS=false)
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  *
  * Flow:

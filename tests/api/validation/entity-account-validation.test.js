@@ -14,7 +14,8 @@
  * - Root user duplicate email handling
  * - Per-beneficiary document completeness (missingDocuments per person)
  *
- * Enable with: ENABLE_WRITE_TESTS=true ENABLE_ENTITY_VALIDATION_TESTS=true
+ * Enable with: ENABLE_ENTITY_VALIDATION_TESTS=true (write tests are on by
+ * default; disable with ENABLE_WRITE_TESTS=false)
  */
 
 import { describe, it, expect } from "vitest";

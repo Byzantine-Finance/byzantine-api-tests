@@ -48,11 +48,30 @@ describeRoleManagement("Byzantine Role Management API", () => {
   const testAccountId = orchestrated
     ? process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID
     : process.env.CGP_ACCOUNT_ID || TEST_DATA.accounts.testEntityAccountId;
-  const role = "view";
+  // The role the target user is moved to. "root" is what ci-test.js's Step 7
+  // ("Promote invited user to root") expects: a freshly invited user starts out
+  // as "view", so asking for "view" is rejected with "cannot be demoted to view".
+  const role = "root";
   const invitedUser = loadInvitedUserData();
-  const userToPromote = orchestrated
+
+  // Target user, in priority order: the id ci-test.js passes explicitly for the
+  // freshly invited user, then the last invited user recorded locally.
+  //
+  // This must never be the user whose passkey signs the request. In an
+  // orchestrated run that signer is the account's root user
+  // (CI_ENTITY_PASSKEY_ROOT_USER_ID), and setting its role to a non-root one
+  // revokes its own permission to update the root quorum — every later
+  // root-quorum call from that credential then fails with a Turnkey 403, and it
+  // cannot promote itself back. Hence the explicit guard below.
+  const roleTargetUserId =
+    process.env.TEST_ROLE_TARGET_USER_ID || invitedUser.userId || null;
+  const signingUserId = orchestrated
     ? process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID
-    : invitedUser.userId;
+    : null;
+  const userToPromote =
+    roleTargetUserId && roleTargetUserId !== signingUserId
+      ? roleTargetUserId
+      : null;
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
     ? describe
@@ -62,8 +81,16 @@ describeRoleManagement("Byzantine Role Management API", () => {
     "POST /v1/query/get-update-users-role-payload-passkey",
     () => {
       it(
-        "should generate payload for promoting a user to root role",
+        `should generate payload for setting a user to the "${role}" role`,
         async () => {
+          if (!userToPromote) {
+            console.warn(
+              "⚠️  No role target user available (or the only candidate is the " +
+                "signing root user) — skipping",
+            );
+            return;
+          }
+
           const requestBody = {
             accountId: testAccountId,
             role: role,
@@ -96,7 +123,7 @@ describeRoleManagement("Byzantine Role Management API", () => {
           saveBodyToSign("promoteUser", bodyToSign);
 
           console.log(
-            `✅ Generated payload to promote user ${userToPromote} to root role`,
+            `✅ Generated payload to set user ${userToPromote} to the "${role}" role`,
           );
           console.log(
             `   Root quorum will have ${bodyToSign.parameters.userIds.length} user(s)`,

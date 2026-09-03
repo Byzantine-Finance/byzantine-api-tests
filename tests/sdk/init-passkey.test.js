@@ -6,7 +6,8 @@
  * - getCancelWithdrawalPayloadPasskey
  *
  * Note: Passkey tests require WebAuthn setup
- * Enable with: ENABLE_PASSKEY_TESTS=true
+ * ENABLE_PASSKEY_TESTS is the parent gate and is on by default; each cycle
+ * still needs its own ENABLE_PASSKEY_INIT_*_TESTS=true
  * Tests using the Byzantine Integrator SDK instead of direct HTTP calls
  */
 
@@ -48,11 +49,23 @@ describeInitPasskey(
   "Initiate Passkey transactions SDK - Using Integrator SDK",
   () => {
     const client = getSdkClient();
-    // Use a KYC/KYB-approved account for passkey operations
-    // Set TEST_PASSKEY_TARGET_ACCOUNT_ID in .env to a verified account
-    const testActivateAccountId = TEST_DATA.accounts.initActivateTargetAccountId;
-    const testDepositAccountId = TEST_DATA.accounts.initDepositTargetAccountId;
-    const testWithdrawAccountId = TEST_DATA.accounts.initWithdrawTargetAccountId;
+    // Use a KYC/KYB-approved account for passkey operations.
+    // Set TEST_INIT_<CYCLE>_TARGET_ACCOUNT_ID in .env to a verified account for
+    // direct `npx vitest` runs. Under ci-test.js the orchestrator sets
+    // CI_TEST_ORCHESTRATED=true and every init cycle runs against the single
+    // account ci-one-time-setup.js registered a passkey for, so
+    // CI_PASSKEY_ACCOUNT_ID wins there and the per-cycle .env vars are ignored.
+    const orchestrated = process.env.CI_TEST_ORCHESTRATED === "true";
+    const ciPasskeyAccountId =
+      orchestrated && process.env.CI_PASSKEY_ACCOUNT_ID
+        ? process.env.CI_PASSKEY_ACCOUNT_ID
+        : null;
+    const testActivateAccountId =
+      ciPasskeyAccountId ?? TEST_DATA.accounts.initActivateTargetAccountId;
+    const testDepositAccountId =
+      ciPasskeyAccountId ?? TEST_DATA.accounts.initDepositTargetAccountId;
+    const testWithdrawAccountId =
+      ciPasskeyAccountId ?? TEST_DATA.accounts.initWithdrawTargetAccountId;
     const testVaultAddr = TEST_DATA.vaults.selected.address;
     const chainId = TEST_DATA.vaults.selected.chainId;
     // Amounts + currencies come from .env (DEPOSIT_AMOUNT, SOURCE_CURRENCY,

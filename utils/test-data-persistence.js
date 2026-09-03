@@ -19,6 +19,29 @@ const TEST_DATA_FILE = join(
 );
 
 /**
+ * Every passkey-signable payload the API can hand back, keyed by the section
+ * name used in generated-tx-passkey.json. One entry per `*-payload-passkey`
+ * endpoint in the OpenAPI spec (activate-account appears twice because the same
+ * endpoint is called per chain). Shared with scripts/serve.js and the signing
+ * widget so the three never drift.
+ */
+export const TX_PASSKEY_TYPES = [
+  { type: "deposit", label: "Deposit" },
+  { type: "withdraw", label: "Withdraw" },
+  { type: "transfer", label: "Transfer" },
+  { type: "cancelWithdrawal", label: "Cancel Withdrawal" },
+  { type: "activateAccount", label: "Activate Account (selected chain)" },
+  { type: "activateAccountEth", label: "Activate Account (Ethereum)" },
+  { type: "vaultUpgrade", label: "Vault Upgrade (2 payloads)" },
+  { type: "inviteUsers", label: "Invite Users" },
+  { type: "promoteUser", label: "Promote User (role update)" },
+  // Legacy: no `*-payload-passkey` endpoint produces an `approve` payload any
+  // more (`approve` survives only as a TransactionType the API records for the
+  // ERC-20 approval leg). Kept so old fixture entries stay signable.
+  { type: "approve", label: "Approve (legacy)" },
+];
+
+/**
  * Default test data structure
  */
 const DEFAULT_TEST_DATA = {
@@ -271,18 +294,7 @@ export function saveBodyToSign(transactionType, bodyToSign, transactionId) {
   );
 
   // Validate transaction type
-  const validTypes = [
-    "approve",
-    "deposit",
-    "withdraw",
-    "transfer",
-    "activateAccount",
-    "activateAccountEth",
-    "inviteUsers",
-    "promoteUser",
-    "vaultUpgrade",
-    "cancelWithdrawal",
-  ];
+  const validTypes = TX_PASSKEY_TYPES.map((t) => t.type);
   if (!validTypes.includes(transactionType)) {
     throw new Error(
       `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(

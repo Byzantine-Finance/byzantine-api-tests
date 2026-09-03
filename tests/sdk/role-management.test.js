@@ -14,7 +14,10 @@ import {
   getTimeout,
   FEATURE_FLAGS,
 } from "../../config/test.config.js";
-import { saveBodyToSign } from "../../utils/test-data-persistence.js";
+import {
+  saveBodyToSign,
+  loadInvitedUserData,
+} from "../../utils/test-data-persistence.js";
 import {
   assertSuccessWithSchema,
   assertValidUuid,
@@ -42,8 +45,26 @@ describeRoleManagement("Byzantine Role Management SDK", () => {
   const testAccountId =
     process.env.CI_ENTITY_PASSKEY_ACCOUNT_ID ||
     TEST_DATA.accounts.testEntityAccountId;
+  const invitedUser = loadInvitedUserData();
+
+  // Target user, in priority order: the id ci-test.js passes explicitly for the
+  // freshly invited user, then the last invited user recorded locally. Both
+  // belong to `testAccountId`; TEST_DATA.users.roleTargetUserId falls back to
+  // the *locally* created entity's root user, which is not in the CI entity
+  // account and is rejected with "is not associated with account".
+  //
+  // This must never be the user whose passkey signs the request — that signer
+  // is the account's root user (CI_ENTITY_PASSKEY_ROOT_USER_ID), and moving it
+  // off root revokes its own permission to update the root quorum, after which
+  // every root-quorum call from that credential fails with a Turnkey 403 and it
+  // cannot promote itself back. Hence the explicit guard below.
+  const roleTargetUserId =
+    process.env.TEST_ROLE_TARGET_USER_ID || invitedUser.userId || null;
   const userToPromote =
-    process.env.TEST_ROLE_TARGET_USER_ID || TEST_DATA.users.roleTargetUserId;
+    roleTargetUserId &&
+    roleTargetUserId !== process.env.CI_ENTITY_PASSKEY_ROOT_USER_ID
+      ? roleTargetUserId
+      : null;
   const role = "root";
 
   const describePayloadTest = TEST_SUITE_FLAGS.runPayloadTest
@@ -56,6 +77,14 @@ describeRoleManagement("Byzantine Role Management SDK", () => {
       it(
         "should generate payload for promoting a user to root role",
         async () => {
+          if (!userToPromote) {
+            console.warn(
+              "⚠️  No role target user available (or the only candidate is the " +
+                "signing root user) — skipping",
+            );
+            return;
+          }
+
           const requestBody = {
             accountId: testAccountId,
             role: role,

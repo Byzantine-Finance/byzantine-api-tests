@@ -1,8 +1,9 @@
 import { createServer } from "http";
-import { readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import dotenv from "dotenv";
+import { TX_PASSKEY_TYPES } from "../utils/test-data-persistence.js";
 
 dotenv.config();
 
@@ -36,9 +37,18 @@ function startServer(port) {
       return;
     }
 
-    // Handle POST request to save passkey attestation data
     const urlPath = req.url.split("?")[0]; // Remove query string
     console.log(`Checking route: method=${req.method}, urlPath=${urlPath}`);
+
+    // Serve the canonical passkey transaction-type list so the widget's
+    // dropdown cannot drift from what saveBodyToSign()/this server accept.
+    if (req.method === "GET" && urlPath === "/tx-types") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(TX_PASSKEY_TYPES));
+      return;
+    }
+
+    // Handle POST request to save passkey attestation data
     if (req.method === "POST" && urlPath === "/save-new-auth") {
       console.log("📝 Received POST request to save passkey data");
       let body = "";
@@ -141,7 +151,7 @@ function startServer(port) {
             throw new Error("webAuthnStamp is required");
           }
 
-          const validTypes = ["approve", "deposit", "withdraw", "activateAccount", "inviteUsers", "promoteUser", "vaultUpgrade"];
+          const validTypes = TX_PASSKEY_TYPES.map((t) => t.type);
           if (!validTypes.includes(transactionType)) {
             throw new Error(
               `Invalid transaction type: ${transactionType}. Must be one of: ${validTypes.join(
@@ -155,7 +165,11 @@ function startServer(port) {
             "fixtures/test-data/__generated__/generated-tx-passkey.json"
           );
 
-          const currentData = JSON.parse(readFileSync(filePath, "utf-8"));
+          // First run after a clean checkout has no fixture yet — start empty
+          // rather than throwing ENOENT and losing the freshly signed stamp.
+          const currentData = existsSync(filePath)
+            ? JSON.parse(readFileSync(filePath, "utf-8"))
+            : {};
 
           if (!currentData[transactionType]) {
             currentData[transactionType] = {};
@@ -181,9 +195,11 @@ function startServer(port) {
     }
 
     try {
-      // Remove leading slash and handle root path
+      // Remove leading slash and handle root path. Use urlPath, not req.url:
+      // the widget cache-busts the generated fixtures with `?t=…` and the query
+      // string must not end up in the filesystem path.
       let relativePath =
-        req.url === "/" ? "tests/web/api-testing.html" : req.url.substring(1);
+        urlPath === "/" ? "tests/web/api-testing.html" : urlPath.substring(1);
       let filePath = join(__dirname, relativePath);
 
       const ext = filePath.substring(filePath.lastIndexOf("."));
@@ -207,7 +223,8 @@ function startServer(port) {
     .listen(port, () => {
       console.log(`\n🚀 Server running at http://localhost:${port}/`);
       console.log(
-        `📄 Open http://localhost:${port}/tests/web/api-testing.html in your browser\n`
+        `📄 Open http://localhost:${port}/ in your browser (the widget is also\n` +
+          `   served at /tests/web/api-testing.html)\n`
       );
     })
     .on("error", (err) => {

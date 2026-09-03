@@ -98,15 +98,19 @@ export const FEATURE_FLAGS = {
   enableVaultTests: true,
   enableHealthTests: true,
 
-  // Tests that modify data (POST/PUT/DELETE) - only in dev/staging
-  enableWriteTests:                                                                                                                                                                        
-    (!isProduction() || process.env.FORCE_WRITE_TESTS === "true") && process.env.ENABLE_WRITE_TESTS === "true",
+  // Tests that modify data (POST/PUT/DELETE) - only in dev/staging.
+  // Enabled by default outside production; set ENABLE_WRITE_TESTS=false to opt out.
+  enableWriteTests:
+    (!isProduction() || process.env.FORCE_WRITE_TESTS === "true") &&
+    process.env.ENABLE_WRITE_TESTS !== "false",
 
   // Vault currency selection
   useEurVault: process.env.EUR_VAULT === "true",
 
-  // WebAuthn/Passkey tests
-  enablePasskeyTests: process.env.ENABLE_PASSKEY_TESTS === "true",
+  // WebAuthn/Passkey tests. Parent gate only — enabled by default; every
+  // individual passkey cycle below still has to be turned on explicitly, so
+  // this on its own runs no passkey test.
+  enablePasskeyTests: process.env.ENABLE_PASSKEY_TESTS !== "false", // Enabled by default
   enablePasskeyInitActivateTests:
     process.env.ENABLE_PASSKEY_INIT_ACTIVATE_TESTS === "true",
   enablePasskeyInitDepositTests:
@@ -139,8 +143,6 @@ export const FEATURE_FLAGS = {
   // Account creation tests
   createUser: process.env.CREATE_USER !== "false", // Enabled by default
   createEntity: process.env.CREATE_ENTITY !== "false", // Enabled by default
-  createUserMinimal: process.env.CREATE_USER_MINIMAL === "true", // Test minimal required fields
-  createEntityMinimal: process.env.CREATE_ENTITY_MINIMAL === "true", // Test minimal required fields
   entityValidation: process.env.ENABLE_ENTITY_VALIDATION_TESTS === "true", // Entity validation edge cases
 
   // Email uniqueness: when true, test emails get a timestamp suffix to avoid
@@ -171,11 +173,6 @@ export const FEATURE_FLAGS = {
   // default — requires SUMSUB_WEBHOOK_SECRET (matching the target API), a GREEN
   // sandbox applicant, and a live subscription. See webhook-lifecycle-events.test.js.
   enableWebhookLifecycleTests: process.env.ENABLE_WEBHOOK_LIFECYCLE_TESTS === "true",
-  // Opt-in fan-out concurrency test: create N subscriptions → one event →
-  // assert N simultaneous deliveries all drain. The worker's in-flight cap (4)
-  // is observed at the receiver (scripts/webhook/webhook-receiver-slow.js), not asserted
-  // here. Needs ENABLE_WRITE_TESTS + TEST_WEBHOOK_URL. See webhook-concurrency.test.js.
-  enableWebhookConcurrencyTests: process.env.ENABLE_WEBHOOK_CONCURRENCY_TESTS === "true",
 
   // Event history tests (GET /v1/query/events) - read-only, enabled by default
   enableEventsTests: process.env.ENABLE_EVENTS_TESTS !== "false", // Enabled by default
@@ -189,11 +186,13 @@ export const FEATURE_FLAGS = {
   enableIntegratorCredentialTests:
     process.env.ENABLE_INTEGRATOR_CREDENTIAL_TESTS === "true",
 
-  // Associated persons tests
-  addAssociatedPerson: process.env.ADD_ASSOCIATED_PERSON !== "false", // Enabled by default
-  updateAssociatedPerson: process.env.UPDATE_ASSOCIATED_PERSON !== "false", // Enabled by default
+  // Associated persons tests are gated directly on ADD_ASSOCIATED_PERSONS and
+  // UPDATE_BENEFICIARY in the test files (both opt-in), not through a flag here.
 
   // Bank account tests
+  // addUsBankAccount has no reader yet on purpose: the US bank account test in
+  // account-management.test.js is still commented out pending API support. Keep
+  // this flag — it is intended, not dead.
   addUsBankAccount: process.env.ADD_US_BANK_ACCOUNT !== "false", // Enabled by default
   addEurBankAccount: process.env.ADD_EUR_BANK_ACCOUNT !== "false", // Enabled by default
 

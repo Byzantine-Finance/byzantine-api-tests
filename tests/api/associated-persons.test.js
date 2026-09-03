@@ -8,8 +8,8 @@
  *   ADD_ASSOCIATED_PERSONS=true npx vitest run tests/api/associated-persons.test.js
  *   UPDATE_BENEFICIARY=true npx vitest run tests/api/associated-persons.test.js
  *
- * Note: These tests use authenticated endpoints and modify data.
- * Enable with: ENABLE_WRITE_TESTS=true
+ * Note: These tests use authenticated endpoints and modify data. Write tests
+ * are on by default outside production; disable with ENABLE_WRITE_TESTS=false.
  */
 
 import { describe, it, expect } from "vitest";

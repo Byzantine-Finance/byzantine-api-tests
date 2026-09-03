@@ -6,7 +6,8 @@
  * - Optional fields in UserInfo (nationality, residentialAddress, birthDate - now optional)
  *
  * Note: These tests use authenticated endpoints and modify data.
- * Enable with: ENABLE_AUTH_TESTS=true ENABLE_WRITE_TESTS=true
+ * Enable with: ENABLE_AUTH_TESTS=true (write tests are on by default;
+ * disable with ENABLE_WRITE_TESTS=false)
  */
 
 import { describe, it, beforeAll } from "vitest";
